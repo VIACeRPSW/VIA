@@ -43,6 +43,8 @@ updated_at
 -   `clerk_user_id` es único.
 -   `username` es único.
 -   `role` pertenece al conjunto `user`, `moderator`, `admin`.
+-   `role` tiene `user` como valor inicial y no puede modificarse mediante el
+	acceso ordinario del usuario.
 
 ## 4. posts
 

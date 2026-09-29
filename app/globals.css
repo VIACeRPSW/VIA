@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+:root {
+	--ink: #17211b;
+	--paper: #f7f8f2;
+	--surface: #ffffff;
+	--leaf: #176b4d;
+	--sun: #f4c95d;
+	--line: #cad4c8;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--paper);
+	color: var(--ink);
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+}
+
+a {
+	color: inherit;
+}
+
+.home-shell {
+	min-height: 100vh;
+	background:
+		linear-gradient(90deg, transparent 49px, rgb(23 107 77 / 10%) 50px, transparent 51px),
+		linear-gradient(var(--paper) 31px, rgb(23 107 77 / 8%) 32px);
+	background-size: 50px 32px;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+}
+
+.site-header,
+.hero,
+footer {
+	width: min(100% - 2rem, 72rem);
+	margin-inline: auto;
+}
+
+.site-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-block: 1.25rem;
+	border-bottom: 1px solid var(--line);
+}
+
+.brand {
+	font-family: Georgia, serif;
+	font-size: 1.75rem;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.brand:focus-visible,
+.button:focus-visible {
+	outline: 3px solid var(--sun);
+	outline-offset: 4px;
+}
+
+.auth-nav {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.button {
+	min-height: 2.75rem;
+	padding: 0.7rem 1rem;
+	border: 1px solid var(--leaf);
+	border-radius: 4px;
+	font: inherit;
+	font-weight: 700;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.button-primary {
+	background: var(--leaf);
+	color: white;
+}
+
+.button-secondary {
+	background: var(--surface);
+	color: var(--leaf);
+}
+
+.hero {
+	align-self: center;
+	padding-block: clamp(4rem, 12vh, 8rem);
+}
+
+.eyebrow {
+	margin: 0 0 1rem;
+	color: var(--leaf);
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+h1 {
+	max-width: 15ch;
+	margin: 0;
+	font-family: Georgia, serif;
+	font-size: clamp(2.5rem, 7vw, 5.75rem);
+	line-height: 0.98;
+	letter-spacing: 0;
+}
+
+.hero-copy {
+	max-width: 40rem;
+	margin: 2rem 0 0;
+	font-size: clamp(1.05rem, 2vw, 1.3rem);
+	line-height: 1.6;
+}
+
+.status {
+	width: fit-content;
+	margin: 2rem 0 0;
+	padding: 0.75rem 1rem;
+	border-left: 4px solid var(--sun);
+	background: var(--surface);
+	font-weight: 700;
+}
+
+footer {
+	padding-block: 1.25rem;
+	border-top: 1px solid var(--line);
+	font-size: 0.875rem;
+}
+
+footer p {
+	margin: 0;
+}
+
+.auth-page,
+.profile-page {
+	min-height: 100vh;
+	background:
+		linear-gradient(90deg, transparent 49px, rgb(23 107 77 / 10%) 50px, transparent 51px),
+		var(--paper);
+	background-size: 50px 100%;
+}
+
+.auth-page {
+	display: grid;
+	place-items: center;
+	padding: 2rem 1rem;
+}
+
+.profile-page {
+	padding: 1.25rem max(1rem, calc((100vw - 72rem) / 2));
+}
+
+.profile-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-bottom: 1.25rem;
+	border-bottom: 1px solid var(--line);
+}
+
+.profile-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.welcome-panel {
+	max-width: 48rem;
+	padding-block: clamp(4rem, 12vh, 8rem);
+}
+
+.welcome-panel h1 {
+	max-width: 14ch;
+}
+
+.welcome-copy {
+	max-width: 38rem;
+	margin-block: 1.5rem 0;
+	font-size: 1.15rem;
+	line-height: 1.6;
+}
+
+.account-summary {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+	margin: 2rem 0 0;
+}
+
+.account-summary div {
+	padding: 1rem;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+}
+
+.account-summary dt {
+	color: var(--leaf);
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.account-summary dd {
+	margin: 0.35rem 0 0;
+	overflow-wrap: anywhere;
+	font-weight: 700;
+}
+
+@media (max-width: 36rem) {
+	.site-header {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.auth-nav {
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+
+	.hero {
+		padding-block: 4rem;
+	}
+
+	.account-summary {
+		grid-template-columns: 1fr;
+	}
+}

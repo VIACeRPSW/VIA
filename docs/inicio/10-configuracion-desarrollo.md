@@ -32,11 +32,15 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
 Los nombres definitivos se ajustarán a la configuración actual de Clerk
 y Supabase.
+
+La contraseña de PostgreSQL solo se introducirá directamente en Supabase
+CLI cuando sea necesaria para enlazar o aplicar migraciones. No se almacenará
+en `.env.local` ni se utilizará desde la aplicación.
 
 ## 4. Reglas de entorno
 
