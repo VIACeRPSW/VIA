@@ -221,7 +221,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] P-3.2.3 — E2E: ejecutar login Google, llegada a `/perfil`, identidad y categoría `user`, estado correcto de datos y logout; repetir en los entornos autorizados y vistas móvil/escritorio (CA-3.2.6).
 - [x] P-3.2.4 — Seguridad/RLS: inspeccionar el bundle y las respuestas de red para descartar secretos; confirmar con acceso directo que el token de otro usuario no lee filas ajenas (CA-3.2.1, CA-3.2.3, CA-3.2.5).
 - [x] P-3.2.5 — Configuración/build: validar variables requeridas por entorno, redirecciones permitidas y build de producción sin imprimir valores; revisar que `.env.local` sigue ignorado (CA-3.2.4, CA-3.2.5).
-- [ ] P-3.2.6 — Error controlado: simular indisponibilidad de Supabase y comprobar mensaje accesible, respuesta no sensible y registro técnico redactado (CA-3.2.2).
+- [x] P-3.2.6 — Error controlado: simular indisponibilidad de Supabase y comprobar mensaje accesible, respuesta no sensible y registro técnico redactado (CA-3.2.2).
 
 **Evidencia de cierre**
 
@@ -237,7 +237,8 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - 2026-09-29: despliegue Production completado desde el commit `5c1328d`, alias `https://via-ivory.vercel.app` y respuesta HTTP 200 confirmada mediante Vercel Authentication; los push a `main` quedaron conectados para despliegue automático.
 - Decisión temporal: Preview y Production comparten la instancia de desarrollo de Clerk y el proyecto Supabase mientras no existan datos reales. Clerk Production, dominio propio y Google OAuth de producción se posponen explícitamente.
 - 2026-09-29: E2E manual desplegado superado en escritorio y vista móvil: acceso Google, llegada a `/perfil`, categoría `user`, estado “Conexión lista; perfil pendiente de la Fase 2”, cierre de sesión y redirección de `/perfil` anónimo a `/sign-in`.
-- Pendiente: sesión expirada real y simulación desplegada de indisponibilidad de Supabase; Clerk Production queda bloqueado hasta disponer de dominio propio.
+- 2026-09-29: `npm test` superó seis casos; la orquestación usada por `/perfil` simuló indisponibilidad HTTP 503, devolvió “Datos temporalmente no disponibles” y registró únicamente código y estado, sin mensaje interno ni correo simulados. Typecheck, lint y build superados.
+- Pendiente: sesión expirada real; Clerk Production queda bloqueado hasta disponer de dominio propio.
 
 ## Validación final de la fase
 
@@ -258,4 +259,4 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 | 2026-09-29 | 1.1 | En curso | Typecheck, lint, build, HTTP `/`, responsive y teclado superados; secretos locales ignorados. | Pendiente aprobación registrada de Fase 0. |
 | 2026-09-29 | 2.1 | En curso | `clerk doctor`, E2E Google login → `/perfil` → logout, responsive y teclado superados. | Pendientes identidad incompleta y sesión expirada. |
 | 2026-09-29 | 3.1 | Completado | Migración remota, restricciones, claims válidos/ausentes/malformados, RLS, rollback/reaplicación con comparación de catálogo y lint remoto superados. | Pruebas remotas reversibles, sin Docker ni datos residuales. |
-| 2026-09-29 | 3.2 | En curso | Consulta Clerk → Supabase bajo RLS, rechazo de sesión ausente/token alterado, Vercel Production, conexión Git y E2E responsive Google → `/perfil` → logout superados. | Pendientes sesión expirada real, fallo controlado de Supabase y Clerk Production cuando exista dominio propio. |
+| 2026-09-29 | 3.2 | En curso | Consulta Clerk → Supabase bajo RLS, rechazo de sesión ausente/token alterado, fallo controlado de datos, Vercel Production y E2E responsive Google → `/perfil` → logout superados. | Pendientes sesión expirada real y Clerk Production cuando exista dominio propio. |

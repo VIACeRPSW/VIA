@@ -1,10 +1,12 @@
 import { SupabaseConfigurationError } from "@/lib/supabase/errors";
 
-type ProfileQueryResult = {
+export type ProfileQueryResult = {
   data: { id: string } | null;
   error: { code: string } | null;
   status: number;
 };
+
+type ErrorLogger = (message: string, context: Record<string, unknown>) => void;
 
 export type ProfileDataStatus =
   | "configuration-invalid"
@@ -56,4 +58,26 @@ export function getSafeCaughtErrorContext(error: unknown) {
   return {
     errorType: error instanceof Error ? error.name : "UnknownError",
   };
+}
+
+export async function resolveProfileDataStatus(
+  query: () => Promise<ProfileQueryResult>,
+  logError: ErrorLogger = console.error,
+): Promise<ProfileDataStatus> {
+  try {
+    const result = await query();
+    const status = classifyProfileQuery(result);
+
+    if (result.error) {
+      logError("Supabase profile check failed", getSafeQueryErrorContext(result));
+    }
+
+    return status;
+  } catch (error) {
+    logError(
+      "Supabase profile check could not start",
+      getSafeCaughtErrorContext(error),
+    );
+    return classifyProfileQueryFailure(error);
+  }
 }

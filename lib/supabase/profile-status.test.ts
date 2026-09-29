@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SupabaseConfigurationError } from "@/lib/supabase/errors";
 import {
   classifyProfileQuery,
@@ -6,6 +6,7 @@ import {
   getProfileDataStatusLabel,
   getSafeCaughtErrorContext,
   getSafeQueryErrorContext,
+  resolveProfileDataStatus,
 } from "@/lib/supabase/profile-status";
 
 describe("profile data status", () => {
@@ -73,6 +74,31 @@ describe("profile data status", () => {
     expect(caughtContext).toEqual({ errorType: "Error" });
     expect(JSON.stringify([queryContext, caughtContext])).not.toMatch(
       /token-secret|user@example\.com/,
+    );
+  });
+
+  it("returns an accessible temporary state and a redacted log on outage", async () => {
+    const logError = vi.fn();
+    const status = await resolveProfileDataStatus(
+      async () => ({
+        data: null,
+        error: { code: "PGRST000", message: "database-secret" },
+        status: 503,
+        statusText: "user@example.com",
+      }),
+      logError,
+    );
+
+    expect(status).toBe("temporarily-unavailable");
+    expect(getProfileDataStatusLabel(status)).toBe(
+      "Datos temporalmente no disponibles",
+    );
+    expect(logError).toHaveBeenCalledWith("Supabase profile check failed", {
+      code: "PGRST000",
+      status: 503,
+    });
+    expect(JSON.stringify(logError.mock.calls)).not.toMatch(
+      /database-secret|user@example\.com/,
     );
   });
 });
