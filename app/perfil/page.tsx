@@ -2,6 +2,10 @@ import { SignOutButton, UserButton } from "@clerk/nextjs";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  getWelcomeIdentityStatusLabel,
+  resolveWelcomeIdentity,
+} from "@/lib/clerk/welcome-identity";
 import { getProfileDataStatus } from "@/lib/supabase/profile-status.server";
 import { getProfileDataStatusLabel } from "@/lib/supabase/profile-status";
 
@@ -12,10 +16,8 @@ export default async function ProfileWelcomePage() {
     redirect("/sign-in");
   }
 
-  const user = await currentUser();
-  const displayName = user?.firstName ?? user?.fullName ?? "estudiante";
-  const email =
-    user?.primaryEmailAddress?.emailAddress ?? "Cuenta de Clerk conectada";
+  const identity = await resolveWelcomeIdentity(currentUser);
+  const identityStatusLabel = getWelcomeIdentityStatusLabel(identity.status);
   const dataConnectionStatus = await getProfileDataStatus();
   const dataStatusLabel = getProfileDataStatusLabel(dataConnectionStatus);
 
@@ -37,7 +39,7 @@ export default async function ProfileWelcomePage() {
 
       <section className="welcome-panel" aria-labelledby="welcome-title">
         <p className="eyebrow">Tu bienvenida en VIA</p>
-        <h1 id="welcome-title">Hola, {displayName}.</h1>
+        <h1 id="welcome-title">Hola, {identity.displayName}.</h1>
         <p className="welcome-copy">
           Tu identidad está autenticada con Clerk. El perfil editable de VIA
           se habilitará en la siguiente fase.
@@ -45,7 +47,11 @@ export default async function ProfileWelcomePage() {
         <dl className="account-summary">
           <div>
             <dt>Cuenta</dt>
-            <dd>{email}</dd>
+            <dd>{identity.email}</dd>
+          </div>
+          <div>
+            <dt>Identidad Clerk</dt>
+            <dd>{identityStatusLabel}</dd>
           </div>
           <div>
             <dt>Categoría inicial</dt>

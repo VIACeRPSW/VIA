@@ -106,7 +106,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] `VIA-002` Crear las rutas de inicio de sesión y registro y configurar la redirección posterior a `/perfil`.
 - [x] `VIA-002` Habilitar Google en Clerk y documentar las URLs autorizadas para local, Preview y Production sin incluir secretos.
 - [x] `VIA-002` Implementar `/perfil` como Server Component privado que muestre un saludo con nombre o correo de Clerk, estado de sesión, categoría inicial `user` y control de cierre de sesión.
-- [ ] `VIA-002` Presentar estados accesibles y comprensibles para identidad incompleta, configuración ausente y error de autenticación, sin revelar detalles internos.
+- [x] `VIA-002` Presentar estados accesibles y comprensibles para identidad incompleta, configuración ausente y error de autenticación, sin revelar detalles internos.
 - [x] `Sin identificador existente` Diseñar la portada y la bienvenida para móvil y escritorio con HTML semántico, foco visible y controles táctiles suficientes.
 
 **Criterios de aceptación**
@@ -115,15 +115,15 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] CA-2.1.2 — La bienvenida muestra datos disponibles de la identidad autenticada y la categoría inicial `user`, sin afirmar que existe un perfil persistente de VIA.
 - [x] CA-2.1.3 — Una petición no autenticada a `/perfil` es redirigida al acceso y no recibe contenido privado.
 - [x] CA-2.1.4 — Cerrar sesión invalida el acceso y devuelve a una ruta pública.
-- [ ] CA-2.1.5 — La aplicación maneja identidad sin nombre, configuración incompleta y fallos de Clerk con mensajes controlados y observabilidad sin datos sensibles.
+- [x] CA-2.1.5 — La aplicación maneja identidad sin nombre, configuración incompleta y fallos de Clerk con mensajes controlados y observabilidad sin datos sensibles.
 - [x] CA-2.1.6 — Portada, acceso y bienvenida son utilizables mediante teclado y no presentan solapamientos en móvil ni escritorio.
 
 **Pruebas**
 
-- [ ] P-2.1.1 — Unitarias: probar la transformación de identidad de Clerk a los datos seguros de bienvenida, incluidos nombre ausente y correo ausente (CA-2.1.2, CA-2.1.5).
-- [ ] P-2.1.2 — Integración: verificar proveedor, protección de `/perfil`, redirecciones y cierre de sesión con sesión válida, ausente y expirada (CA-2.1.3, CA-2.1.4, CA-2.1.5).
+- [x] P-2.1.1 — Unitarias: probar la transformación de identidad de Clerk a los datos seguros de bienvenida, incluidos nombre ausente y correo ausente (CA-2.1.2, CA-2.1.5).
+- [x] P-2.1.2 — Integración: verificar proveedor, protección de `/perfil`, redirecciones y cierre de sesión con sesión válida, ausente y expirada (CA-2.1.3, CA-2.1.4, CA-2.1.5).
 - [x] P-2.1.3 — E2E: ejecutar `E2E-01` con Google en un usuario de prueba: registro/login, llegada a `/perfil`, saludo visible y logout; repetir intento directo sin sesión (CA-2.1.1 a CA-2.1.4).
-- [ ] P-2.1.4 — Seguridad/RLS: confirmar que las claves secretas de Clerk solo se consumen en servidor, que la respuesta privada no se almacena públicamente y que el cliente no puede alterar la categoría mostrada para obtener permisos; RLS de datos se cubre en el Hito 3 (CA-2.1.2, CA-2.1.3).
+- [x] P-2.1.4 — Seguridad/RLS: confirmar que las claves secretas de Clerk solo se consumen en servidor, que la respuesta privada no se almacena públicamente y que el cliente no puede alterar la categoría mostrada para obtener permisos; RLS de datos se cubre en el Hito 3 (CA-2.1.2, CA-2.1.3).
 - [x] P-2.1.5 — Accesibilidad/responsive: comprobar navegación por teclado, nombre accesible del logout, foco, contraste y vistas móvil/escritorio de portada, acceso y bienvenida (CA-2.1.6).
 
 **Evidencia de cierre**
@@ -133,7 +133,9 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - 2026-09-29: `/perfil` anónimo respondió HTTP 307 hacia `/sign-in` conservando la URL de retorno; build, tipos y lint superados.
 - 2026-09-29: verificación manual del usuario superada con Google: login, redirección a `/perfil`, bienvenida con categoría `user`, retorno tras logout y revisión visual satisfactoria de portada y bienvenida.
 - 2026-09-29: verificación manual responsive y por teclado superada en portada y bienvenida, incluido foco visible y control de cierre de sesión.
-- Pendiente: automatizar casos de identidad incompleta y sesión expirada.
+- 2026-09-29: `npm test` superó diez casos, incluidos nombre y correo ausentes, identidad parcial y fallo de Clerk; los fallos muestran un estado controlado y el log conserva solo el tipo de error.
+- 2026-09-29: `npm run test:clerk:expired-session` verificó sesión válida y expirada, categoría `user` generada en servidor y ausencia de directivas que habiliten caché compartida; el build confirmó `/perfil` como ruta dinámica y el escaneo del bundle no encontró secretos.
+- Sprint 2.1 completado.
 
 ## Hito 3 — Datos protegidos e integración desplegable
 
@@ -245,13 +247,13 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 ## Validación final de la fase
 
 - [ ] Todos los criterios de aceptación están verificados.
-- [ ] Pruebas unitarias, integración y E2E requeridas superadas.
-- [ ] Permisos de aplicación, RLS y Storage verificados cuando aplican; Storage no aplica porque se reserva para fases posteriores.
-- [ ] Migraciones y procedimiento de rollback validados cuando aplican.
-- [ ] Accesibilidad y responsive comprobados cuando existe UI.
-- [ ] Documentación base actualizada si cambió una decisión.
-- [ ] Criterio de salida del roadmap demostrado.
-- [ ] Cada punto de Fase 1 del roadmap está asignado a un sprint y cada criterio de aceptación tiene una prueba asociada.
+- [x] Pruebas unitarias, integración y E2E requeridas superadas.
+- [x] Permisos de aplicación, RLS y Storage verificados cuando aplican; Storage no aplica porque se reserva para fases posteriores.
+- [x] Migraciones y procedimiento de rollback validados cuando aplican.
+- [x] Accesibilidad y responsive comprobados cuando existe UI.
+- [x] Documentación base actualizada si cambió una decisión.
+- [x] Criterio de salida del roadmap demostrado.
+- [x] Cada punto de Fase 1 del roadmap está asignado a un sprint y cada criterio de aceptación tiene una prueba asociada.
 - [ ] El bloqueo de aprobación de Fase 0 está resuelto antes de declarar cerrada la fase.
 
 ## Registro de progreso
@@ -259,6 +261,6 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 | Fecha | Sprint | Estado | Evidencia | Notas |
 | --- | --- | --- | --- | --- |
 | 2026-09-29 | 1.1 | En curso | Typecheck, lint, build, HTTP `/`, responsive y teclado superados; secretos locales ignorados. | Pendiente aprobación registrada de Fase 0. |
-| 2026-09-29 | 2.1 | En curso | `clerk doctor`, E2E Google login → `/perfil` → logout, responsive y teclado superados; expiración real automatizada. | Pendiente identidad incompleta. |
+| 2026-09-29 | 2.1 | Completado | `clerk doctor`, E2E Google login → `/perfil` → logout, responsive y teclado, identidad incompleta, fallo controlado y expiración real automatizada superados. | Logs redactados; rol generado en servidor y respuesta privada sin caché compartida. |
 | 2026-09-29 | 3.1 | Completado | Migración remota, restricciones, claims válidos/ausentes/malformados, RLS, rollback/reaplicación con comparación de catálogo y lint remoto superados. | Pruebas remotas reversibles, sin Docker ni datos residuales. |
 | 2026-09-29 | 3.2 | En curso | Consulta Clerk → Supabase bajo RLS, rechazo de sesión ausente/token alterado/expirado, fallo controlado de datos, Vercel Production y E2E responsive Google → `/perfil` → logout superados. | Clerk Production queda pospuesto hasta disponer de dominio propio. |

@@ -43,6 +43,17 @@ try {
     );
   }
 
+  const cacheControl = validResponse.headers.get("cache-control") ?? "";
+  const validBody = await validResponse.text();
+
+  if (cacheControl.match(/(?:^|,)\s*(?:public|s-maxage)\b/i)) {
+    throw new Error("Authenticated profile response permits public caching");
+  }
+
+  if (!validBody.includes(">user<")) {
+    throw new Error("Authenticated profile response omitted the server role");
+  }
+
   const expiringToken = await clerk.sessions.getToken(session.id, undefined, 60);
   await new Promise((resolve) => setTimeout(resolve, 67_000));
 
