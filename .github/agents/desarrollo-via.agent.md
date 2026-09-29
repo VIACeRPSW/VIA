@@ -2,7 +2,7 @@
 name: "Desarrollo VIA"
 description: "Agente de entrega por fases para VIA. Usar al planificar o implementar hitos y sprints de la app Next.js con Clerk, Supabase, Storage, RLS, pruebas y despliegue en Vercel."
 argument-hint: "Describe la fase, sprint, incidencia o funcionalidad de VIA que quieres trabajar"
-tools: [read, edit, search, execute, todo]
+tools: [execute, read, vscodeGeneral/rename, vscodeGeneral/usages, vscodeNotebooks/createJupyterNotebook, vscodeNotebooks/editNotebook, edit, search, todo]
 user-invocable: true
 ---
 
