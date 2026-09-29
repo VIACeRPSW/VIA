@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:client-secrets": "node scripts/check-client-secrets.mjs",
+    "test:clerk:expired-session": "node scripts/test-clerk-expired-session.mjs",
     "test:db:auth-boundary": "node scripts/test-supabase-auth-boundary.mjs",
     "test:db:rls": "supabase db query --linked --file supabase/tests/profiles_rls.sql --agent no --output-format text",
     "test:db:rollback": "node scripts/test-supabase-rollback.mjs"
