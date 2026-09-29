@@ -10,6 +10,7 @@ artificial con fines educativos.
 
 ## Stack definido
 
+
 -   Next.js
 -   React
 -   TypeScript
