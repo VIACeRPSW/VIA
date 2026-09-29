@@ -201,7 +201,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] `VIA-003` Integrar el mecanismo vigente de token Clerk-Supabase y centralizar el cliente autenticado en `lib/`.
 - [x] `VIA-003` Realizar desde `/perfil` una consulta mínima protegida por RLS que distinga conexión correcta, ausencia esperada de perfil y fallo del servicio.
 - [x] `VIA-003` Añadir manejo de errores y registro técnico sin tokens, correos completos ni detalles internos de base de datos.
-- [ ] `Sin identificador existente` Configurar en Vercel los mismos nombres de variables para Development, Preview y Production; registrar si Preview y Production comparten valores reales conforme a la decisión del proyecto.
+- [x] `Sin identificador existente` Configurar en Vercel los mismos nombres de variables para Development, Preview y Production; registrar si Preview y Production comparten valores reales conforme a la decisión del proyecto.
 - [ ] `VIA-002` Verificar las URLs y redirecciones de Clerk para dominios local, Preview y Production.
 - [x] `Sin identificador existente` Documentar la lista de comprobación de despliegue sin ejecutar despliegues ni cambios remotos salvo autorización explícita.
 
@@ -220,7 +220,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [ ] P-3.2.2 — Integración: intercambiar una sesión de prueba de Clerk por el token admitido, consultar Supabase con RLS y repetir con sesión ausente, expirada y token alterado (CA-3.2.1, CA-3.2.3).
 - [ ] P-3.2.3 — E2E: ejecutar login Google, llegada a `/perfil`, identidad y categoría `user`, estado correcto de datos y logout; repetir en los entornos autorizados y vistas móvil/escritorio (CA-3.2.6).
 - [x] P-3.2.4 — Seguridad/RLS: inspeccionar el bundle y las respuestas de red para descartar secretos; confirmar con acceso directo que el token de otro usuario no lee filas ajenas (CA-3.2.1, CA-3.2.3, CA-3.2.5).
-- [ ] P-3.2.5 — Configuración/build: validar variables requeridas por entorno, redirecciones permitidas y build de producción sin imprimir valores; revisar que `.env.local` sigue ignorado (CA-3.2.4, CA-3.2.5).
+- [x] P-3.2.5 — Configuración/build: validar variables requeridas por entorno, redirecciones permitidas y build de producción sin imprimir valores; revisar que `.env.local` sigue ignorado (CA-3.2.4, CA-3.2.5).
 - [ ] P-3.2.6 — Error controlado: simular indisponibilidad de Supabase y comprobar mensaje accesible, respuesta no sensible y registro técnico redactado (CA-3.2.2).
 
 **Evidencia de cierre**
@@ -233,7 +233,10 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - 2026-09-29: `npm run test:client-secrets` inspeccionó `.next/static` y confirmó que ningún valor privado configurado aparece en el bundle cliente; el aislamiento frente a otro `sub` ya estaba demostrado directamente por la prueba RLS.
 - 2026-09-29: `npm run test:db:auth-boundary` confirmó por HTTP 401 que Supabase rechaza una consulta anónima y la misma consulta con un JWT alterado, sin imprimir cuerpo de respuesta ni credenciales.
 - 2026-09-29: README actualizado con el contrato completo de variables para Development, Preview y Production, rutas de acceso y retorno, exposición cliente/servidor y checklist de Clerk, Supabase, Vercel y validación previa.
-- Pendiente: sesión expirada real, Vercel Preview/Production y E2E responsive por entorno.
+- 2026-09-29: proyecto `via-17d8/via` creado en Vercel y conectado a `VIACeRPSW/VIA`; las ocho variables requeridas se configuraron en Development, Preview y Production, con `CLERK_SECRET_KEY` como secreto y el resto conforme a su exposición documentada.
+- 2026-09-29: despliegue Production completado desde el commit `5c1328d`, alias `https://via-ivory.vercel.app` y respuesta HTTP 200 confirmada mediante Vercel Authentication; los push a `main` quedaron conectados para despliegue automático.
+- Decisión temporal: Preview y Production comparten la instancia de desarrollo de Clerk y el proyecto Supabase mientras no existan datos reales. Clerk Production, dominio propio y Google OAuth de producción se posponen explícitamente.
+- Pendiente: sesión expirada real y E2E responsive desplegado; Clerk Production queda bloqueado hasta disponer de dominio propio.
 
 ## Validación final de la fase
 
@@ -254,4 +257,4 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 | 2026-09-29 | 1.1 | En curso | Typecheck, lint, build, HTTP `/`, responsive y teclado superados; secretos locales ignorados. | Pendiente aprobación registrada de Fase 0. |
 | 2026-09-29 | 2.1 | En curso | `clerk doctor`, E2E Google login → `/perfil` → logout, responsive y teclado superados. | Pendientes identidad incompleta y sesión expirada. |
 | 2026-09-29 | 3.1 | Completado | Migración remota, restricciones, claims válidos/ausentes/malformados, RLS, rollback/reaplicación con comparación de catálogo y lint remoto superados. | Pruebas remotas reversibles, sin Docker ni datos residuales. |
-| 2026-09-29 | 3.2 | En curso | Consulta Clerk → Supabase bajo RLS, estados y logs unitarios, rechazo de sesión ausente/token alterado, build y escaneo del bundle cliente superados. | Pendientes sesión expirada real y configuración Vercel. |
+| 2026-09-29 | 3.2 | En curso | Consulta Clerk → Supabase bajo RLS, estados y logs unitarios, rechazo de sesión ausente/token alterado, Vercel Production HTTP 200, variables y conexión Git verificadas. | Pendientes sesión expirada real, E2E desplegado y Clerk Production cuando exista dominio propio. |
