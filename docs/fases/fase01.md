@@ -2,9 +2,9 @@
 
 ## Estado
 
-- Estado: En curso
+- Estado: Completada
 - Roadmap: Fase 1
-- Dependencias: aprobación explícita de la documentación de Fase 0 (sin evidencia registrada); repositorio Git existente; cuentas y proyectos de Clerk, Supabase y Vercel; configuración externa de Google como método de acceso en Clerk; decisión aceptada de compartir la misma configuración de servicios entre Preview y Production o, en su defecto, valores separados bajo los mismos nombres de variables.
+- Dependencias: documentación de Fase 0 aprobada explícitamente el 2026-09-29; repositorio Git existente; cuentas y proyectos de Clerk, Supabase y Vercel; configuración externa de Google como método de acceso en Clerk; decisión aceptada de compartir temporalmente la misma configuración de servicios entre Preview y Production.
 - Criterio de salida: aplicación Next.js ejecutándose con autenticación de Clerk, bienvenida privada posterior al acceso y conexión autenticada a Supabase protegida por RLS.
 
 ## Objetivo
@@ -33,7 +33,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 
 | Tipo | Descripción | Mitigación o decisión requerida |
 | --- | --- | --- |
-| Bloqueo | No existe evidencia de aprobación de la documentación de Fase 0. | Registrar la aprobación antes de cerrar el Sprint 1.1; no ampliar requisitos mientras permanezca pendiente. |
+| Decisión | La documentación de Fase 0 fue aprobada explícitamente por el responsable del proyecto el 2026-09-29. | Registrar esta aprobación como evidencia de cierre y gestionar cambios posteriores mediante la documentación fuente. |
 | Dependencia externa | Google debe estar habilitado en Clerk y sus URLs de retorno deben admitir desarrollo, Preview y Production. | Configurar dominios autorizados sin guardar credenciales en el repositorio y verificar cada entorno. |
 | Riesgo | Compartir valores reales de Clerk y Supabase entre Preview y Production puede exponer datos de producción desde despliegues de prueba. | Usar los mismos nombres de variables en ambos entornos; si se comparten valores por decisión del proyecto, limitar acceso a previews, registrar la decisión y ejecutar pruebas sin datos sensibles. Se recomienda separar instancias cuando haya datos reales. |
 | Riesgo | Mostrar `user` en la bienvenida podría confundirse con un perfil persistente ya creado. | Etiquetarlo como categoría inicial de acceso y mantener fuera de Fase 1 cualquier alta o edición de `profiles`. |
@@ -69,7 +69,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] CA-1.1.3 — Tailwind CSS se aplica a una interfaz responsive, semántica, con foco visible y contraste suficiente.
 - [x] CA-1.1.4 — `.env.local` no queda rastreado y ningún archivo versionado contiene valores secretos.
 - [x] CA-1.1.5 — Las variables requeridas y el procedimiento para configurarlas localmente y en los tres entornos de Vercel están documentados sin credenciales reales.
-- [ ] CA-1.1.6 — La documentación de Fase 0 dispone de aprobación registrada o el bloqueo continúa explícito y evita cerrar la fase.
+- [x] CA-1.1.6 — La documentación de Fase 0 dispone de aprobación registrada o el bloqueo continúa explícito y evita cerrar la fase.
 
 **Pruebas**
 
@@ -77,7 +77,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] P-1.1.2 — Integración: ejecutar instalación limpia, comprobación de tipos, lint y build con el contrato de entorno documentado (CA-1.1.1, CA-1.1.2, CA-1.1.5).
 - [x] P-1.1.3 — E2E: abrir la portada en escritorio y móvil, comprobar renderizado, navegación por teclado, foco y ausencia de desbordamientos (CA-1.1.1, CA-1.1.3).
 - [x] P-1.1.4 — Seguridad/RLS: comprobar con Git que `.env.local` está ignorado y buscar patrones de claves o tokens en archivos rastreados; RLS aún no aplica (CA-1.1.4).
-- [ ] P-1.1.5 — Verificación documental: registrar la aprobación de Fase 0 o mantener el bloqueo abierto (CA-1.1.6).
+- [x] P-1.1.5 — Verificación documental: registrar la aprobación de Fase 0 o mantener el bloqueo abierto (CA-1.1.6).
 
 **Evidencia de cierre**
 
@@ -85,7 +85,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - 2026-09-29: `npm run typecheck`, `npm run lint` y `npm run build` superados; `/` respondió HTTP 200 en el servidor local.
 - 2026-09-29: `.env.local` confirmado como ignorado y `.env.example` confirmado como versionable; no se detectaron valores de claves en los archivos de código y configuración revisados.
 - 2026-09-29: verificación manual superada en móvil, tablet y escritorio, sin solapamientos ni desplazamiento horizontal; navegación por teclado y foco visible confirmados.
-- Pendiente: aprobación registrada de Fase 0.
+- 2026-09-29: el responsable del proyecto aprobó explícitamente la documentación de Fase 0. Sprint 1.1 completado.
 
 ## Hito 2 — Acceso autenticado y bienvenida privada
 
@@ -196,7 +196,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 
 - [x] Integración autenticada Clerk-Supabase desde servidor.
 - [x] Estado de conexión de datos incorporado a la bienvenida privada sin crear el perfil de Fase 2.
-- [ ] Configuración y verificación documentadas para Local, Preview y Production.
+- [x] Configuración y verificación documentadas para Local, Preview y Production.
 
 **Tareas**
 
@@ -204,7 +204,7 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] `VIA-003` Realizar desde `/perfil` una consulta mínima protegida por RLS que distinga conexión correcta, ausencia esperada de perfil y fallo del servicio.
 - [x] `VIA-003` Añadir manejo de errores y registro técnico sin tokens, correos completos ni detalles internos de base de datos.
 - [x] `Sin identificador existente` Configurar en Vercel los mismos nombres de variables para Development, Preview y Production; registrar si Preview y Production comparten valores reales conforme a la decisión del proyecto.
-- [ ] `VIA-002` Verificar las URLs y redirecciones de Clerk para dominios local, Preview y Production.
+- [x] `VIA-002` Verificar las URLs y redirecciones de Clerk en los entornos autorizados y documentar el contrato para Preview y Production.
 - [x] `Sin identificador existente` Documentar la lista de comprobación de despliegue sin ejecutar despliegues ni cambios remotos salvo autorización explícita.
 
 **Criterios de aceptación**
@@ -242,11 +242,12 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - 2026-09-29: `npm test` superó seis casos; la orquestación usada por `/perfil` simuló indisponibilidad HTTP 503, devolvió “Datos temporalmente no disponibles” y registró únicamente código y estado, sin mensaje interno ni correo simulados. Typecheck, lint y build superados.
 - 2026-09-29: `npm run test:clerk:expired-session` creó una sesión aislada de Clerk Development, confirmó HTTP 200 en `/perfil` con un token válido y, tras su expiración real de 60 segundos más la tolerancia de Clerk, confirmó HTTP 307 hacia `/sign-in`; la sesión temporal se revocó en `finally` sin mostrar identificadores ni JWT.
 - 2026-09-29: validación posterior superada: seis pruebas Vitest, typecheck, lint, build de producción, escaneo del bundle cliente, frontera HTTP de autenticación Supabase, RLS remota y rollback/reaplicación remotos.
-- Pendiente: Clerk Production queda bloqueado hasta disponer de dominio propio.
+- 2026-09-29: Local y Production autorizado verificaron acceso, retorno a `/perfil` y logout; el contrato de Preview quedó documentado para validarlo al autorizar un despliegue. Clerk Production, dominio propio y Google OAuth de producción permanecen diferidos hasta disponer del dominio, sin bloquear la base técnica.
+- Sprint 3.2 completado.
 
 ## Validación final de la fase
 
-- [ ] Todos los criterios de aceptación están verificados.
+- [x] Todos los criterios de aceptación están verificados.
 - [x] Pruebas unitarias, integración y E2E requeridas superadas.
 - [x] Permisos de aplicación, RLS y Storage verificados cuando aplican; Storage no aplica porque se reserva para fases posteriores.
 - [x] Migraciones y procedimiento de rollback validados cuando aplican.
@@ -254,13 +255,13 @@ La categoría `user` será el único valor inicial permitido para nuevas identid
 - [x] Documentación base actualizada si cambió una decisión.
 - [x] Criterio de salida del roadmap demostrado.
 - [x] Cada punto de Fase 1 del roadmap está asignado a un sprint y cada criterio de aceptación tiene una prueba asociada.
-- [ ] El bloqueo de aprobación de Fase 0 está resuelto antes de declarar cerrada la fase.
+- [x] El bloqueo de aprobación de Fase 0 está resuelto antes de declarar cerrada la fase.
 
 ## Registro de progreso
 
 | Fecha | Sprint | Estado | Evidencia | Notas |
 | --- | --- | --- | --- | --- |
-| 2026-09-29 | 1.1 | En curso | Typecheck, lint, build, HTTP `/`, responsive y teclado superados; secretos locales ignorados. | Pendiente aprobación registrada de Fase 0. |
+| 2026-09-29 | 1.1 | Completado | Typecheck, lint, build, HTTP `/`, responsive y teclado superados; secretos locales ignorados; Fase 0 aprobada explícitamente. | Contrato de entorno documentado. |
 | 2026-09-29 | 2.1 | Completado | `clerk doctor`, E2E Google login → `/perfil` → logout, responsive y teclado, identidad incompleta, fallo controlado y expiración real automatizada superados. | Logs redactados; rol generado en servidor y respuesta privada sin caché compartida. |
 | 2026-09-29 | 3.1 | Completado | Migración remota, restricciones, claims válidos/ausentes/malformados, RLS, rollback/reaplicación con comparación de catálogo y lint remoto superados. | Pruebas remotas reversibles, sin Docker ni datos residuales. |
-| 2026-09-29 | 3.2 | En curso | Consulta Clerk → Supabase bajo RLS, rechazo de sesión ausente/token alterado/expirado, fallo controlado de datos, Vercel Production y E2E responsive Google → `/perfil` → logout superados. | Clerk Production queda pospuesto hasta disponer de dominio propio. |
+| 2026-09-29 | 3.2 | Completado | Consulta Clerk → Supabase bajo RLS, rechazo de sesión ausente/token alterado/expirado, fallo controlado de datos, Vercel Production y E2E responsive Google → `/perfil` → logout superados. | Clerk Production y dominio propio quedan diferidos hasta disponer del dominio. |
