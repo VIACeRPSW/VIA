@@ -1,13 +1,18 @@
 begin;
 
-insert into public.profiles (clerk_user_id, username)
-values ('via_rls_other_test', 'via_rls_other_test');
+insert into public.profiles (clerk_user_id, username, display_name)
+values ('via_rls_other_test', 'via_rls_other_test', 'Other test');
 
 do $$
 begin
   begin
-    insert into public.profiles (clerk_user_id, username, role)
-    values ('via_rls_invalid_role_test', 'via_rls_invalid_role_test', 'owner');
+    insert into public.profiles (clerk_user_id, username, display_name, role)
+    values (
+      'via_rls_invalid_role_test',
+      'via_rls_invalid_role_test',
+      'Invalid role test',
+      'owner'
+    );
     raise exception 'Expected unknown role to be rejected';
   exception
     when check_violation then null;
@@ -31,8 +36,8 @@ begin
   end if;
 
   begin
-    insert into public.profiles (clerk_user_id, username)
-    values ('via_rls_missing_sub_test', 'via_rls_missing_sub_test');
+    insert into public.profiles (clerk_user_id, username, display_name)
+    values ('via_rls_missing_sub_test', 'via_rls_missing_sub_test', 'Missing sub');
     raise exception 'Expected insert without a subject claim to be rejected';
   exception
     when insufficient_privilege then null;
@@ -63,8 +68,8 @@ select set_config(
   true
 );
 
-insert into public.profiles (clerk_user_id, username)
-values ('via_rls_owner_test', 'via_rls_owner_test');
+insert into public.profiles (clerk_user_id, username, display_name)
+values ('via_rls_owner_test', 'via_rls_owner_test', 'RLS owner');
 
 update public.profiles
 set display_name = 'RLS owner'
@@ -99,16 +104,21 @@ begin
   end if;
 
   begin
-    insert into public.profiles (clerk_user_id, username)
-    values ('via_rls_foreign_test', 'via_rls_foreign_test');
+    insert into public.profiles (clerk_user_id, username, display_name)
+    values ('via_rls_foreign_test', 'via_rls_foreign_test', 'Foreign test');
     raise exception 'Expected foreign identity insert to be rejected';
   exception
     when insufficient_privilege then null;
   end;
 
   begin
-    insert into public.profiles (clerk_user_id, username, role)
-    values ('via_rls_owner_test_admin', 'via_rls_owner_test_admin', 'admin');
+    insert into public.profiles (clerk_user_id, username, display_name, role)
+    values (
+      'via_rls_owner_test_admin',
+      'via_rls_owner_test_admin',
+      'Owner admin test',
+      'admin'
+    );
     raise exception 'Expected privileged role insert to be rejected';
   exception
     when insufficient_privilege then null;
@@ -130,6 +140,24 @@ begin
     raise exception 'Expected identity reassignment to be rejected';
   exception
     when insufficient_privilege then null;
+  end;
+
+  begin
+    update public.profiles
+    set username = 'Invalid-Name'
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected invalid username to be rejected';
+  exception
+    when check_violation then null;
+  end;
+
+  begin
+    update public.profiles
+    set bio = repeat('a', 301)
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected oversized bio to be rejected';
+  exception
+    when check_violation then null;
   end;
 end;
 $$;

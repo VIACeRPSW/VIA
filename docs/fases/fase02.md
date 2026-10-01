@@ -2,7 +2,7 @@
 
 ## Estado
 
-- Estado: Planificada
+- Estado: En curso
 - Roadmap: Fase 2
 - Dependencias: Fase 1 completada; autenticación de Clerk y conexión autenticada a Supabase operativas; tabla `profiles` y RLS iniciales aplicadas; proyecto de Supabase Storage disponible; decisión temporal de usar la instancia Clerk Development fuera de datos reales hasta disponer de dominio propio.
 - Criterio de salida: sistema de usuarios funcional con perfil persistente asociado a Clerk, username único, avatar, edición propia, rol protegido y rutas públicas/privadas autorizadas correctamente.
@@ -52,38 +52,42 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 **Alcance**
 
-- [ ] Contrato de campos de perfil y username aplicado en TypeScript y PostgreSQL.
-- [ ] Flujo privado `/perfil/completar` para crear el perfil persistente.
-- [ ] Migración incremental, RLS y rollback para el alta propia.
+- [x] Contrato de campos de perfil y username aplicado en TypeScript y PostgreSQL.
+- [x] Flujo privado `/perfil/completar` para crear el perfil persistente.
+- [x] Migración incremental, RLS y rollback para el alta propia.
 
 **Tareas**
 
-- [ ] `VIA-006` Definir un esquema compartido de validación para username, nombre visible y biografía, con normalización determinista y mensajes accesibles.
-- [ ] `VIA-006` Crear una migración que consolide restricciones de `profiles`, mantenga `role = 'user'` por defecto y preserve compatibilidad con el esquema de Fase 1.
-- [ ] `VIA-006` Implementar una Server Action idempotente de alta que valide entrada, sesión, ausencia de perfil, identidad Clerk y conflicto de username antes de insertar.
-- [ ] `VIA-006` Crear `/perfil/completar` como formulario accesible, precargado con identidad segura de Clerk y con estados pendiente, éxito, datos inválidos, conflicto y error temporal.
-- [ ] `VIA-006` Hacer que `/perfil` dirija al alta cuando no exista fila y muestre el perfil cuando exista, sin insertar durante el renderizado.
-- [ ] `Sin identificador existente` Versionar y ensayar rollback de las restricciones y políticas añadidas.
+- [x] `VIA-006` Definir un esquema compartido de validación para username, nombre visible y biografía, con normalización determinista y mensajes accesibles.
+- [x] `VIA-006` Crear una migración que consolide restricciones de `profiles`, mantenga `role = 'user'` por defecto y preserve compatibilidad con el esquema de Fase 1.
+- [x] `VIA-006` Implementar una Server Action idempotente de alta que valide entrada, sesión, ausencia de perfil, identidad Clerk y conflicto de username antes de insertar.
+- [x] `VIA-006` Crear `/perfil/completar` como formulario accesible, precargado con identidad segura de Clerk y con estados pendiente, éxito, datos inválidos, conflicto y error temporal.
+- [x] `VIA-006` Hacer que `/perfil` dirija al alta cuando no exista fila y muestre el perfil cuando exista, sin insertar durante el renderizado.
+- [x] `Sin identificador existente` Versionar y ensayar rollback de las restricciones y políticas añadidas.
 
 **Criterios de aceptación**
 
-- [ ] CA-1.1.1 — Una sesión válida sin perfil completa datos válidos y obtiene una única fila vinculada a su `sub`, con username canónico único y rol `user`.
-- [ ] CA-1.1.2 — Username vacío, mal formado, demasiado corto/largo o ya ocupado no crea ni modifica filas y produce un mensaje comprensible.
-- [ ] CA-1.1.3 — Una petición anónima, con identidad ajena o que intenta asignar otro rol no puede crear un perfil.
-- [ ] CA-1.1.4 — Repetir el alta o reenviar el formulario no duplica el perfil ni expone errores internos.
-- [ ] CA-1.1.5 — La migración se aplica y revierte de forma reproducible sin debilitar las garantías de Fase 1.
+- [x] CA-1.1.1 — Una sesión válida sin perfil completa datos válidos y obtiene una única fila vinculada a su `sub`, con username canónico único y rol `user`.
+- [x] CA-1.1.2 — Username vacío, mal formado, demasiado corto/largo o ya ocupado no crea ni modifica filas y produce un mensaje comprensible.
+- [x] CA-1.1.3 — Una petición anónima, con identidad ajena o que intenta asignar otro rol no puede crear un perfil.
+- [x] CA-1.1.4 — Repetir el alta o reenviar el formulario no duplica el perfil ni expone errores internos.
+- [x] CA-1.1.5 — La migración se aplica y revierte de forma reproducible sin debilitar las garantías de Fase 1.
 
 **Pruebas**
 
-- [ ] P-1.1.1 — Unitarias: validar normalización y límites de username, nombre y biografía, incluidos Unicode permitido en texto visible y caracteres inválidos en username (CA-1.1.1, CA-1.1.2).
-- [ ] P-1.1.2 — Integración: ejecutar la Server Action con alta válida, duplicada, username ocupado, datos inválidos, sesión ausente y fallo temporal de Supabase (CA-1.1.1 a CA-1.1.4).
+- [x] P-1.1.1 — Unitarias: validar normalización y límites de username, nombre y biografía, incluidos Unicode permitido en texto visible y caracteres inválidos en username (CA-1.1.1, CA-1.1.2).
+- [x] P-1.1.2 — Integración: ejecutar la Server Action con alta válida, duplicada, username ocupado, datos inválidos, sesión ausente y fallo temporal de Supabase (CA-1.1.1 a CA-1.1.4).
 - [ ] P-1.1.3 — E2E: iniciar sesión sin perfil, llegar a `/perfil/completar`, corregir un error, completar el alta y terminar en `/perfil` (CA-1.1.1, CA-1.1.2).
-- [ ] P-1.1.4 — Seguridad/RLS: probar directamente alta propia, identidad ajena, segundo perfil, rol privilegiado y claims ausentes o malformados (CA-1.1.3, CA-1.1.4).
-- [ ] P-1.1.5 — Migración/rollback: aplicar, inspeccionar restricciones y políticas, revertir y reaplicar comparando el catálogo resultante (CA-1.1.5).
+- [x] P-1.1.4 — Seguridad/RLS: probar directamente alta propia, identidad ajena, segundo perfil, rol privilegiado y claims ausentes o malformados (CA-1.1.3, CA-1.1.4).
+- [x] P-1.1.5 — Migración/rollback: aplicar, inspeccionar restricciones y políticas, revertir y reaplicar comparando el catálogo resultante (CA-1.1.5).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- 2026-10-01: Zod incorporado como dependencia directa; 27 pruebas unitarias e integración validaron normalización, límites, Unicode visible, datos inválidos, alta propia, sesión ausente, idempotencia, conflicto de username, fallo de datos y redacción de logs.
+- 2026-10-01: migración `20261001000100_enforce_profile_contract.sql` aplicada al remoto tras confirmar cero perfiles incompatibles; historial local/remoto sincronizado.
+- 2026-10-01: RLS remota y rollback/reaplicación de todas las migraciones superados en transacciones reversibles; username inválido, bio excesiva, identidad ajena y elevación de rol fueron rechazados.
+- 2026-10-01: integración HTTP con sesión Clerk aislada confirmó 307 de `/perfil` a `/perfil/completar`, formulario autenticado HTTP 200 y rechazo de token expirado; build y escaneo de secretos superados.
+- Pendiente: envío E2E del formulario en navegador, incluida corrección de un dato inválido, antes de completar el sprint.
 
 ### Sprint 1.2 — Perfil propio y perfil público seguro
 
@@ -258,7 +262,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 | Fecha | Sprint | Estado | Evidencia | Notas |
 | --- | --- | --- | --- | --- |
-| 2026-09-29 | 1.1 | Pendiente | — | Primer sprint listo para ejecutar. |
+| 2026-10-01 | 1.1 | En curso | Contrato, migración remota, Server Action, formulario, 27 pruebas, RLS, rollback, build e integración HTTP superados. | Pendiente envío E2E manual del formulario. |
 | 2026-09-29 | 1.2 | Pendiente | — | Depende del alta persistente. |
 | 2026-09-29 | 2.1 | Pendiente | — | Depende de lectura propia y pública. |
 | 2026-09-29 | 2.2 | Pendiente | — | Depende de edición y Storage disponible. |

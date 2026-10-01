@@ -1,26 +1,25 @@
-import { readFile, unlink, writeFile } from "node:fs/promises";
+import { readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
-const migrationPath = join(
-  process.cwd(),
-  "supabase",
-  "migrations",
-  "20260929000100_create_profiles.sql",
-);
-const rollbackPath = join(
-  process.cwd(),
-  "supabase",
-  "rollbacks",
-  "20260929000100_create_profiles.sql",
-);
 const temporaryPath = join(tmpdir(), `via-rollback-test-${process.pid}.sql`);
 
-const [migration, rollback] = await Promise.all([
-  readFile(migrationPath, "utf8"),
-  readFile(rollbackPath, "utf8"),
-]);
+const migrationsDirectory = join(process.cwd(), "supabase", "migrations");
+const rollbacksDirectory = join(process.cwd(), "supabase", "rollbacks");
+const migrationNames = (await readdir(migrationsDirectory))
+  .filter((name) => name.endsWith(".sql"))
+  .sort();
+const rollbackNames = [...migrationNames].reverse();
+
+const migrations = await Promise.all(
+  migrationNames.map((name) => readFile(join(migrationsDirectory, name), "utf8")),
+);
+const rollbacks = await Promise.all(
+  rollbackNames.map((name) => readFile(join(rollbacksDirectory, name), "utf8")),
+);
+const migration = migrations.join("\n");
+const rollback = rollbacks.join("\n");
 
 const testSql = `
 begin;

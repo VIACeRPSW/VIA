@@ -19,6 +19,11 @@ export default async function ProfileWelcomePage() {
   const identity = await resolveWelcomeIdentity(currentUser);
   const identityStatusLabel = getWelcomeIdentityStatusLabel(identity.status);
   const dataConnectionStatus = await getProfileDataStatus();
+
+  if (dataConnectionStatus === "ready") {
+    redirect("/perfil/completar");
+  }
+
   const dataStatusLabel = getProfileDataStatusLabel(dataConnectionStatus);
 
   return (

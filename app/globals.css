@@ -180,6 +180,15 @@ footer p {
 	padding-block: clamp(4rem, 12vh, 8rem);
 }
 
+.profile-form-panel {
+	max-width: 42rem;
+	padding-block: clamp(3rem, 8vh, 6rem);
+}
+
+.profile-form-panel h1 {
+	font-size: 3.5rem;
+}
+
 .welcome-panel h1 {
 	max-width: 14ch;
 }
@@ -218,7 +227,74 @@ footer p {
 	font-weight: 700;
 }
 
+.profile-form {
+	display: grid;
+	gap: 1.25rem;
+	margin-top: 2rem;
+}
+
+.form-field {
+	display: grid;
+	gap: 0.5rem;
+}
+
+.form-field label {
+	font-weight: 700;
+}
+
+.form-field input,
+.form-field textarea {
+	width: 100%;
+	padding: 0.8rem 0.9rem;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+}
+
+.form-field textarea {
+	resize: vertical;
+}
+
+.form-field input:focus-visible,
+.form-field textarea:focus-visible {
+	outline: 3px solid var(--sun);
+	outline-offset: 2px;
+}
+
+.form-field [aria-invalid="true"] {
+	border-color: #a52727;
+}
+
+.field-help,
+.field-error,
+.form-status {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.field-help {
+	color: #47564c;
+}
+
+.field-error {
+	color: #8b1f1f;
+	font-weight: 700;
+}
+
+.form-status {
+	padding: 0.75rem 1rem;
+	border-left: 4px solid var(--sun);
+	background: var(--surface);
+}
+
 @media (max-width: 36rem) {
+	.profile-form-panel h1 {
+		font-size: 2.5rem;
+	}
+
 	.site-header {
 		align-items: stretch;
 		flex-direction: column;

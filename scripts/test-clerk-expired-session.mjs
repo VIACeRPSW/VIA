@@ -26,32 +26,58 @@ if (!user) {
 
 const session = await clerk.sessions.createSession({ userId: user.id });
 
-async function requestProfile(jwt) {
-  return fetch(testUrl, {
+async function requestAuthenticated(url, jwt) {
+  return fetch(url, {
     headers: { Authorization: `Bearer ${jwt}` },
     redirect: "manual",
   });
 }
 
+async function requestProfile(jwt) {
+  return requestAuthenticated(testUrl, jwt);
+}
+
 try {
   const validToken = await clerk.sessions.getToken(session.id, undefined, 60);
   const validResponse = await requestProfile(validToken.jwt);
+  const validLocation = validResponse.headers.get("location");
+  const validProfileResponse = validResponse.status === 200;
+  const validOnboardingRedirect =
+    validResponse.status === 307 &&
+    validLocation?.includes("/perfil/completar");
 
-  if (validResponse.status !== 200) {
+  if (!validProfileResponse && !validOnboardingRedirect) {
     throw new Error(
-      `Valid Clerk token returned HTTP ${validResponse.status}, expected 200`,
+      `Valid Clerk token returned HTTP ${validResponse.status}, expected profile access`,
     );
   }
 
-  const cacheControl = validResponse.headers.get("cache-control") ?? "";
-  const validBody = await validResponse.text();
+  const authenticatedResponse = validOnboardingRedirect
+    ? await requestAuthenticated(new URL(validLocation, testUrl), validToken.jwt)
+    : validResponse;
+  const cacheControl = authenticatedResponse.headers.get("cache-control") ?? "";
+  const validBody = await authenticatedResponse.text();
+
+  if (authenticatedResponse.status !== 200) {
+    throw new Error(
+      `Authenticated destination returned HTTP ${authenticatedResponse.status}`,
+    );
+  }
 
   if (cacheControl.match(/(?:^|,)\s*(?:public|s-maxage)\b/i)) {
     throw new Error("Authenticated profile response permits public caching");
   }
 
-  if (!validBody.includes(">user<")) {
+  if (validProfileResponse && !validBody.includes(">user<")) {
     throw new Error("Authenticated profile response omitted the server role");
+  }
+
+  if (
+    validOnboardingRedirect &&
+    (!validBody.includes("Completa tu perfil") ||
+      !validBody.includes('name="username"'))
+  ) {
+    throw new Error("Authenticated onboarding form was not rendered");
   }
 
   const expiringToken = await clerk.sessions.getToken(session.id, undefined, 60);
