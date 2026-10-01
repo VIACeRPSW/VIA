@@ -36,7 +36,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="inicio" aria-labelledby="hero-title">
-        <p className="eyebrow">Ideas que inspiran aprendizaje</p>
+        <p className="eyebrow">Imágenes que inspiran aprendizaje</p>
         <h1 id="hero-title">Aprender también puede empezar con una imagen.</h1>
         <p className="hero-copy">
           VIA será el lugar donde estudiantes y docentes compartan recursos
