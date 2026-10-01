@@ -102,7 +102,25 @@ as $$
         and table_name = 'profiles'
         and grantee in ('anon', 'authenticated')
     ),
-    'function', pg_get_functiondef('public.set_updated_at()'::regprocedure)
+    'functions', (
+      select jsonb_agg(
+        jsonb_build_object(
+          'name', routine_name,
+          'definition', pg_get_functiondef(
+            to_regprocedure('public.' || routine_name || '()')
+          )
+        )
+        order by routine_name
+      )
+      from information_schema.routines
+      where routine_schema = 'public'
+        and routine_name in (
+          'current_profile_role',
+          'protect_last_admin_delete',
+          'protect_profile_privileged_changes',
+          'set_updated_at'
+        )
+    )
   );
 $$;
 
@@ -119,6 +137,12 @@ begin
 
   if to_regprocedure('public.set_updated_at()') is not null then
     raise exception 'Rollback did not remove public.set_updated_at()';
+  end if;
+
+  if to_regprocedure('public.current_profile_role()') is not null
+    or to_regprocedure('public.protect_last_admin_delete()') is not null
+    or to_regprocedure('public.protect_profile_privileged_changes()') is not null then
+    raise exception 'Rollback left profile authorization functions behind';
   end if;
 end;
 $$;

@@ -36,6 +36,27 @@ Puede moderar recursos según el alcance asignado.
 
 Puede gestionar el sistema.
 
+### Matriz de perfiles
+
+| Operación | `user` | `moderator` | `admin` |
+| --- | --- | --- | --- |
+| Leer perfiles privados | Solo el propio | El propio y perfiles `user` | Todos |
+| Editar datos ordinarios | Solo el propio | El propio y perfiles `user` | Todos |
+| Cambiar roles | No | No | Sí |
+| Eliminar perfiles | No | Solo perfiles `user` | Todos, excepto eliminar el último `admin` |
+| Crear perfiles | El propio con rol inicial `user` | El propio con rol inicial `user` | El propio con rol inicial `user` |
+
+Los campos `id` y `clerk_user_id` son inmutables para todos los roles. Los
+campos ordinarios editables son `username`, `display_name`, `bio` y
+`avatar_url`. Un moderador nunca puede actuar sobre otro moderador ni sobre un
+administrador, y tampoco puede promover usuarios. Solo un administrador puede
+cambiar roles; la base de datos deberá impedir que se elimine o degrade el
+último administrador.
+
+El primer administrador se asignará mediante una operación administrativa
+directa y auditada en PostgreSQL. La interfaz de gestión de roles y usuarios
+permanece reservada para la fase de administración.
+
 ## 4. Protección de rutas
 
 Las rutas privadas deberán requerir autenticación.

@@ -9,10 +9,13 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
     "test:client-secrets": "node scripts/check-client-secrets.mjs",
     "test:clerk:expired-session": "node scripts/test-clerk-expired-session.mjs",
     "test:db:auth-boundary": "node scripts/test-supabase-auth-boundary.mjs",
     "test:db:rls": "supabase db query --linked --file supabase/tests/profiles_rls.sql --agent no --output-format text",
+    "test:db:roles": "supabase db query --linked --file supabase/tests/profile_roles_rls.sql --agent no --output-format text",
     "test:db:rollback": "node scripts/test-supabase-rollback.mjs"
   },
   "engines": {
@@ -27,6 +30,9 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@clerk/backend": "3.20.1",
+    "@clerk/testing": "2.2.39",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -37,5 +43,9 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "@clerk/backend": "3.20.1",
+    "@clerk/shared": "4.36.0"
   }
 }

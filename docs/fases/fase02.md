@@ -26,7 +26,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - Crear, listar o administrar publicaciones; corresponde a Fase 3.
 - Implementar follows, likes, comentarios o compartir; corresponde a Fase 4.
 - Mostrar medallas, rankings o estadísticas reales; corresponde a Fase 6.
-- Asignar, elevar o administrar roles `moderator` y `admin`; corresponde a Fase 7. Esta fase solo conserva y aplica el rol ya autorizado.
+- Crear la interfaz administrativa para asignar o revocar roles; corresponde a Fase 7. Esta fase sí versiona la jerarquía RLS, protege los cambios de rol y realiza el bootstrap auditado del primer `admin`.
 - Crear paneles administrativos o rutas `/admin`.
 - Sincronizar toda la identidad mediante webhooks de Clerk. Se evaluará aparte cuando exista un evento externo que deba reflejarse sin una sesión activa.
 - Configurar Clerk Production, dominio propio o Google OAuth de producción; sigue diferido hasta disponer del dominio.
@@ -37,7 +37,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 | --- | --- | --- |
 | Decisión | Un usuario autenticado sin fila en `profiles` necesita completar datos propios antes de tener perfil funcional. | Redirigir a `/perfil/completar`, precargar solo datos seguros de Clerk y crear la fila mediante una Server Action idempotente; no mutar datos durante el renderizado. |
 | Decisión | El contrato exacto de username no está definido en Fase 0. | Adoptar username canónico en minúsculas, de 3 a 30 caracteres ASCII, compuesto por letras, números y guion bajo; aplicar la misma regla en validador, migración y mensajes. Documentar cualquier cambio antes de implementarlo. |
-| Decisión | `role` existe en `profiles`, pero su administración pertenece a Fase 7. | Mantener `user` como valor inicial, mostrar el rol como dato de solo lectura y bloquear cambios de rol tanto en acciones como mediante privilegios y RLS. |
+| Decisión | La jerarquía de perfiles debe aplicarse antes de crear el panel de administración. | `user` edita solo sus campos propios; `moderator` gestiona campos y eliminación solo de perfiles `user`; `admin` gestiona todos los perfiles y roles. ID e identidad Clerk son inmutables y el último admin no puede eliminarse ni degradarse. La UI administrativa permanece en Fase 7. |
 | Riesgo | La unicidad de username puede sufrir carreras entre validación e inserción/edición. | Tratar la restricción única de PostgreSQL como autoridad y convertir su error en un resultado controlado sin detalles internos. |
 | Riesgo | Un perfil público podría exponer `clerk_user_id` u otros campos internos. | Diseñar una proyección pública explícita con columnas permitidas; probar el acceso directo como anónimo y autenticado. |
 | Riesgo | Un archivo con MIME declarado falso, tamaño excesivo o ruta ajena podría entrar en Storage. | Validar en servidor contenido, tipo y tamaño; usar rutas propiedad del `sub` autenticado y políticas de Storage de mínimo privilegio. |
@@ -55,6 +55,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] Contrato de campos de perfil y username aplicado en TypeScript y PostgreSQL.
 - [x] Flujo privado `/perfil/completar` para crear el perfil persistente.
 - [x] Migración incremental, RLS y rollback para el alta propia.
+- [x] Jerarquía RLS para `user`, `moderator` y `admin`, con primer administrador auditado.
 
 **Tareas**
 
@@ -64,6 +65,8 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] `VIA-006` Crear `/perfil/completar` como formulario accesible, precargado con identidad segura de Clerk y con estados pendiente, éxito, datos inválidos, conflicto y error temporal.
 - [x] `VIA-006` Hacer que `/perfil` dirija al alta cuando no exista fila y muestre el perfil cuando exista, sin insertar durante el renderizado.
 - [x] `Sin identificador existente` Versionar y ensayar rollback de las restricciones y políticas añadidas.
+- [x] `Sin identificador existente` Versionar funciones, trigger, privilegios y políticas RLS de la matriz jerárquica de perfiles.
+- [x] `Sin identificador existente` Asignar mediante SQL auditado el primer rol `admin` al único perfil existente, sin versionar su identidad.
 
 **Criterios de aceptación**
 
@@ -72,14 +75,17 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] CA-1.1.3 — Una petición anónima, con identidad ajena o que intenta asignar otro rol no puede crear un perfil.
 - [x] CA-1.1.4 — Repetir el alta o reenviar el formulario no duplica el perfil ni expone errores internos.
 - [x] CA-1.1.5 — La migración se aplica y revierte de forma reproducible sin debilitar las garantías de Fase 1.
+- [x] CA-1.1.6 — `user` solo modifica sus campos propios; `moderator` gestiona únicamente perfiles `user`; `admin` gestiona perfiles y roles de todos.
+- [x] CA-1.1.7 — Ningún rol modifica `id` o `clerk_user_id`, y el último `admin` no puede degradarse ni eliminarse.
 
 **Pruebas**
 
 - [x] P-1.1.1 — Unitarias: validar normalización y límites de username, nombre y biografía, incluidos Unicode permitido en texto visible y caracteres inválidos en username (CA-1.1.1, CA-1.1.2).
 - [x] P-1.1.2 — Integración: ejecutar la Server Action con alta válida, duplicada, username ocupado, datos inválidos, sesión ausente y fallo temporal de Supabase (CA-1.1.1 a CA-1.1.4).
-- [ ] P-1.1.3 — E2E: iniciar sesión sin perfil, llegar a `/perfil/completar`, corregir un error, completar el alta y terminar en `/perfil` (CA-1.1.1, CA-1.1.2).
+- [x] P-1.1.3 — E2E: iniciar sesión sin perfil, llegar a `/perfil/completar`, corregir un error, completar el alta y terminar en `/perfil` (CA-1.1.1, CA-1.1.2).
 - [x] P-1.1.4 — Seguridad/RLS: probar directamente alta propia, identidad ajena, segundo perfil, rol privilegiado y claims ausentes o malformados (CA-1.1.3, CA-1.1.4).
 - [x] P-1.1.5 — Migración/rollback: aplicar, inspeccionar restricciones y políticas, revertir y reaplicar comparando el catálogo resultante (CA-1.1.5).
+- [x] P-1.1.6 — Seguridad/RLS: ejecutar la matriz directa como `user`, `moderator` y `admin`, incluidos objetivos de cada rol, cambio de rol, identidad inmutable, eliminación y protección del último admin (CA-1.1.6, CA-1.1.7).
 
 **Evidencia de cierre**
 
@@ -87,7 +93,11 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - 2026-10-01: migración `20261001000100_enforce_profile_contract.sql` aplicada al remoto tras confirmar cero perfiles incompatibles; historial local/remoto sincronizado.
 - 2026-10-01: RLS remota y rollback/reaplicación de todas las migraciones superados en transacciones reversibles; username inválido, bio excesiva, identidad ajena y elevación de rol fueron rechazados.
 - 2026-10-01: integración HTTP con sesión Clerk aislada confirmó 307 de `/perfil` a `/perfil/completar`, formulario autenticado HTTP 200 y rechazo de token expirado; build y escaneo de secretos superados.
-- Pendiente: envío E2E del formulario en navegador, incluida corrección de un dato inválido, antes de completar el sprint.
+- 2026-10-01: migración `20261001000200_add_profile_role_policies.sql` aplicada al remoto; matriz RLS directa superada para lectura, edición, eliminación, roles superiores, cambio de rol, identidad inmutable y último admin. Rollback/reaplicación conservó el catálogo exacto.
+- 2026-10-01: `admin_via` promovido de `user` a primer `admin` mediante transacción administrativa con cero admins como precondición y exactamente un admin como postcondición; la identidad no se incluyó en la migración.
+- 2026-10-01: E2E Playwright con usuario Clerk efímero superado en Chromium: sesión sin perfil, redirección a `/perfil/completar`, rechazo accesible de username inválido, corrección, creación con rol `user`, llegada a `/perfil` y limpieza final en Supabase y Clerk.
+- 2026-10-01: regresión final superada con 27 pruebas Vitest, TypeScript estricto, ESLint, build de producción y E2E; `@clerk/testing` 2.2.39 y `@playwright/test` 1.63.0 quedaron resueltos sin duplicados, y Clerk y Supabase terminaron con cero fixtures E2E.
+- Sprint 1.1 completado; Sprint 1.2 desbloqueado.
 
 ### Sprint 1.2 — Perfil propio y perfil público seguro
 
@@ -262,8 +272,8 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 | Fecha | Sprint | Estado | Evidencia | Notas |
 | --- | --- | --- | --- | --- |
-| 2026-10-01 | 1.1 | En curso | Contrato, migración remota, Server Action, formulario, 27 pruebas, RLS, rollback, build e integración HTTP superados. | Pendiente envío E2E manual del formulario. |
-| 2026-09-29 | 1.2 | Pendiente | — | Depende del alta persistente. |
+| 2026-10-01 | 1.1 | Completado | Contrato, migraciones remotas, Server Action, formulario, 27 pruebas, E2E Playwright, matriz jerárquica RLS, bootstrap admin, rollback, build e integración HTTP superados. | Usuario y perfil E2E eliminados al finalizar. |
+| 2026-10-01 | 1.2 | Desbloqueado | — | Siguiente incremento: consultas tipadas y proyección pública segura. |
 | 2026-09-29 | 2.1 | Pendiente | — | Depende de lectura propia y pública. |
 | 2026-09-29 | 2.2 | Pendiente | — | Depende de edición y Storage disponible. |
 | 2026-09-29 | 3.1 | Pendiente | — | Cierre integral tras completar los hitos anteriores. |
