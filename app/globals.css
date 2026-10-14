@@ -173,6 +173,64 @@ footer p {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.profile-details {
+	max-width: 48rem;
+	padding-block: clamp(2rem, 6vh, 4rem);
+}
+
+.profile-identity {
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+}
+
+.profile-identity > div {
+	min-width: 0;
+}
+
+.profile-details h1 {
+	max-width: none;
+	font-size: clamp(2rem, 6vw, 3.5rem);
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+}
+
+.profile-avatar {
+	width: 6rem;
+	height: 6rem;
+	flex-shrink: 0;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.profile-avatar-empty {
+	display: grid;
+	place-items: center;
+	background: var(--leaf);
+	color: white;
+	font-size: 2rem;
+}
+
+.profile-username {
+	overflow-wrap: anywhere;
+}
+
+.account-summary .profile-bio {
+	white-space: pre-wrap;
+	font-weight: 400;
+}
+
+.profile-future {
+	margin-top: 2rem;
+	line-height: 1.6;
+}
+
+.profile-page a:focus-visible {
+	outline: 3px solid var(--leaf);
+	outline-offset: 4px;
 }
 
 .welcome-panel {
@@ -187,6 +245,10 @@ footer p {
 
 .profile-form-panel h1 {
 	font-size: 3.5rem;
+}
+
+.profile-form-panel > .button {
+	display: inline-block;
 }
 
 .welcome-panel h1 {
@@ -291,6 +353,11 @@ footer p {
 }
 
 @media (max-width: 36rem) {
+	.profile-header,
+	.profile-identity {
+		flex-wrap: wrap;
+	}
+
 	.profile-form-panel h1 {
 		font-size: 2.5rem;
 	}

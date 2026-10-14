@@ -16,6 +16,7 @@
     "test:db:auth-boundary": "node scripts/test-supabase-auth-boundary.mjs",
     "test:db:rls": "supabase db query --linked --file supabase/tests/profiles_rls.sql --agent no --output-format text",
     "test:db:roles": "supabase db query --linked --file supabase/tests/profile_roles_rls.sql --agent no --output-format text",
+    "test:db:public-profiles": "supabase db query --linked --file supabase/tests/public_profiles_rls.sql --agent no --output-format text",
     "test:db:rollback": "node scripts/test-supabase-rollback.mjs"
   },
   "engines": {

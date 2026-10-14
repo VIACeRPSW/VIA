@@ -93,6 +93,38 @@ previews y revisar esta decisión antes de almacenar datos reales.
 
 No escribir valores reales en documentación, commits, incidencias o capturas.
 
+## Consulta de perfiles
+
+`/perfil` muestra el perfil persistente de la sesión Clerk y deriva a
+`/perfil/completar` cuando todavía no existe. `/usuario/[username]` permite
+visitar un perfil público sin iniciar sesión, usando el username canónico
+en minúsculas; nombres inexistentes o no canónicos muestran el estado 404.
+Un fallo del servicio se distingue de un perfil inexistente.
+
+La consulta pública usa la función PostgreSQL `get_public_profile`, que
+devuelve únicamente username, nombre visible, biografía, avatar y rol.
+No concede lectura anónima de `profiles` ni expone identificadores Clerk.
+La migración y su rollback están versionados en `supabase/`.
+
+`/perfil/editar` permite cambiar username, nombre visible y biografía del
+perfil propio. La acción comprueba sesión y propiedad en cada envío,
+normaliza los campos y actualiza los tres de forma atómica. Un username
+ocupado conserva los datos anteriores y muestra un error de campo.
+Identidad, rol, avatar y timestamps no forman parte de la entrada editable.
+Tras cambiar username se actualizan los enlaces y la URL anterior deja de
+encontrar el perfil.
+
+La subida de avatar sigue pendiente en Fase 2. Por ahora solo se
+renderizan referencias de avatar público del bucket `avatars` en el origen
+Supabase configurado, sin URLs externas ni firmadas; se usa un fallback
+accesible cuando no hay avatar. La optimización y el contrato definitivo de
+Storage se resolverán en el Sprint 2.2.
+
+El formulario de edición tiene contador de biografía, estado de guardado y
+foco en el error o resultado. Su revisión manual con lector de pantalla
+sigue pendiente; no se considera cerrado el Sprint 2.1 solo por sus pruebas
+automatizadas.
+
 ## Comprobaciones
 
 ```bash
@@ -103,5 +135,15 @@ npm run build
 npm run test:client-secrets
 npm run test:db:auth-boundary
 npm run test:db:rls
+npm run test:db:public-profiles
 npm run test:db:rollback
 ```
+
+`test:db:public-profiles` prueba la proyección pública, el aislamiento de
+la tabla privada y el rollback/reaplicación de la función dentro de una
+transacción que se revierte. Requiere un proyecto enlazado y la migración
+`add_public_profile_lookup` aplicada; no conserva perfiles de prueba.
+
+`test:db:rls` también comprueba edición propia de tres campos, atomicidad
+frente a un username ocupado y rechazo de escritura ajena, anónima o en
+columnas protegidas. Sus fixtures se eliminan mediante rollback.

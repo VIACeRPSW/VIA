@@ -30,3 +30,15 @@ export async function createServerSupabaseClient() {
     },
   });
 }
+
+export function createPublicSupabaseClient() {
+  const { url, publishableKey } = getSupabaseConfig();
+
+  return createClient(url, publishableKey, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+  });
+}

@@ -162,6 +162,88 @@ begin
 end;
 $$;
 
-select 'profiles RLS tests passed' as result;
+do $$
+declare
+  updated_rows integer;
+begin
+  update public.profiles
+  set username = 'via_rls_owner_edited',
+    display_name = 'Edited owner',
+    bio = 'Edited biography'
+  where clerk_user_id = 'via_rls_owner_test';
+  get diagnostics updated_rows = row_count;
+  if updated_rows <> 1 then
+    raise exception 'Expected own three-field update to affect exactly one row';
+  end if;
+
+  begin
+    update public.profiles
+    set username = 'via_rls_other_test', display_name = 'Must not persist', bio = 'Must not persist'
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected occupied username to reject the entire update';
+  exception
+    when unique_violation then null;
+  end;
+
+  if not exists (
+    select 1 from public.profiles
+    where clerk_user_id = 'via_rls_owner_test'
+      and username = 'via_rls_owner_edited'
+      and display_name = 'Edited owner'
+      and bio = 'Edited biography'
+  ) then
+    raise exception 'Failed update changed persisted profile fields';
+  end if;
+
+  update public.profiles set bio = 'Forbidden'
+  where clerk_user_id = 'via_rls_other_test';
+  get diagnostics updated_rows = row_count;
+  if updated_rows <> 0 then
+    raise exception 'User updated another profile';
+  end if;
+
+  begin
+    update public.profiles set id = gen_random_uuid()
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected explicit ID update to be denied';
+  exception
+    when insufficient_privilege then null;
+  end;
+
+  begin
+    update public.profiles set created_at = now()
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected explicit creation timestamp update to be denied';
+  exception
+    when insufficient_privilege then null;
+  end;
+
+  begin
+    update public.profiles set updated_at = now()
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected explicit update timestamp write to be denied';
+  exception
+    when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+reset role;
+set local role anon;
+select set_config('request.jwt.claims', '{}', true);
+
+do $$
+begin
+  begin
+    update public.profiles set display_name = 'Anonymous edit'
+    where clerk_user_id = 'via_rls_owner_test';
+    raise exception 'Expected anonymous profile update to be denied';
+  exception
+    when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+select 'profiles RLS and atomic editing tests passed' as result;
 
 rollback;

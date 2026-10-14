@@ -47,6 +47,24 @@ toggleFollow(userId)
 updateProfile(data)
 ```
 
+La implementación de Fase 2 expone `updateProfileAction(previousState,
+formData)` y reutiliza el contrato de alta para username, nombre visible y
+biografía. El estado previo no es una fuente de identidad ni autorización.
+La acción obtiene la sesión Clerk y la fila propia en servidor, y actualiza
+solo esos tres campos filtrando por ID persistido y `clerk_user_id`.
+
+Identificador, identidad Clerk, rol, avatar y timestamps se ignoran si
+aparecen como campos adicionales: no son parte de esta operación. El rol
+almacenado se muestra como solo lectura; la matriz RLS existente se conserva.
+No se implementa edición administrativa ni subida de avatar en esta acción.
+
+El resultado distingue éxito, errores de campo, username ocupado, sesión
+no disponible y fallo temporal, conservando los valores del formulario.
+La restricción única de PostgreSQL resuelve conflictos y carreras; nunca
+se informa éxito cuando la actualización no confirma la fila propia.
+Después de guardar se revalidan perfil, edición y URLs públicas anterior
+y nueva. El cambio de username no crea un alias para la dirección anterior.
+
 ### Reports
 
 ``` text

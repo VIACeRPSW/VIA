@@ -1,30 +1,19 @@
 import { SignOutButton, UserButton } from "@clerk/nextjs";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  getWelcomeIdentityStatusLabel,
-  resolveWelcomeIdentity,
-} from "@/lib/clerk/welcome-identity";
-import { getProfileDataStatus } from "@/lib/supabase/profile-status.server";
-import { getProfileDataStatusLabel } from "@/lib/supabase/profile-status";
+import { ProfileDetails } from "@/components/profile/ProfileDetails";
+import { getOwnProfile } from "@/lib/profiles/read-profile.server";
 
-export default async function ProfileWelcomePage() {
-  const { isAuthenticated } = await auth();
+export default async function ProfilePage() {
+  const result = await getOwnProfile();
 
-  if (!isAuthenticated) {
+  if (result.status === "unauthorized") {
     redirect("/sign-in");
   }
 
-  const identity = await resolveWelcomeIdentity(currentUser);
-  const identityStatusLabel = getWelcomeIdentityStatusLabel(identity.status);
-  const dataConnectionStatus = await getProfileDataStatus();
-
-  if (dataConnectionStatus === "ready") {
+  if (result.status === "missing") {
     redirect("/perfil/completar");
   }
-
-  const dataStatusLabel = getProfileDataStatusLabel(dataConnectionStatus);
 
   return (
     <main className="profile-page">
@@ -42,32 +31,24 @@ export default async function ProfileWelcomePage() {
         </div>
       </header>
 
-      <section className="welcome-panel" aria-labelledby="welcome-title">
-        <p className="eyebrow">Tu bienvenida en VIA</p>
-        <h1 id="welcome-title">Hola, {identity.displayName}.</h1>
-        <p className="welcome-copy">
-          Tu identidad está autenticada con Clerk. El perfil editable de VIA
-          se habilitará en la siguiente fase.
-        </p>
-        <dl className="account-summary">
-          <div>
-            <dt>Cuenta</dt>
-            <dd>{identity.email}</dd>
-          </div>
-          <div>
-            <dt>Identidad Clerk</dt>
-            <dd>{identityStatusLabel}</dd>
-          </div>
-          <div>
-            <dt>Categoría inicial</dt>
-            <dd>user</dd>
-          </div>
-          <div>
-            <dt>Datos de VIA</dt>
-            <dd>{dataStatusLabel}</dd>
-          </div>
-        </dl>
-      </section>
+      {result.status === "found" ? (
+        <>
+          <ProfileDetails profile={result.profile} />
+          <nav className="profile-actions" aria-label="Acciones de mi perfil">
+            <Link className="button button-primary" href="/perfil/editar">Editar mi perfil</Link>
+            <Link className="button button-secondary" href={`/usuario/${result.profile.username}`}>
+              Ver perfil público
+            </Link>
+          </nav>
+        </>
+      ) : (
+        <section className="profile-form-panel" aria-labelledby="profile-error-title">
+          <h1 id="profile-error-title">Perfil no disponible</h1>
+          <p className="form-status" role="status">
+            No pudimos cargar tu perfil. Inténtalo de nuevo más tarde.
+          </p>
+        </section>
+      )}
     </main>
   );
 }

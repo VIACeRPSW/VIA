@@ -105,36 +105,46 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 **Alcance**
 
-- [ ] `/perfil` convertido en vista persistente del usuario autenticado.
-- [ ] `/usuario/[username]` disponible como perfil público.
-- [ ] Proyección pública y permisos de lectura mínimos versionados.
+- [x] `/perfil` convertido en vista persistente del usuario autenticado.
+- [x] `/usuario/[username]` disponible como perfil público.
+- [x] Proyección pública y permisos de lectura mínimos versionados.
 
 **Tareas**
 
-- [ ] `VIA-006` Centralizar consultas de perfil propio y público en `lib/`, con tipos separados que impidan mezclar campos internos y públicos.
-- [ ] `VIA-006` Crear una proyección pública de solo username, nombre visible, biografía, avatar y rol, sin exponer `clerk_user_id`.
-- [ ] `VIA-006` Implementar `/perfil` y `/usuario/[username]` como Server Components con estados de carga, perfil inexistente y servicio no disponible.
-- [ ] `VIA-006` Representar publicaciones, seguidores, seguidos y medallas como secciones no activas o estados vacíos honestos, sin consultas ni métricas ficticias.
-- [ ] `Sin identificador existente` Diseñar ambas vistas para teclado, lector de pantalla, móvil, tablet y escritorio.
+- [x] `VIA-006` Centralizar consultas de perfil propio y público en `lib/`, con tipos separados que impidan mezclar campos internos y públicos.
+- [x] `VIA-006` Crear una proyección pública de solo username, nombre visible, biografía, avatar y rol, sin exponer `clerk_user_id`.
+- [x] `VIA-006` Implementar `/perfil` y `/usuario/[username]` como Server Components con estados de carga, perfil inexistente y servicio no disponible.
+- [x] `VIA-006` Representar publicaciones, seguidores, seguidos y medallas como secciones no activas o estados vacíos honestos, sin consultas ni métricas ficticias.
+- [x] `Sin identificador existente` Diseñar ambas vistas para teclado, lector de pantalla, móvil, tablet y escritorio.
 
 **Criterios de aceptación**
 
-- [ ] CA-1.2.1 — El propietario ve sus datos persistentes correctos en `/perfil` y un visitante ve solo campos públicos en `/usuario/[username]`.
-- [ ] CA-1.2.2 — Un username inexistente o no canónico devuelve un estado controlado y no filtra si existe un `clerk_user_id` concreto.
-- [ ] CA-1.2.3 — Ninguna consulta pública, respuesta o bundle cliente contiene identificadores Clerk, secretos o campos no permitidos.
-- [ ] CA-1.2.4 — Las vistas son semánticas, navegables por teclado y no presentan solapamientos en móvil ni escritorio.
+- [x] CA-1.2.1 — El propietario ve sus datos persistentes correctos en `/perfil` y un visitante ve solo campos públicos en `/usuario/[username]`.
+- [x] CA-1.2.2 — Un username inexistente o no canónico devuelve un estado controlado y no filtra si existe un `clerk_user_id` concreto.
+- [x] CA-1.2.3 — Ninguna consulta pública, respuesta o bundle cliente contiene identificadores Clerk, secretos o campos no permitidos.
+- [x] CA-1.2.4 — Las vistas son semánticas, navegables por teclado y no presentan solapamientos en móvil ni escritorio.
 
 **Pruebas**
 
-- [ ] P-1.2.1 — Unitarias: probar el mapeo de fila interna a perfil público y la exclusión estructural de campos internos (CA-1.2.1, CA-1.2.3).
-- [ ] P-1.2.2 — Integración: consultar perfil propio, perfil público existente, username inexistente y fallo de datos, verificando resultados controlados (CA-1.2.1, CA-1.2.2).
-- [ ] P-1.2.3 — E2E: visitar perfil propio autenticado y perfil público como visitante, incluidos estado inexistente y navegación responsive (CA-1.2.1, CA-1.2.2, CA-1.2.4).
-- [ ] P-1.2.4 — Seguridad/RLS: consultar directamente la proyección pública como anónimo y autenticado, y confirmar que la tabla base y `clerk_user_id` no quedan expuestos (CA-1.2.3).
-- [ ] P-1.2.5 — Accesibilidad/responsive: comprobar jerarquía, texto alternativo del avatar, foco, contraste, zoom y vistas móvil/escritorio (CA-1.2.4).
+- [x] P-1.2.1 — Unitarias: probar el mapeo de fila interna a perfil público y la exclusión estructural de campos internos (CA-1.2.1, CA-1.2.3).
+- [x] P-1.2.2 — Integración: consultar perfil propio, perfil público existente, username inexistente y fallo de datos, verificando resultados controlados (CA-1.2.1, CA-1.2.2).
+- [x] P-1.2.3 — E2E: visitar perfil propio autenticado y perfil público como visitante, incluidos estado inexistente y navegación responsive (CA-1.2.1, CA-1.2.2, CA-1.2.4).
+- [x] P-1.2.4 — Seguridad/RLS: consultar directamente la proyección pública como anónimo y autenticado, y confirmar que la tabla base y `clerk_user_id` no quedan expuestos (CA-1.2.3).
+- [x] P-1.2.5 — Accesibilidad/responsive: comprobar jerarquía, texto alternativo del avatar, foco, contraste, zoom y vistas móvil/escritorio (CA-1.2.4).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- 2026-10-14: Supabase MCP autenticado comprobado mediante consultas de migraciones y políticas; migración [add_public_profile_lookup](../../supabase/migrations/20261014173824_add_public_profile_lookup.sql) aplicada y numeración local alineada con el historial remoto.
+- Proyección implementada como RPC SQL `get_public_profile(text)`, `security definer` con `search_path` vacío, sin SQL dinámico ni privilegios nuevos sobre `profiles`. Solo devuelve los cinco campos aprobados y admite un username canónico exacto. El cliente público no obtiene tokens Clerk.
+- Consultas propias filtradas por la identidad autenticada, tipos privados/públicos separados y validación de respuestas; estados de carga, 404 público, redirección al alta y errores temporales diferenciados. Logs sin mensajes internos, identidades ni URLs de avatar.
+- Pruebas unitarias/de integración cubren mapeo, identidad, límites de username, configuración, fallo de datos, rol desconocido, estados de ruta y referencias de avatar. E2E Chromium comprueba alta, persistencia tras recarga, navegación por teclado, visitante sin sesión, ausencia de identidad/email en HTML público y rechazo de acceso privado anónimo.
+- [Prueba SQL](../../supabase/tests/public_profiles_rls.sql) superada contra el remoto: lectura anónima/autenticada de exactamente cinco columnas, rechazo de lectura/escritura privada anónima, aislamiento propio/ajeno y ensayo de rollback/reaplicación dentro de una transacción revertida.
+- Responsive automatizado comprobado en 375, 768 y 1280 px, árbol accesible, avatar con nombre accesible, foco visible, ampliación de texto al 200 % y contraste del texto destacado de al menos 4,5:1. La revisión manual se registra por separado y no se infiere del árbol accesible automatizado.
+- 2026-10-14: el usuario confirma sin incidencias la revisión manual solicitada («todo perfecto»). Aporta cuatro capturas: perfil propio, perfil público, perfil público en InPrivate (tercera imagen, confirmado expresamente) y perfil inexistente. La confirmación del lector de pantalla procede del reporte del usuario, no de las capturas; no se registró su nombre ni versión.
+- La cuarta captura permitió detectar un solapamiento menor del botón de retorno con el mensaje 404. Corregido el flujo de la caja del enlace; una regresión E2E específica comprobó separación vertical, ausencia de desbordamientos y retorno por teclado en 375, 768 y 1280 px. Typecheck y lint del test superados.
+- Regresión final del 2026-10-14: 68 pruebas Vitest, E2E Chromium, TypeScript estricto, ESLint, build de producción y escaneo de secretos superados. `test:db:rls` y `test:db:public-profiles` pasaron. La comprobación final por MCP confirmó cero perfiles de prueba residuales, ausencia de lectura anónima sobre la tabla base y disponibilidad de la RPC pública.
+- Edición, subida de avatar y cierre integral no se adelantan. Las imágenes existentes solo admiten referencias públicas de `avatars` del origen configurado, sin optimización hasta definir Storage en 2.2.
+- Sprint 1.2 completado con pruebas automatizadas y confirmación manual del usuario; Sprint 2.1 desbloqueado. La Fase 2 sigue en curso.
 
 ## Hito 2 — Perfil editable con avatar
 
@@ -144,37 +154,46 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 **Alcance**
 
-- [ ] Formulario privado `/perfil/editar` con valores actuales.
-- [ ] Server Action de actualización propia con resultados controlados.
-- [ ] RLS y privilegios de columnas verificados para edición.
+- [x] Formulario privado `/perfil/editar` con valores actuales.
+- [x] Server Action de actualización propia con resultados controlados.
+- [x] RLS y privilegios de columnas verificados para edición.
 
 **Tareas**
 
-- [ ] `VIA-007` Implementar la Server Action `updateProfile` con validación compartida, autenticación, propiedad, detección de username ocupado y revalidación de rutas afectadas.
-- [ ] `VIA-007` Crear el formulario de edición con labels, ayuda contextual, contador de biografía y estados pendiente, éxito, error de campo, conflicto y error temporal.
-- [ ] `VIA-007` Mantener `clerk_user_id`, `role`, marcas de tiempo e identificador fuera de la entrada editable.
-- [ ] `VIA-007` Actualizar de forma coherente la navegación cuando cambie el username y evitar referencias públicas obsoletas.
-- [ ] `Sin identificador existente` Redactar logs y errores de PostgreSQL sin valores de perfil ni detalles internos.
+- [x] `VIA-007` Implementar la Server Action `updateProfile` con validación compartida, autenticación, propiedad, detección de username ocupado y revalidación de rutas afectadas.
+- [x] `VIA-007` Crear el formulario de edición con labels, ayuda contextual, contador de biografía y estados pendiente, éxito, error de campo, conflicto y error temporal.
+- [x] `VIA-007` Mantener `clerk_user_id`, `role`, marcas de tiempo e identificador fuera de la entrada editable.
+- [x] `VIA-007` Actualizar de forma coherente la navegación cuando cambie el username y evitar referencias públicas obsoletas.
+- [x] `Sin identificador existente` Redactar logs y errores de PostgreSQL sin valores de perfil ni detalles internos.
 
 **Criterios de aceptación**
 
-- [ ] CA-2.1.1 — El propietario actualiza campos permitidos válidos y ve el resultado en su perfil privado y público.
-- [ ] CA-2.1.2 — Datos inválidos o username ocupado conservan los datos previos y muestran errores asociados al campo correcto.
-- [ ] CA-2.1.3 — Una sesión anónima o un usuario distinto no puede editar el perfil; ningún usuario ordinario puede cambiar `role` o `clerk_user_id`.
-- [ ] CA-2.1.4 — Un fallo de Supabase produce un resultado recuperable, un log redactado y ninguna actualización parcial.
+- [x] CA-2.1.1 — El propietario actualiza campos permitidos válidos y ve el resultado en su perfil privado y público.
+- [x] CA-2.1.2 — Datos inválidos o username ocupado conservan los datos previos y muestran errores asociados al campo correcto.
+- [x] CA-2.1.3 — Una sesión anónima o un usuario distinto no puede editar el perfil; ningún usuario ordinario puede cambiar `role` o `clerk_user_id`.
+- [x] CA-2.1.4 — Un fallo de Supabase produce un resultado recuperable, un log redactado y ninguna actualización parcial.
 - [ ] CA-2.1.5 — El formulario es usable con teclado, lector de pantalla y controles táctiles en móvil y escritorio.
 
 **Pruebas**
 
-- [ ] P-2.1.1 — Unitarias: probar transformación de formulario, normalización, límites y mapeo seguro de conflictos y errores (CA-2.1.1, CA-2.1.2, CA-2.1.4).
-- [ ] P-2.1.2 — Integración: actualizar correctamente, repetir sin cambios, usar username ocupado, enviar datos inválidos, perder sesión y simular fallo de datos (CA-2.1.1 a CA-2.1.4).
-- [ ] P-2.1.3 — E2E: editar nombre, bio y username; comprobar la URL pública nueva, persistencia tras recarga y mensajes de un intento inválido (CA-2.1.1, CA-2.1.2).
-- [ ] P-2.1.4 — Seguridad/RLS: intentar actualización directa de otro perfil, reasignación de identidad, elevación de rol y escritura de columnas no concedidas (CA-2.1.3).
+- [x] P-2.1.1 — Unitarias: probar transformación de formulario, normalización, límites y mapeo seguro de conflictos y errores (CA-2.1.1, CA-2.1.2, CA-2.1.4).
+- [x] P-2.1.2 — Integración: actualizar correctamente, repetir sin cambios, usar username ocupado, enviar datos inválidos, perder sesión y simular fallo de datos (CA-2.1.1 a CA-2.1.4).
+- [x] P-2.1.3 — E2E: editar nombre, bio y username; comprobar la URL pública nueva, persistencia tras recarga y mensajes de un intento inválido (CA-2.1.1, CA-2.1.2).
+- [x] P-2.1.4 — Seguridad/RLS: intentar actualización directa de otro perfil, reasignación de identidad, elevación de rol y escritura de columnas no concedidas (CA-2.1.3).
 - [ ] P-2.1.5 — Accesibilidad/responsive: verificar labels, descripción de errores, foco tras envío, estado pendiente y ausencia de desbordamientos (CA-2.1.5).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- 2026-10-14: [acción de actualización propia](../../actions/profiles.ts), [servicio tipado](../../lib/profiles/update-profile.ts), [formulario](../../components/profile/EditProfileForm.tsx) y [ruta privada](../../app/perfil/editar/page.tsx) implementados. Se reutilizan el contrato de alta, sus mensajes, límites y normalización; el formulario de alta conserva su comportamiento.
+- La sesión se comprueba en cada acción. El ID y username anterior se obtienen de la fila propia en servidor; el `UPDATE` filtra por ese ID y el `sub` autenticado y modifica únicamente username, nombre y biografía en una sola sentencia. Los campos privilegiados y el estado previo enviados por el cliente no deciden identidad, destino ni permisos.
+- PostgreSQL mantiene la autoridad sobre la unicidad; un conflicto conserva los datos anteriores y se asocia al campo username. Se distingue sesión no disponible, perfil ausente, respuesta inválida, error de configuración y fallo de red, incluidos errores sin código y HTTP 0. Nunca se informa éxito sin confirmar la fila propia actualizada.
+- Tras guardar se revalidan `/perfil`, `/perfil/editar` y las direcciones públicas anterior y nueva. Repetir el guardado sin cambios sigue siendo válido. Al cambiar username, la dirección anterior queda como perfil inexistente, sin alias ni redirección añadidos.
+- Regresión local: **107 pruebas Vitest**, TypeScript estricto, ESLint sin advertencias, build de producción y escaneo de secretos superados.
+- **Dos E2E Chromium superados**: alta y lectura existentes, edición válida/inválida, username ocupado con fixture independiente, persistencia tras recarga, reenvío sin cambios, URL pública nueva/anterior y conservación del rol `user` al manipular campos de identidad/rol. El segundo caso conserva la regresión del estado 404.
+- E2E comprueba contador de biografía, labels, foco en username tras errores y en mensaje tras éxito, bloqueo de campos/botón y anuncio durante un guardado retenido de forma controlada, y ausencia de desbordamientos a 375, 768 y 1280 px.
+- [RLS directa](../../supabase/tests/profiles_rls.sql) superada contra el remoto en una transacción revertida: actualización propia de tres campos, conflicto de username atómico, rechazo de modificación ajena para un usuario ordinario, rol, identidad, ID, timestamps y petición anónima. Las políticas jerárquicas preexistentes no se modificaron; no se requirió una nueva migración.
+- Limpieza final comprobada por Supabase MCP: **cero perfiles de prueba residuales**. Los E2E eliminaron el usuario Clerk efímero y los dos perfiles de prueba.
+- **Pendiente:** revisión manual con lector de pantalla del nuevo formulario de edición (CA-2.1.5/P-2.1.5). La confirmación de Sprint 1.2 no se extrapola a esta interfaz nueva. Sprint 2.1 queda en validación, sin adelantar avatar ni cierre integral.
 
 ### Sprint 2.2 — Avatar propio en Supabase Storage
 
@@ -273,7 +292,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 | Fecha | Sprint | Estado | Evidencia | Notas |
 | --- | --- | --- | --- | --- |
 | 2026-10-01 | 1.1 | Completado | Contrato, migraciones remotas, Server Action, formulario, 27 pruebas, E2E Playwright, matriz jerárquica RLS, bootstrap admin, rollback, build e integración HTTP superados. | Usuario y perfil E2E eliminados al finalizar. |
-| 2026-10-01 | 1.2 | Desbloqueado | — | Siguiente incremento: consultas tipadas y proyección pública segura. |
-| 2026-09-29 | 2.1 | Pendiente | — | Depende de lectura propia y pública. |
+| 2026-10-14 | 1.2 | Completado | Consultas/vistas propias y públicas, RPC remota, pruebas locales, E2E responsive, permisos directos, rollback transaccional y revisión manual confirmada por el usuario. | P-1.2.5 completada; tercera captura en InPrivate. |
+| 2026-10-14 | 2.1 | En validación | Edición propia, 107 pruebas, dos E2E, RLS transaccional, tipos, lint, build y secretos superados; cero fixtures residuales. | Pendiente revisión manual con lector de pantalla del formulario nuevo. |
 | 2026-09-29 | 2.2 | Pendiente | — | Depende de edición y Storage disponible. |
 | 2026-09-29 | 3.1 | Pendiente | — | Cierre integral tras completar los hitos anteriores. |
