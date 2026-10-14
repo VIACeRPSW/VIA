@@ -6,6 +6,7 @@ import {
   USERNAME_MIN_LENGTH,
 } from "@/lib/profiles/profile-contract";
 import { getSafeCaughtErrorContext } from "@/lib/supabase/profile-status";
+import { isAvatarPath } from "@/lib/profiles/avatar-path";
 
 export const PUBLIC_PROFILE_COLUMNS =
   "username, display_name, bio, avatar_url, role";
@@ -121,6 +122,7 @@ export function getSafeAvatarUrl(
       && !url.search
       && !url.hash
       && url.pathname.startsWith("/storage/v1/object/public/avatars/")
+      && isAvatarPath(url.pathname.slice("/storage/v1/object/public/avatars/".length))
     ) {
       return url.href;
     }

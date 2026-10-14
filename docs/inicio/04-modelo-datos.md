@@ -20,6 +20,7 @@ follows
 badges
 user_badges
 reports
+avatar_cleanup_tasks
 ```
 
 ## 3. profiles
@@ -45,6 +46,22 @@ updated_at
 -   `role` pertenece al conjunto `user`, `moderator`, `admin`.
 -   `role` tiene `user` como valor inicial y no puede modificarse mediante el
 	acceso ordinario del usuario.
+
+### Registro privado de limpieza de avatar
+
+`avatar_cleanup_tasks` contiene `object_path` (clave primaria), `owner_sub`,
+`state` (`uploading` o `cleanup`) y `expires_at`. El propietario se obtiene
+del JWT y el vencimiento inicial es de 10 minutos; el cliente ordinario no
+puede elegir propietario ni expiración. RLS limita consulta, inserción,
+actualización de estado y eliminación al propietario.
+
+Se crea un ticket antes de cargar un objeto inmutable en
+`avatars/SHA256(sub)/UUID.webp`. `commit_profile_avatar` compara la referencia
+anterior, rechaza tickets expirados, actualiza el perfil, consume el ticket
+nuevo y agenda la referencia anterior en una sola transacción. Un proceso
+de limpieza invocado por el usuario elimina primero el objeto físico y
+después el ticket, sin borrar el avatar activo ni cargas todavía vigentes.
+Esta tabla es operativa y nunca forma parte de la proyección pública.
 
 ## 4. posts
 

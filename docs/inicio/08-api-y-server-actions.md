@@ -65,6 +65,27 @@ se informa éxito cuando la actualización no confirma la fila propia.
 Después de guardar se revalidan perfil, edición y URLs públicas anterior
 y nueva. El cambio de username no crea un alias para la dirección anterior.
 
+### Avatar
+
+`avatarAction(previousState, formData)` acepta `operation` con valores
+`upload`, `remove` o `cleanup`. Solo `upload` recibe un archivo `avatar`;
+identidad, ruta, URL y referencia anterior se resuelven en servidor.
+La acción exige sesión Clerk y perfil propio en cada petición.
+
+La carga valida bytes, MIME y límites, normaliza con Sharp, crea un ticket
+privado, sube un objeto nuevo y confirma la referencia mediante
+`commit_profile_avatar`. La RPC aplica compare-and-swap para que una pestaña
+obsoleta no sobrescriba otro cambio. Después se limpia el objeto anterior.
+La retirada confirma primero la referencia nula y después elimina el objeto.
+
+El resultado distingue `success`, `error`, `warning` (cambio confirmado con
+limpieza pendiente) y `unauthorized`. `avatarChanged` permite limpiar la
+previsualización solo cuando cambió la referencia; `cleanupPending` permite
+reintentar. Un fallo de limpieza no se informa como fallo del guardado ya
+confirmado. No se borra una carga en curso antes de sus 10 minutos de lease.
+Las mutaciones revalidan perfil, edición y perfil público; `cleanup`
+revalida la edición para retirar avisos ya resueltos.
+
 ### Reports
 
 ``` text

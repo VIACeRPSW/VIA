@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EditProfileForm } from "@/components/profile/EditProfileForm";
+import { AvatarEditor } from "@/components/profile/AvatarEditor";
+import { getAvatarCleanupStatus } from "@/lib/profiles/avatar-repository.server";
+import { getSafeAvatarUrl } from "@/lib/profiles/read-profile";
 import { getOwnProfile } from "@/lib/profiles/read-profile.server";
 
 export default async function EditProfilePage() {
@@ -8,6 +11,7 @@ export default async function EditProfilePage() {
 
   if (result.status === "unauthorized") redirect("/sign-in");
   if (result.status === "missing") redirect("/perfil/completar");
+  const cleanup = result.status === "found" ? await getAvatarCleanupStatus() : null;
 
   return (
     <main className="profile-page">
@@ -28,6 +32,11 @@ export default async function EditProfilePage() {
               displayName: result.profile.displayName,
               bio: result.profile.bio,
             }} />
+            {cleanup && <AvatarEditor
+              avatarUrl={getSafeAvatarUrl(result.profile.avatarUrl, process.env.NEXT_PUBLIC_SUPABASE_URL)}
+              cleanupPending={cleanup.pending}
+              cleanupUnavailable={cleanup.unavailable}
+            />}
           </>
         ) : (
           <p className="form-status" role="status">

@@ -19,9 +19,9 @@ La comprobación seguirá el orden identidad y perfiles → contratos → esquem
 | Fuente | Situación documentada y observada | Consecuencia |
 | --- | --- | --- |
 | [Fase 1](fase01.md) | Completada; evidencia registrada de autenticación, conexión, RLS, rollback y despliegue autorizado. | Reutilizar la base existente; no repetir su implementación. La evidencia histórica no demuestra disponibilidad actual del remoto. |
-| [Fase 2](fase02.md) | En curso. Sprints 1.1 y 1.2 completados; 2.1 implementado y en validación manual el 2026-10-14; 2.2 y 3.1 pendientes. | Completar la revisión de edición y continuar con avatar en Fase 2; no iniciar el CRUD. |
-| [Perfil actual](../../app/perfil/page.tsx) | Presenta datos persistentes, perfil público y acceso a edición propia; deriva al alta cuando falta perfil. No incluye todavía subida de avatar ni galería. | Cerrar primero el sistema de usuarios; añadir publicaciones aquí solo en Fase 3. |
-| [Migraciones](../../supabase/migrations/) | Cuatro migraciones de perfiles: creación, contrato, jerarquía de roles y consulta pública limitada. No hay esquema de publicaciones ni buckets versionados. | No dar por existentes `posts`, `categories`, `communities` o Storage de publicaciones. |
+| [Fase 2](fase02.md) | En curso. Sprints 1.1, 1.2 y 2.1 completados; Sprint 2.2 implementado y en validación manual y de retirada aislada del bucket; 3.1 pendiente. | Cerrar avatar y autorización integral en Fase 2; no iniciar el CRUD. |
+| [Perfil actual](../../app/perfil/page.tsx) | Presenta datos persistentes, perfil público, edición propia y avatar validado con carga, reemplazo y retirada desde edición. Deriva al alta cuando falta perfil; no incluye galería. | Cerrar primero el sistema de usuarios; añadir publicaciones aquí solo en Fase 3. |
+| [Migraciones](../../supabase/migrations/) | Cinco migraciones: cuatro de perfiles y una de bucket público `avatars`, RLS y journal privado de limpieza. No hay esquema ni bucket de publicaciones. | No dar por existentes `posts`, `categories`, `communities` o Storage de publicaciones. |
 | [Cliente servidor](../../lib/supabase/server.ts) | Usa clave publicable y token Clerk con template `supabase`, sin credenciales administrativas para operaciones ordinarias. | Mantener este límite de privilegios y comprobar la frontera de identidad antes de añadir operaciones. |
 
 La revisión inicial fue local y documental. La actualización de estado de Fase 2 del 2026-10-14 incorpora consultas reales por Supabase MCP, una migración de lectura pública autorizada y pruebas locales/remotas y E2E con fixtures efímeros. No se implementaron publicaciones ni se desplegó en Vercel; el cierre de Fase 2 sigue siendo una dependencia.
@@ -63,7 +63,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 
 | Tipo | Descripción | Mitigación o decisión requerida |
 | --- | --- | --- |
-| Bloqueo | Fase 2 aún no satisface su salida: revisión manual de edición, avatar y autorización integral pendientes. | Cerrar sus sprints 2.1, 2.2 y 3.1 con evidencia en su documento. No iniciar migraciones ni código de publicaciones antes. |
+| Bloqueo | Fase 2 aún no satisface su salida: avatar y autorización integral pendientes. | Cerrar sus sprints 2.2 y 3.1 con evidencia en su documento. No iniciar migraciones ni código de publicaciones antes. |
 | Decisión pendiente | Proyecto presenta hashtags obligatorios; ERS y UI base exigen categoría y dejan etiquetas opcionales. El modelo no contiene hashtags. | En 1.1 aprobar categoría obligatoria para Fase 3 y diferir hashtags a Fase 5. Si se exige adelantarlos, actualizar primero roadmap, modelo, requisitos y backlog; no ampliar silenciosamente esta fase. |
 | Decisión pendiente | Proyecto llama rol a Estudiante/Docente, pero los permisos existentes usan `user`, `moderator`, `admin`. | Tratar Estudiante/Docente como posible atributo educativo, nunca como privilegio. No añadirlo sin contrato y actualización de Fase 2/base; el CRUD usa roles persistidos existentes. |
 | Decisión pendiente | Rutas de Proyecto difieren de las implementadas y de la estructura base. | Aprobar la correspondencia de vistas anterior en 1.1; conservar rutas existentes. No crear aliases ni cambiar retornos globales sin decisión explícita. |

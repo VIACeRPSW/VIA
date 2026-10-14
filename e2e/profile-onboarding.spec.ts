@@ -1,44 +1,8 @@
-import { spawnSync } from "node:child_process";
-import { join } from "node:path";
 import { createClerkClient } from "@clerk/backend";
 import { clerk, setupClerkTestingToken } from "@clerk/testing/playwright";
 import { expect, test } from "@playwright/test";
 
-function runProfileFixtureSql(query: string) {
-  const supabaseCli = join(
-    process.cwd(),
-    "node_modules",
-    "supabase",
-    "dist",
-    "supabase.js",
-  );
-  const result = spawnSync(
-    process.execPath,
-    [
-      supabaseCli,
-      "db",
-      "query",
-      "--linked",
-      query,
-      "--agent",
-      "no",
-      "--output-format",
-      "text",
-    ],
-    { cwd: process.cwd(), encoding: "utf8" },
-  );
-
-  if (result.status !== 0) {
-    throw new Error("Could not prepare or clean up an E2E profile fixture");
-  }
-}
-
-function deleteProfile(clerkUserId: string) {
-  if (!/^user_[A-Za-z0-9]+$/.test(clerkUserId)) {
-    throw new Error("Clerk returned an unexpected user identifier");
-  }
-  runProfileFixtureSql(`delete from public.profiles where clerk_user_id = '${clerkUserId}';`);
-}
+import { deleteProfile, runProfileFixtureSql } from "./profile-fixture";
 
 test("creates, edits and exposes only the public profile projection", async ({ page, browser }) => {
   test.setTimeout(180_000);
@@ -204,7 +168,7 @@ test("creates, edits and exposes only the public profile projection", async ({ p
       await expect(publicPage.getByRole("heading", { name: "Perfil E2E", exact: true })).toBeVisible();
 
       await page.getByLabel("Nombre de usuario").fill(` ${updatedUsername.toUpperCase()} `);
-      await page.locator("form").evaluate((form, identity) => {
+      await page.locator("form").filter({ has: page.getByLabel("Nombre de usuario") }).evaluate((form, identity) => {
         for (const [name, value] of Object.entries({
           role: "admin", clerk_user_id: identity, id: "foreign-profile",
         })) {

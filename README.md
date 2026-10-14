@@ -114,16 +114,30 @@ Identidad, rol, avatar y timestamps no forman parte de la entrada editable.
 Tras cambiar username se actualizan los enlaces y la URL anterior deja de
 encontrar el perfil.
 
-La subida de avatar sigue pendiente en Fase 2. Por ahora solo se
-renderizan referencias de avatar público del bucket `avatars` en el origen
-Supabase configurado, sin URLs externas ni firmadas; se usa un fallback
-accesible cuando no hay avatar. La optimización y el contrato definitivo de
-Storage se resolverán en el Sprint 2.2.
+La edición incluye subida, previsualización, reemplazo y retirada del avatar.
+Admite JPEG, PNG y WebP de hasta **2 MiB**, estáticos y con un máximo de
+4096 píxeles por lado. El servidor decodifica el contenido real, comprueba
+el MIME y lo convierte a WebP de hasta 512 × 512, sin ampliar ni conservar
+metadatos. El límite multipart de Server Actions es 3 MiB para alojar
+el archivo permitido más los campos del formulario.
+
+El bucket `avatars` es público: no debe usarse para información privada.
+Los objetos son inmutables y usan `SHA256(sub)/UUID.webp`, sin publicar
+literalmente el identificador Clerk. Solo se renderizan referencias del
+origen Supabase configurado, sin URLs externas ni firmadas, con optimización
+Next Image y fallback accesible. Retirar el avatar elimina su referencia y
+su objeto, pero no revoca copias públicas ni cachés ya distribuidas.
+
+Storage y PostgreSQL no comparten transacción. Un registro privado de limpieza
+precede a la carga; una RPC compare-and-swap confirma la referencia y agenda
+el avatar anterior de forma atómica. Un fallo parcial deja un aviso y permite
+reintentar la limpieza. Las cargas interrumpidas pueden limpiarse tras
+10 minutos; no se ejecuta un proceso automático de limpieza en segundo plano.
+No se usa `service_role` en el flujo ordinario.
 
 El formulario de edición tiene contador de biografía, estado de guardado y
-foco en el error o resultado. Su revisión manual con lector de pantalla
-sigue pendiente; no se considera cerrado el Sprint 2.1 solo por sus pruebas
-automatizadas.
+foco en el error o resultado. El Sprint 2.1 está completado con pruebas
+automatizadas y confirmación del usuario de la revisión manual solicitada.
 
 ## Comprobaciones
 
@@ -136,6 +150,7 @@ npm run test:client-secrets
 npm run test:db:auth-boundary
 npm run test:db:rls
 npm run test:db:public-profiles
+npm run test:db:avatars
 npm run test:db:rollback
 ```
 
@@ -147,3 +162,23 @@ transacción que se revierte. Requiere un proyecto enlazado y la migración
 `test:db:rls` también comprueba edición propia de tres campos, atomicidad
 frente a un username ocupado y rechazo de escritura ajena, anónima o en
 columnas protegidas. Sus fixtures se eliminan mediante rollback.
+
+`test:db:avatars` verifica propiedad, aislamiento del registro privado,
+concurrencia y expiración dentro de una transacción revertida. El E2E
+`avatar.spec.ts` usa dos usuarios Clerk Development y archivos generados
+localmente; comprueba el flujo visual y la API real de Storage y limpia
+objetos físicos antes de eliminar las identidades de prueba.
+
+Para ensayar el rollback de avatar con bucket, referencias y registro vacíos:
+
+```bash
+node scripts/test-supabase-avatar-rollback.mjs 20261014202722_add_avatar_storage.sql
+```
+
+El ensayo revierte y reaplica solo los recursos de aplicación dentro de
+una transacción que se deshace, verificando que el bucket queda intacto.
+Para un rollback real, primero retirar referencias y objetos mediante la
+aplicación/API de Storage, resolver el registro de limpieza y ejecutar el
+SQL de rollback. **El bucket vacío se elimina después mediante la API de
+Storage o el panel de Supabase**, no con `DELETE` SQL ni desactivando su
+protección. Su eliminación física no forma parte del ensayo transaccional.

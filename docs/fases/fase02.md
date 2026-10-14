@@ -42,7 +42,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 | Riesgo | Un perfil público podría exponer `clerk_user_id` u otros campos internos. | Diseñar una proyección pública explícita con columnas permitidas; probar el acceso directo como anónimo y autenticado. |
 | Riesgo | Un archivo con MIME declarado falso, tamaño excesivo o ruta ajena podría entrar en Storage. | Validar en servidor contenido, tipo y tamaño; usar rutas propiedad del `sub` autenticado y políticas de Storage de mínimo privilegio. |
 | Riesgo | Reemplazar o eliminar un avatar puede dejar objetos huérfanos o una URL inconsistente. | Ordenar las operaciones, usar nombres no reutilizados, actualizar la referencia de forma controlada y limpiar el objeto anterior con recuperación ante fallo parcial. |
-| Dependencia externa | Supabase Storage debe estar disponible y sus políticas deben reconocer el `sub` de Clerk. | Versionar bucket y políticas mediante migración, probarlas directamente y preparar rollback sin depender del panel. |
+| Dependencia externa | Supabase Storage debe estar disponible y sus políticas deben reconocer el `sub` de Clerk. | Versionar bucket y políticas, probarlas directamente y preparar rollback de aplicación por SQL; retirar el bucket vacío mediante la API de Storage o el panel, respetando su protección. |
 
 ## Hito 1 — Perfil persistente identificable
 
@@ -172,7 +172,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] CA-2.1.2 — Datos inválidos o username ocupado conservan los datos previos y muestran errores asociados al campo correcto.
 - [x] CA-2.1.3 — Una sesión anónima o un usuario distinto no puede editar el perfil; ningún usuario ordinario puede cambiar `role` o `clerk_user_id`.
 - [x] CA-2.1.4 — Un fallo de Supabase produce un resultado recuperable, un log redactado y ninguna actualización parcial.
-- [ ] CA-2.1.5 — El formulario es usable con teclado, lector de pantalla y controles táctiles en móvil y escritorio.
+- [x] CA-2.1.5 — El formulario es usable con teclado, lector de pantalla y controles táctiles en móvil y escritorio.
 
 **Pruebas**
 
@@ -180,7 +180,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] P-2.1.2 — Integración: actualizar correctamente, repetir sin cambios, usar username ocupado, enviar datos inválidos, perder sesión y simular fallo de datos (CA-2.1.1 a CA-2.1.4).
 - [x] P-2.1.3 — E2E: editar nombre, bio y username; comprobar la URL pública nueva, persistencia tras recarga y mensajes de un intento inválido (CA-2.1.1, CA-2.1.2).
 - [x] P-2.1.4 — Seguridad/RLS: intentar actualización directa de otro perfil, reasignación de identidad, elevación de rol y escritura de columnas no concedidas (CA-2.1.3).
-- [ ] P-2.1.5 — Accesibilidad/responsive: verificar labels, descripción de errores, foco tras envío, estado pendiente y ausencia de desbordamientos (CA-2.1.5).
+- [x] P-2.1.5 — Accesibilidad/responsive: verificar labels, descripción de errores, foco tras envío, estado pendiente y ausencia de desbordamientos (CA-2.1.5).
 
 **Evidencia de cierre**
 
@@ -193,7 +193,8 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - E2E comprueba contador de biografía, labels, foco en username tras errores y en mensaje tras éxito, bloqueo de campos/botón y anuncio durante un guardado retenido de forma controlada, y ausencia de desbordamientos a 375, 768 y 1280 px.
 - [RLS directa](../../supabase/tests/profiles_rls.sql) superada contra el remoto en una transacción revertida: actualización propia de tres campos, conflicto de username atómico, rechazo de modificación ajena para un usuario ordinario, rol, identidad, ID, timestamps y petición anónima. Las políticas jerárquicas preexistentes no se modificaron; no se requirió una nueva migración.
 - Limpieza final comprobada por Supabase MCP: **cero perfiles de prueba residuales**. Los E2E eliminaron el usuario Clerk efímero y los dos perfiles de prueba.
-- **Pendiente:** revisión manual con lector de pantalla del nuevo formulario de edición (CA-2.1.5/P-2.1.5). La confirmación de Sprint 1.2 no se extrapola a esta interfaz nueva. Sprint 2.1 queda en validación, sin adelantar avatar ni cierre integral.
+- 2026-10-14: el usuario confirma la revisión manual solicitada del formulario nuevo («quedo bien»). Se registra como evidencia reportada por el usuario, sin atribuir un lector o versión no especificados. CA-2.1.5 y P-2.1.5 completadas.
+- Sprint 2.1 completado; Sprint 2.2 desbloqueado para definir el contrato de avatar y comprobar Storage. Fase 2 sigue en curso, sin adelantar su cierre integral ni publicaciones.
 
 ### Sprint 2.2 — Avatar propio en Supabase Storage
 
@@ -201,40 +202,77 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 **Alcance**
 
-- [ ] Bucket y políticas de Storage para avatares versionados.
-- [ ] Flujo privado de subida, reemplazo y eliminación.
-- [ ] Avatar responsive con alternativa accesible y fallback.
+- [x] Bucket y políticas de Storage para avatares versionados.
+- [x] Flujo privado de subida, reemplazo y eliminación.
+- [x] Avatar responsive con alternativa accesible y fallback.
 
 **Tareas**
 
-- [ ] `VIA-008` Definir y documentar formatos de imagen admitidos, tamaño máximo, validación de contenido y estrategia de rutas por propietario.
-- [ ] `VIA-008` Crear una migración para el bucket `avatars` y políticas de lectura y escritura, sin usar credenciales administrativas en el flujo ordinario.
-- [ ] `VIA-008` Implementar acciones de subida y retirada que validen sesión, archivo, propiedad y referencia del perfil, y que manejen reemplazos sin objetos huérfanos.
-- [ ] `VIA-008` Incorporar selector, previsualización, progreso/estado pendiente, reemplazo, eliminación, fallback y mensajes accesibles en la edición de perfil.
-- [ ] `VIA-008` Servir el avatar de forma compatible con la optimización de imágenes y sin aceptar URLs arbitrarias aportadas por el cliente.
+- [x] `VIA-008` Definir y documentar formatos de imagen admitidos, tamaño máximo, validación de contenido y estrategia de rutas por propietario.
+- [x] `VIA-008` Crear una migración para el bucket `avatars` y políticas de lectura y escritura, sin usar credenciales administrativas en el flujo ordinario.
+- [x] `VIA-008` Implementar acciones de subida y retirada que validen sesión, archivo, propiedad y referencia del perfil, y que manejen reemplazos sin objetos huérfanos.
+- [x] `VIA-008` Incorporar selector, previsualización, progreso/estado pendiente, reemplazo, eliminación, fallback y mensajes accesibles en la edición de perfil.
+- [x] `VIA-008` Servir el avatar de forma compatible con la optimización de imágenes y sin aceptar URLs arbitrarias aportadas por el cliente.
 - [ ] `Sin identificador existente` Documentar y ensayar rollback de bucket, políticas y referencias de prueba.
 
 **Criterios de aceptación**
 
-- [ ] CA-2.2.1 — El propietario sube una imagen válida y el avatar persiste y se muestra en perfil privado y público.
-- [ ] CA-2.2.2 — Archivo vacío, tipo no admitido, contenido incompatible o tamaño excesivo es rechazado antes de actualizar el perfil.
-- [ ] CA-2.2.3 — Un usuario no puede escribir, reemplazar ni eliminar objetos de otro; la lectura se limita al contrato público definido.
-- [ ] CA-2.2.4 — Reemplazar o retirar el avatar actualiza referencia y objeto sin dejar datos inconsistentes u objetos de prueba residuales.
-- [ ] CA-2.2.5 — Fallos parciales de Storage o base de datos se presentan de forma recuperable y se registran sin rutas firmadas ni datos personales.
+- [x] CA-2.2.1 — El propietario sube una imagen válida y el avatar persiste y se muestra en perfil privado y público.
+- [x] CA-2.2.2 — Archivo vacío, tipo no admitido, contenido incompatible o tamaño excesivo es rechazado antes de actualizar el perfil.
+- [x] CA-2.2.3 — Un usuario no puede escribir, reemplazar ni eliminar objetos de otro; la lectura se limita al contrato público definido.
+- [x] CA-2.2.4 — Reemplazar o retirar el avatar actualiza referencia y objeto sin dejar datos inconsistentes u objetos de prueba residuales.
+- [x] CA-2.2.5 — Fallos parciales de Storage o base de datos se presentan de forma recuperable y se registran sin rutas firmadas ni datos personales.
 - [ ] CA-2.2.6 — El avatar tiene texto alternativo o tratamiento decorativo correcto, dimensiones estables y no deforma la interfaz responsive.
 
 **Pruebas**
 
-- [ ] P-2.2.1 — Unitarias: validar metadatos, contenido, tamaño, extensión normalizada y construcción de ruta propia (CA-2.2.1, CA-2.2.2).
-- [ ] P-2.2.2 — Integración: subir, reemplazar y retirar avatar; simular error de Storage y de actualización de perfil comprobando compensación (CA-2.2.1, CA-2.2.4, CA-2.2.5).
-- [ ] P-2.2.3 — E2E: seleccionar imagen válida, verla tras recarga y en perfil público, reemplazarla, retirarla y probar un archivo inválido (CA-2.2.1, CA-2.2.2, CA-2.2.6).
-- [ ] P-2.2.4 — Seguridad/RLS/Storage: probar lectura permitida y escrituras propias/ajenas directamente contra Storage, incluidas rutas manipuladas y sesión ausente (CA-2.2.3).
+- [x] P-2.2.1 — Unitarias: validar metadatos, contenido, tamaño, extensión normalizada y construcción de ruta propia (CA-2.2.1, CA-2.2.2).
+- [x] P-2.2.2 — Integración: subir, reemplazar y retirar avatar; simular error de Storage y de actualización de perfil comprobando compensación (CA-2.2.1, CA-2.2.4, CA-2.2.5).
+- [x] P-2.2.3 — E2E: seleccionar imagen válida, verla tras recarga y en perfil público, reemplazarla, retirarla y probar un archivo inválido (CA-2.2.1, CA-2.2.2, CA-2.2.6).
+- [x] P-2.2.4 — Seguridad/RLS/Storage: probar lectura permitida y escrituras propias/ajenas directamente contra Storage, incluidas rutas manipuladas y sesión ausente (CA-2.2.3).
 - [ ] P-2.2.5 — Migración/rollback: aplicar y retirar bucket/políticas en entorno de prueba, verificando ausencia de objetos residuales (CA-2.2.4).
 - [ ] P-2.2.6 — Accesibilidad/responsive: comprobar nombre accesible de controles, foco, anuncio de errores, dimensiones estables y vistas móvil/escritorio (CA-2.2.6).
 
 **Evidencia de cierre**
 
 - Pendiente.
+
+### Evidencia registrada del Sprint 2.2
+
+- 2026-10-14: contrato aprobado por el usuario: JPEG, PNG y WebP, máximo
+  2 MiB; autorización explícita para bucket público, políticas, registro
+  privado y pruebas remotas con archivos efímeros.
+- Migración `20261014202722_add_avatar_storage.sql` aplicada por MCP y
+  alineada con la versión remota. RLS SQL superada para dos propietarios,
+  anónimo, journal privado, CAS obsoleto y expiración.
+- Sharp decodifica y normaliza a WebP estático de hasta 512 × 512, sin
+  metadatos. Se prueba el límite exacto de 2 MiB y el rechazo del siguiente
+  byte; el E2E sube un PNG generado de más de 1 MiB para comprobar multipart.
+- E2E Chromium de selección, preview, pendiente, errores con foco, recarga,
+  perfil privado/público, Next Image cargado, reemplazo y retirada superado.
+  API real: B y anónimo no sobrescriben ni borran el objeto de A; A tampoco
+  sobrescribe ni elimina directamente su avatar activo ni carga sin ticket.
+  Metadatos y journal ajenos permanecen privados. Vistas públicas a 375,
+  768 y 1280 px sin desbordamiento y sin identificador Clerk literal.
+- Unitarias de acciones, compensación y cliente Supabase con fetch
+  controlado verifican fallos de Storage/DB, leases vigentes, referencias
+  activas, limpieza pendiente y registro redactado. 150 pruebas Vitest,
+  TypeScript estricto y lint superados.
+- Rollback/reaplicación de recursos de aplicación ensayado en transacción
+  revertida con bucket vacío. Supabase rechaza borrar buckets por SQL:
+  se conserva su protección y el bucket; la retirada física por API/panel
+  no se ha ensayado. Tarea de rollback y P-2.2.5 siguen pendientes de esa
+  comprobación aislada, sin borrar datos reales para lograrla.
+- CA-2.2.6 y P-2.2.6 siguen en validación manual de teclado y lector de
+  pantalla del nuevo selector, preview, mensajes y retirada. No se reutiliza
+  como evidencia la confirmación manual del formulario de Sprint 2.1.
+- `npm audit` informa 7 avisos high en la cadena Next/ESLint; no se han
+  aplicado actualizaciones automáticas. Fase 2 continúa abierta y
+  Fase 3 permanece planificada.
+- Regresión final: 3 E2E Chromium, build de producción y escaneo de secretos
+  del cliente superados. Consulta MCP posterior al recorrido: cero perfiles
+  E2E, cero objetos en `avatars` y cero tareas de limpieza; las identidades
+  Clerk efímeras se eliminaron mediante la API al finalizar.
 
 ## Hito 3 — Roles y rutas protegidas
 
@@ -293,6 +331,6 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 | --- | --- | --- | --- | --- |
 | 2026-10-01 | 1.1 | Completado | Contrato, migraciones remotas, Server Action, formulario, 27 pruebas, E2E Playwright, matriz jerárquica RLS, bootstrap admin, rollback, build e integración HTTP superados. | Usuario y perfil E2E eliminados al finalizar. |
 | 2026-10-14 | 1.2 | Completado | Consultas/vistas propias y públicas, RPC remota, pruebas locales, E2E responsive, permisos directos, rollback transaccional y revisión manual confirmada por el usuario. | P-1.2.5 completada; tercera captura en InPrivate. |
-| 2026-10-14 | 2.1 | En validación | Edición propia, 107 pruebas, dos E2E, RLS transaccional, tipos, lint, build y secretos superados; cero fixtures residuales. | Pendiente revisión manual con lector de pantalla del formulario nuevo. |
-| 2026-09-29 | 2.2 | Pendiente | — | Depende de edición y Storage disponible. |
+| 2026-10-14 | 2.1 | Completado | Edición propia, 107 pruebas, dos E2E, RLS transaccional, tipos, lint, build y secretos superados; revisión manual confirmada por el usuario. | Cero fixtures residuales. |
+| 2026-10-14 | 2.2 | En validación | Avatar implementado, migración remota, RLS/CAS, 150 pruebas, 3 E2E, tipos, lint, build y secretos superados; cero fixtures residuales. | Pendientes revisión manual de nueva UI y ensayo aislado de retirada física del bucket por API; no se desactiva la protección de Storage. |
 | 2026-09-29 | 3.1 | Pendiente | — | Cierre integral tras completar los hitos anteriores. |

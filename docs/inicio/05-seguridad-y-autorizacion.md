@@ -102,6 +102,30 @@ community-images
 Las políticas deberán impedir que un usuario modifique archivos que no
 le corresponden.
 
+### Contrato de avatares implementado
+
+- `avatars` es público para la lectura de imágenes; el listado de metadatos
+  y el registro de limpieza no dan acceso a datos ajenos ni a anónimos.
+- La aplicación admite JPEG, PNG y WebP estáticos de hasta 2 MiB y 4096
+  píxeles por lado. Sharp verifica el contenido y normaliza a WebP de hasta
+  512 × 512 sin metadatos. Storage admite únicamente WebP, hasta 2097152 bytes.
+- Las rutas son `SHA256(sub)/UUID.webp`: no incluyen el identificador Clerk
+  literal. Las acciones generan rutas y URLs; ignoran propietario, ruta,
+  referencia y estado previo aportados por el cliente.
+- INSERT exige ruta propia, perfil existente y ticket de carga vigente.
+  No se permite UPDATE/overwrite. DELETE exige ruta propia y que no sea
+  el avatar activo del propietario. Los roles elevados de perfiles no
+  amplían los permisos sobre archivos ajenos.
+- Una RPC invoker con `search_path` vacío aplica compare-and-swap; el registro
+  privado permite compensar y reintentar fallos parciales sin usar
+  credenciales administrativas. Los errores se registran de forma redactada.
+- Next Image admite solo el origen configurado y la ruta pública del bucket,
+  sin redirecciones ni URLs con parámetros. Una retirada no revoca copias
+  públicas o cachés ya distribuidas.
+- El rollback rechaza objetos, referencias o tareas existentes. Elimina
+  recursos de aplicación por SQL y deja la retirada del bucket vacío a
+  la API de Storage/panel; nunca desactiva la protección de sus tablas.
+
 ## 7. Secretos
 
 Nunca se deben incluir en el repositorio:

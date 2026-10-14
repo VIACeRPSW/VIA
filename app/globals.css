@@ -295,6 +295,17 @@ footer p {
 	margin-top: 2rem;
 }
 
+.avatar-editor {
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--line);
+}
+
+.avatar-editor :focus-visible {
+	outline: 3px solid var(--leaf);
+	outline-offset: 3px;
+}
+
 .form-field {
 	display: grid;
 	gap: 0.5rem;

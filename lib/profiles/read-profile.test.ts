@@ -99,7 +99,7 @@ describe("profile read contract", () => {
 
 describe("avatar references", () => {
   const origin = "https://example.supabase.co";
-  const avatar = `${origin}/storage/v1/object/public/avatars/owner/image.png`;
+  const avatar = `${origin}/storage/v1/object/public/avatars/${"a".repeat(64)}/b02e9ce0-0a90-4e7c-a5cb-f54ff20f228a.webp`;
 
   it("allows only public avatar objects from the configured Supabase origin", () => {
     expect(getSafeAvatarUrl(null, origin)).toBeNull();

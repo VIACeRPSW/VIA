@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   getPublicProfile: vi.fn(),
   redirect: vi.fn(),
   notFound: vi.fn(),
+  getAvatarCleanupStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/profiles/read-profile.server", () => ({
@@ -22,6 +23,10 @@ vi.mock("next/navigation", () => ({
   notFound: mocks.notFound,
 }));
 vi.mock("@/actions/profiles", () => ({ updateProfileAction: vi.fn() }));
+vi.mock("@/actions/avatars", () => ({ avatarAction: vi.fn() }));
+vi.mock("@/lib/profiles/avatar-repository.server", () => ({
+  getAvatarCleanupStatus: mocks.getAvatarCleanupStatus,
+}));
 
 import ProfilePage from "@/app/perfil/page";
 import EditProfilePage from "@/app/perfil/editar/page";
@@ -38,6 +43,7 @@ const profile = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.getAvatarCleanupStatus.mockResolvedValue({ pending: false, unavailable: false });
   mocks.redirect.mockImplementation(() => { throw new Error("NEXT_REDIRECT"); });
   mocks.notFound.mockImplementation(() => { throw new Error("NEXT_NOT_FOUND"); });
 });

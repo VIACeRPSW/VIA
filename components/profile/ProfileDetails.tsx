@@ -20,7 +20,7 @@ export function ProfileDetails({ profile }: { profile: PublicProfile }) {
             alt={`Avatar de ${profile.displayName}`}
             width={96}
             height={96}
-            unoptimized
+            sizes="96px"
           />
         ) : (
           <span className="profile-avatar profile-avatar-empty" role="img" aria-label="Sin avatar">
