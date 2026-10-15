@@ -197,7 +197,31 @@ Gestionar publicaciones.
 
 Gestionar comunidades.
 
-## Prioridad
+## Ampliación aprobada el 2026-10-15
+
+### VIA-037
+
+Crear, editar y mostrar hashtags obligatorios de publicaciones en Fase 3.
+
+Criterios:
+
+- Entre 1 y 5 etiquetas únicas por publicación después de normalizar.
+- Cada etiqueta: 2–30 caracteres, letras Unicode, números o guion bajo;
+  minúsculas y NFC, sin espacios ni `#` almacenado.
+- El prefijo `#` se admite opcionalmente en la entrada; duplicados
+  normalizados no cuentan como etiquetas adicionales.
+- Validación equivalente en formulario, servidor y escrituras PostgreSQL.
+- Persistencia atómica con los campos de publicación; rechazo sin
+  publicaciones parciales cuando no queda ninguna etiqueta válida.
+- Tarjetas y detalle muestran etiquetas como texto, sin navegación ni
+  búsqueda por hashtag hasta Fase 5.
+- Edición propia reutiliza el contrato; terceros no alteran etiquetas.
+- Pruebas de límites, Unicode, duplicados, permisos, edición y recarga.
+
+Este incremento depende de `VIA-010`, `VIA-011`, `VIA-012` y `VIA-013`
+para su integración completa; no adelanta comunidades.
+
+## Prioridad actualizada
 
 Orden recomendado:
 
@@ -210,6 +234,7 @@ VIA-005
 VIA-006
 VIA-009
 VIA-010
+VIA-037
 VIA-011
 VIA-012
 VIA-013

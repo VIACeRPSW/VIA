@@ -1,16 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { EditProfileForm } from "@/components/profile/EditProfileForm";
 import { AvatarEditor } from "@/components/profile/AvatarEditor";
 import { getAvatarCleanupStatus } from "@/lib/profiles/avatar-repository.server";
 import { getSafeAvatarUrl } from "@/lib/profiles/read-profile";
-import { getOwnProfile } from "@/lib/profiles/read-profile.server";
+import { getProfileForRoute } from "@/lib/profiles/profile-route.server";
 
 export default async function EditProfilePage() {
-  const result = await getOwnProfile();
-
-  if (result.status === "unauthorized") redirect("/sign-in");
-  if (result.status === "missing") redirect("/perfil/completar");
+  const result = await getProfileForRoute("existing");
   const cleanup = result.status === "found" ? await getAvatarCleanupStatus() : null;
 
   return (

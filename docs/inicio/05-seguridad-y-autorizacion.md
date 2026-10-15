@@ -73,9 +73,14 @@ Ejemplos conceptuales:
 posts:
   SELECT -> contenido público permitido
   INSERT -> usuario autenticado
-  UPDATE -> propietario o moderador/admin
-  DELETE -> propietario o moderador/admin
+  UPDATE -> propietario (todos los roles en Fase 3)
+  DELETE -> propietario (todos los roles en Fase 3)
 ```
+
+En Fase 3 no se permite a moderadores ni administradores modificar
+publicaciones ajenas. Los permisos de gestión ajena se incorporan y prueban
+en Fase 7; la jerarquía existente de perfiles no concede privilegios sobre
+publicaciones ni objetos Storage.
 
 ``` text
 comments:
@@ -125,6 +130,28 @@ le corresponden.
 - El rollback rechaza objetos, referencias o tareas existentes. Elimina
   recursos de aplicación por SQL y deja la retirada del bucket vacío a
   la API de Storage/panel; nunca desactiva la protección de sus tablas.
+
+### Contrato de imágenes de publicaciones aprobado para Fase 3
+
+- Bucket `posts` privado. Las publicaciones confirmadas y sus imágenes son
+  públicas, pero las cargas pendientes solo son accesibles al propietario.
+- JPEG, PNG o WebP estáticos de hasta 5 MiB (5242880 bytes), como máximo
+  4096 píxeles por eje. Validación real de contenido, rechazo de formatos
+  discordantes, animados o vacíos y normalización WebP sin metadatos.
+- Objetos inmutables en `SHA256(sub)/UUID.webp`, vinculados a una operación
+  propia vigente antes de cargarlos; sin overwrite ni rutas del cliente.
+- La lectura del bucket exige publicación confirmada asociada o propiedad
+  de la carga pendiente. El anónimo puede solicitar una URL firmada solo
+  para el objeto de una publicación pública; no listar cargas privadas.
+- Las URLs firmadas duran 60 segundos, se generan al leer y no se guardan
+  en metadata, logs ni documentación. No hay caché pública que prolongue
+  esa autorización; una retirada impide nuevas firmas y elimina el objeto.
+  Una URL emitida puede seguir siendo válida hasta vencer y no se pueden
+  revocar copias descargadas. No se usa `service_role` para la entrega.
+- La base valida sesión/perfil, propiedad, objeto y operación también en
+  llamadas directas. Confirmación, reintentos y limpieza son observables;
+  un fallo de borrado físico se presenta como limpieza pendiente.
+- Estas son decisiones de contrato, no infraestructura ya aplicada.
 
 ## 7. Secretos
 

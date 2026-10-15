@@ -69,6 +69,8 @@ test("creates, edits and exposes only the public profile projection", async ({ p
     await expect(page.getByRole("heading", { name: "Perfil E2E", exact: true })).toBeVisible();
     await expect(page.getByText(`@${username}`, { exact: true })).toBeVisible();
     await expect(page.getByText("Perfil temporal de prueba.", { exact: true })).toBeVisible();
+    await page.goto("/perfil/completar");
+    await expect(page).toHaveURL(/\/perfil$/);
     await page.reload();
     await expect(page.getByRole("heading", { name: "Perfil E2E", exact: true })).toBeVisible();
     for (const width of [375, 768, 1280]) {
@@ -231,6 +233,20 @@ test("creates, edits and exposes only the public profile projection", async ({ p
       await expect(publicPage.getByRole("heading", { name: "Perfil no encontrado" })).toBeVisible();
       await publicPage.goto("/perfil");
       await expect(publicPage).toHaveURL(/\/sign-in/);
+
+      await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
+      await expect(page).toHaveURL("http://localhost:3000/");
+      for (const width of [375, 1280]) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const path of ["/perfil", "/perfil/completar", "/perfil/editar"]) {
+          await page.goto(path);
+          await expect(page).toHaveURL(/\/sign-in/);
+          await expect(page.getByRole("button", { name: "Crear perfil", exact: true })).toHaveCount(0);
+          await expect(page.getByRole("button", { name: "Guardar cambios", exact: true })).toHaveCount(0);
+        }
+        await page.goto(`/usuario/${updatedUsername}`);
+        await expect(page.getByRole("heading", { name: "Perfil editado E2E", exact: true })).toBeVisible();
+      }
     } finally {
       await visitor.close();
     }
@@ -271,5 +287,46 @@ test("keeps the missing-profile return link below its message", async ({ page })
     await expect(returnLink).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL("http://localhost:3000/");
+  }
+});
+
+test("rejects an expired session on every private profile route", async ({ request }) => {
+  test.setTimeout(120_000);
+  const secretKey = process.env.CLERK_SECRET_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!secretKey?.startsWith("sk_test_") || !publishableKey?.startsWith("pk_test_")) {
+    throw new Error("Clerk development keys are required for E2E tests");
+  }
+  const backend = createClerkClient({ secretKey, publishableKey });
+  const user = await backend.users.createUser({
+    emailAddress: [`via.expiry.${Date.now().toString(36)}+clerk_test@example.com`],
+    skipPasswordRequirement: true,
+  });
+  try {
+    const session = await backend.sessions.createSession({ userId: user.id });
+    const token = await backend.sessions.getToken(session.id, undefined, 60);
+    const headers = { Authorization: `Bearer ${token.jwt}` };
+    const valid = await request.get("/perfil/completar", { headers, maxRedirects: 0 });
+    expect(valid.status()).toBe(200);
+    expect(await valid.text()).toContain('name="username"');
+    expect(valid.headers()["cache-control"] ?? "").not.toMatch(/(?:^|,)\s*(?:public|s-maxage)\b/i);
+
+    await new Promise((resolve) => setTimeout(resolve, 67_000));
+    for (const path of ["/perfil", "/perfil/completar", "/perfil/editar"]) {
+      const expired = await request.get(path, { headers, maxRedirects: 0 });
+      const body = await expired.text();
+      if (expired.status() === 307) {
+        expect(expired.headers().location).toMatch(/\/sign-in(?:\?|$)/);
+      } else {
+        expect(expired.status()).toBe(200);
+        const refresh = body.match(/<meta\b[^>]*http-equiv="refresh"[^>]*>/)?.[0];
+        expect(refresh).toContain('content="1;url=/sign-in"');
+      }
+      expect(body).not.toContain('name="username"');
+      expect(body).not.toContain('name="displayName"');
+      expect(body).not.toContain('name="avatar"');
+    }
+  } finally {
+    await backend.users.deleteUser(user.id);
   }
 });

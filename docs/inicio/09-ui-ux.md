@@ -60,9 +60,16 @@ Título
 Descripción
 Categoría
 Comunidad (opcional)
-Etiquetas (opcional)
+Hashtags (obligatorios, de 1 a 5)
 Publicar
 ```
+
+En Fase 3, cada hashtag admite 2–30 caracteres conforme a
+[RF-04](01-ers.md). El formulario informa límites, errores y normalización,
+conserva valores inválidos para corregirlos y permite editar las etiquetas.
+Las tarjetas y el detalle muestran hashtags como texto, sin enlaces ni
+botones de búsqueda ficticios. Comunidad no se muestra como control activo
+hasta Fase 5.
 
 ## 6. Responsive
 

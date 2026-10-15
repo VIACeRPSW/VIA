@@ -316,6 +316,7 @@ footer p {
 }
 
 .form-field input,
+.form-field select,
 .form-field textarea {
 	width: 100%;
 	padding: 0.8rem 0.9rem;
@@ -331,6 +332,7 @@ footer p {
 }
 
 .form-field input:focus-visible,
+.form-field select:focus-visible,
 .form-field textarea:focus-visible {
 	outline: 3px solid var(--sun);
 	outline-offset: 2px;
@@ -350,6 +352,45 @@ footer p {
 
 .field-help {
 	color: #47564c;
+}
+
+.post-image-frame {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 4 / 3;
+	background: var(--surface);
+	border: 1px solid var(--line);
+}
+
+.post-image-frame img {
+	object-fit: contain;
+}
+
+.post-detail {
+	max-width: 48rem;
+	padding-block: 2rem;
+}
+
+.post-detail h1 {
+	max-width: none;
+	font-size: clamp(2rem, 6vw, 3.5rem);
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+}
+
+.post-description {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.6;
+}
+
+.post-hashtags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	padding: 0;
+	list-style: none;
+	overflow-wrap: anywhere;
 }
 
 .field-error {

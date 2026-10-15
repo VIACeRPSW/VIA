@@ -58,6 +58,7 @@ describe("server profile queries", () => {
     expect(await getOwnProfile()).toMatchObject({
       status: "found", profile: { clerkUserId: "owner-clerk-id" },
     });
+
     expect(client.from).toHaveBeenCalledWith("profiles");
     expect(query.eq).toHaveBeenCalledWith("clerk_user_id", "owner-clerk-id");
     expect(query.select).toHaveBeenCalledWith(
@@ -74,6 +75,20 @@ describe("server profile queries", () => {
     expect(client.from).not.toHaveBeenCalled();
     expect(mocks.auth).not.toHaveBeenCalled();
     expect(mocks.createServerSupabaseClient).not.toHaveBeenCalled();
+  });
+
+  it.each(["user", "moderator", "admin"])("accepts the stored role %s", async (role) => {
+    mockClient({ ...row, role });
+    expect(await getOwnProfile()).toMatchObject({ status: "found", profile: { role } });
+  });
+
+  it.each([undefined, null, "", "owner", "ADMIN"])("fails closed for an invalid stored role %s", async (role) => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockClient({ ...row, role });
+    expect(await getOwnProfile()).toEqual({ status: "unavailable" });
+    expect(log).toHaveBeenCalledWith("Supabase profile response violated the contract", {
+      code: "INVALID_PROFILE_RESPONSE",
+    });
   });
 
   it("does not normalize non-canonical public usernames or query the database", async () => {

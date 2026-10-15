@@ -72,6 +72,7 @@ id
 user_id
 community_id
 category_id
+hashtags
 title
 description
 image_url
@@ -86,6 +87,59 @@ Relaciones:
 -   `user_id -> profiles.id`
 -   `community_id -> communities.id`
 -   `category_id -> categories.id`
+
+### Incremento aprobado para Fase 3 — 2026-10-15
+
+- `category_id` obligatorio referencia el catálogo mínimo de Historia,
+  Ciencia, Arte, Tecnología y Matemáticas. `community_id` y su FK se
+  incorporarán en Fase 5, cuando exista `communities`, no en esta migración.
+- `title`: 1–120 caracteres tras trim; `description`: 0–2000 caracteres.
+  `prompt` no se ofrece como campo editable en Fase 3.
+- `image_url` representa conceptualmente la imagen, pero el esquema de
+  Fase 3 persistirá una ruta de objeto (`image_path`) validada, nunca una
+  URL firmada ni una URL externa proporcionada por cliente.
+- Solo publicaciones confirmadas (`published`) son públicas. Cargas
+  pendientes y limpieza se representan en un registro operativo privado,
+  sin filas incompletas visibles como publicaciones. Autor, ID y timestamps
+  se derivan en servidor/base; idempotencia y versión de edición se
+  concretan como garantías técnicas del Sprint 1.2.
+- `hashtags` forma parte del contenido de la publicación: de 1 a 5 valores
+  canónicos únicos, de 2 a 30 caracteres cada uno (letras Unicode, números
+  y guion bajo). Se normalizan a minúsculas y NFC, sin almacenar el `#`
+  inicial. No se eliminan tildes ni se convierte `ñ` a `n`.
+- La cantidad se comprueba después de normalizar y quitar duplicados.
+  Creación y edición deben guardar campos y hashtags de forma atómica;
+  las restricciones deben impedir publicaciones sin hashtags también en
+  escrituras directas. En Sprint 1.2 se implementa como `text[]` unidimensional,
+  con base 1 y validación SQL inmutable; la base exige entrada ya canónica,
+  no normaliza ni descarta valores inválidos silenciosamente. La acción
+  normalizará y deduplicará antes de enviar. No se anticipan tablas sociales.
+- Las lecturas públicas incluyen hashtags solo del contenido visible.
+  No hay catálogo administrable, conteos, búsqueda ni rutas por hashtag
+  en esta fase. Comunidades y membresías permanecen en Fase 5.
+
+### Esquema incremental aplicado en Sprint 1.2
+
+`posts` contiene `id`, `user_id`, `category_id`, `title`, `description`,
+`hashtags`, `image_path`, `status`, `operation_id`, `version`, `created_at`
+y `updated_at`. Solo se admite `status = 'published'`; cargas pendientes
+no son publicaciones incompletas. `operation_id` es UUID obligatorio y único
+por autor; la acción idempotente se completa en Sprint 2.2. `version`
+empieza en 1 y el trigger la incrementa; la edición debe filtrar por versión
+esperada para rechazar pérdida de cambios. Identidad, autor, operación,
+estado y fecha de creación no son editables.
+
+La referencia a `profiles` y `categories` es restrictiva, sin borrado en
+cascada: eliminar un perfil con publicaciones requiere resolver antes su
+contenido. Índices `(created_at DESC, id DESC)`, autor + orden y categoría
++ orden soportan la lectura estable. No hay columna `community_id`,
+`prompt` ni URL firmada en esta migración.
+
+La RPC `get_public_posts` combina explícitamente campos públicos de autor
+con contenido confirmado y categoría, sin ampliar RLS de `profiles` ni
+exponer `user_id`, `clerk_user_id`, `operation_id` o `version`.
+Las tablas privadas de operación/limpieza y políticas Storage se añadirán
+en Sprint 2.1 antes de habilitar el formulario de creación.
 
 ## 5. categories
 

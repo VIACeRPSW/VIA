@@ -15,6 +15,30 @@ updatePost(postId, data)
 deletePost(postId)
 ```
 
+El contrato de Fase 3 incorpora hashtags obligatorios en `createPost`
+y `updatePost`: entre 1 y 5 etiquetas únicas de 2–30 caracteres, con
+normalización y caracteres según [RF-04](01-ers.md). La validación se
+repite en servidor y PostgreSQL; campos y etiquetas se guardan de forma
+atómica. Las consultas devuelven las etiquetas del contenido autorizado,
+sin exponer identidades privadas ni permitir mutaciones ajenas.
+No se incorpora una operación de búsqueda por hashtag hasta Fase 5.
+
+Título obligatorio de 1–120 caracteres tras trim, descripción opcional de
+0–2000 y categoría existente obligatoria. Autor, rol, estado, timestamps
+y referencia de Storage no se aceptan del formulario. El servidor genera
+una operación UUID de idempotencia vinculada a sesión y payload: repetirla
+devuelve la misma publicación; reutilizarla con datos distintos da conflicto.
+La edición usa una versión esperada y rechaza actualizaciones obsoletas.
+El borrado exige confirmación explícita, retira la lectura pública antes
+de limpiar archivos y distingue retirada de limpieza física completada.
+Los roles elevados tampoco pueden mutar publicaciones ajenas en Fase 3.
+
+Las consultas públicas usan cursor compuesto `(created_at, id)` descendente,
+12 elementos por página y proyección explícita del autor, sin identidad
+Clerk ni ID privado del perfil. El DTO de imagen contiene una URL firmada
+de 60 segundos generada en lectura, nunca persistida. No se firma contenido
+pendiente ni retirado para terceros; la entrega debe respetar esa caducidad.
+
 ### Likes
 
 ``` text

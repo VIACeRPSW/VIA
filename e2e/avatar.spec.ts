@@ -81,7 +81,9 @@ test("validates, publishes, replaces and retires avatars with real Storage owner
       await expect(page.getByText("Procesando avatar...", { exact: true })).toBeVisible();
       await expect(input).toBeDisabled();
     } finally { release(); }
-    expect((await saved).ok()).toBe(true);
+    const savedResponse = await saved;
+    expect(savedResponse.ok()).toBe(true);
+    expect(await savedResponse.finished()).toBeNull();
     await expect(page.getByText("Avatar actualizado.", { exact: true })).toBeVisible();
     await page.unroute("**/perfil/editar");
     await page.reload();
@@ -141,11 +143,13 @@ test("validates, publishes, replaces and retires avatars with real Storage owner
     expect(protectedObject.data?.some((object) => object.name === path.split("/")[1])).toBe(true);
 
     await input.setInputFiles({ name: "replacement.webp", mimeType: "image/webp", buffer: webp });
-    await Promise.all([
+    const [replacedResponse] = await Promise.all([
       page.waitForResponse((response) => response.request().method() === "POST"
         && Boolean(response.request().headers()["next-action"]), { timeout: 60_000 }),
       page.getByRole("button", { name: "Reemplazar avatar", exact: true }).click(),
     ]);
+    expect(replacedResponse.ok()).toBe(true);
+    expect(await replacedResponse.finished()).toBeNull();
     await expect(page.getByText("Avatar actualizado.", { exact: true })).toBeVisible();
     await expect.poll(async () => {
       const listing = await owner.client?.storage.from("avatars").list(folder);
@@ -157,11 +161,13 @@ test("validates, publishes, replaces and retires avatars with real Storage owner
     expect(replacement.data?.avatar_url).not.toBe(url);
     await publicPage.reload();
     await expect(publicPage.getByRole("img", { name: "Avatar de Avatar E2E", exact: true })).toBeVisible();
-    await Promise.all([
+    const [removedResponse] = await Promise.all([
       page.waitForResponse((response) => response.request().method() === "POST"
         && Boolean(response.request().headers()["next-action"]), { timeout: 60_000 }),
       page.getByRole("button", { name: "Retirar avatar", exact: true }).click(),
     ]);
+    expect(removedResponse.ok()).toBe(true);
+    expect(await removedResponse.finished()).toBeNull();
     await expect(page.getByText("Avatar retirado.", { exact: true })).toBeVisible();
     await page.reload();
     await expect(page.getByText("Sin avatar.", { exact: true })).toBeVisible();

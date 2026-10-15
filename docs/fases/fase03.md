@@ -2,11 +2,11 @@
 
 ## Estado
 
-- Estado: Planificada
+- Estado: En curso — Sprint 1.1 completado; Sprint 1.2 implementado, en validación
 - Roadmap: Fase 3
 - Dependencias: cierre verificable de Fase 2; perfiles propios y proyección pública segura; autenticación Clerk → Supabase bajo RLS; Supabase PostgreSQL y Storage disponibles; aprobación de los contratos y diferencias con los wireframes en el Sprint 1.1.
 - Criterio de salida: CRUD completo de publicaciones con imagen persistente, listado, detalle, edición y eliminación propias, permisos equivalentes en aplicación, PostgreSQL y Storage, y vistas responsive comprobadas.
-- Restricción: este documento solo planifica. No autoriza implementar, aplicar migraciones, modificar servicios remotos ni desplegar.
+- Restricción: el usuario autorizó continuar la fase tras confirmar el cierre de Fase 2. El Sprint 1.1 resuelve contratos antes de implementar; las operaciones remotas, migraciones y despliegues requieren autorización específica.
 
 ## Objetivo
 
@@ -32,6 +32,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 | --- | --- |
 | Roadmap | Storage → Sprint 2.1; crear publicación → 2.2; listar y detalle → 3.1; editar → 4.1; eliminar → 4.2; salida CRUD completo → 5.1. Sprint 1.1 controla dependencias y 1.2 prepara las garantías de datos. |
 | Backlog | `VIA-009` → 2.1; `VIA-010` → 2.2; `VIA-011`, `VIA-012` → 3.1; `VIA-013` → 4.1; `VIA-014` → 4.2. `VIA-004`, `VIA-005` se reutilizan para esquema/RLS de publicaciones en 1.2, sin reabrir la base ya cerrada. |
+| Ampliación 2026-10-15 | `VIA-037`: hashtags obligatorios → contrato 1.1, garantías de datos 1.2, creación 2.2, lectura 3.1 y edición 4.1. Búsqueda/navegación por hashtag permanece en Fase 5. |
 | Requisitos | `RF-03`, `RF-04`, `RF-05`; `RF-02` solo para publicaciones en perfil; `RF-06` solo como referencia obligatoria de categoría; `RNF-01` a `RNF-06`; reglas de propiedad de la ERS; [modelo de datos](../inicio/04-modelo-datos.md), [seguridad](../inicio/05-seguridad-y-autorizacion.md), [arquitectura](../inicio/03-arquitectura.md), [acciones](../inicio/08-api-y-server-actions.md), [UI/UX](../inicio/09-ui-ux.md) y [testing](../inicio/11-testing.md). |
 | Proyecto | Pantallas 3, 4 y 5 → 2.2 y 3.1; galería y acciones de pantalla 7 → 3.1, 4.1 y 4.2. Pantallas 1 y 2 se conservan; 6 y 8 se trazan como diferidas, no implementadas. |
 
@@ -42,7 +43,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 | 1. Splash / bienvenida | `/` → `/` | Conservar marca, slogan y accesos de Fase 1; comprobar navegación y regresión en 3.1 y 5.1. No rehacer la portada. |
 | 2. Login / registro | `/login`, `/register` → `/sign-in`, `/sign-up` | Conservar Clerk y Google existentes; comprobar retorno a la operación solicitada y logout en 5.1. Alias y selección Estudiante/Docente requieren decisión; no cambiar autenticación aquí. |
 | 3. Home / feed | `/home` → `/inicio` | Imagen, título, autor y publicaciones recientes paginadas en 3.1. Hashtags destacados, buscador y comunidad quedan diferidos a Fase 5; no mostrar controles falsamente funcionales. |
-| 4. Crear / publicar | `/crear` → `/crear` | Selector de imagen y formulario en 2.1 y 2.2. Categoría obligatoria según ERS; comunidad y hashtags no se vuelven obligatorios sin modificar primero la especificación. |
+| 4. Crear / publicar | `/crear` → `/crear` | Selector de imagen y formulario en 2.1 y 2.2. Categoría y entre 1 y 5 hashtags obligatorios según ERS actualizada el 2026-10-15; comunidades permanecen en Fase 5. |
 | 5. Vista individual | `/post/:id` → `/post/[id]` | Imagen, autor público, título, descripción y retorno en 3.1; acceso a resolución original sujeto al mismo permiso que el detalle. Hashtags clicables diferidos a Fase 5. |
 | 6. Búsqueda y hashtags | `/buscar` → ruta por acordar con `/explorar` | Fase 5: `VIA-024`, `VIA-025`; búsqueda por hashtag no tiene identificador específico existente. Esta fase solo documenta el destino, sin crear pantalla, filtros ni conteos ficticios. |
 | 7. Perfil | `/perfil` → `/perfil`; galería propia `/imagenes` | Datos y avatar dependen del cierre de Fase 2. Galería y conteo real de publicaciones en 3.1; editar/eliminar propias en 4.1 y 4.2. Perfil público conserva `/usuario/[username]`. |
@@ -63,21 +64,87 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 
 | Tipo | Descripción | Mitigación o decisión requerida |
 | --- | --- | --- |
-| Bloqueo | Fase 2 aún no satisface su salida: avatar y autorización integral pendientes. | Cerrar sus sprints 2.2 y 3.1 con evidencia en su documento. No iniciar migraciones ni código de publicaciones antes. |
-| Decisión pendiente | Proyecto presenta hashtags obligatorios; ERS y UI base exigen categoría y dejan etiquetas opcionales. El modelo no contiene hashtags. | En 1.1 aprobar categoría obligatoria para Fase 3 y diferir hashtags a Fase 5. Si se exige adelantarlos, actualizar primero roadmap, modelo, requisitos y backlog; no ampliar silenciosamente esta fase. |
-| Decisión pendiente | Proyecto llama rol a Estudiante/Docente, pero los permisos existentes usan `user`, `moderator`, `admin`. | Tratar Estudiante/Docente como posible atributo educativo, nunca como privilegio. No añadirlo sin contrato y actualización de Fase 2/base; el CRUD usa roles persistidos existentes. |
-| Decisión pendiente | Rutas de Proyecto difieren de las implementadas y de la estructura base. | Aprobar la correspondencia de vistas anterior en 1.1; conservar rutas existentes. No crear aliases ni cambiar retornos globales sin decisión explícita. |
-| Dependencia | `category_id` obligatorio necesita un catálogo antes de Fase 5; `community_id` apunta a una tabla todavía ausente. | Aprobar en 1.1 solo `categories` mínimo y seed versionado de Historia, Ciencia, Arte, Tecnología y Matemáticas. Diferir `community_id` y su FK hasta que exista `communities`; registrar este incremento del modelo antes de migrar. |
-| Decisión pendiente | Falta contrato preciso de longitud, archivos, visibilidad, estado y borrado. | Acordarlo en 1.1 y reflejarlo en la base. Propuesta para revisión: título de 1–120 caracteres tras trim, descripción de 0–2000; JPEG/PNG/WebP hasta 5 MiB, dimensiones máximas de 4096 por eje. No son decisiones implementadas. |
+| Dependencia resuelta 2026-10-15 | Fase 2 completada con evidencia automatizada y confirmación manual del usuario. | Cierre enlazado en Sprint 1.1; habilita resolver contratos, no autoriza por sí solo cambios remotos. |
+| Decisión aprobada 2026-10-15 | El usuario adelanta solo hashtags a Fase 3 y exige al menos uno además de categoría obligatoria. | Entre 1 y 5 hashtags únicos de 2–30 caracteres; letras Unicode, números y guion bajo, minúsculas/NFC, sin espacios y sin `#` almacenado. Creación, edición y visualización en esta fase; búsqueda/navegación y comunidades en Fase 5. ERS, alcance, modelo, acciones, UI, roadmap y backlog (`VIA-037`) actualizados. |
+| Alcance preservado | Proyecto llama rol a Estudiante/Docente, pero los permisos existentes usan `user`, `moderator`, `admin`. | No incorporar un atributo educativo ni privilegios nuevos en este CRUD; conservar roles persistidos y rutas Clerk. |
+| Decisión aprobada 2026-10-15 | Rutas y lectura pública. | `/inicio` y `/post/[id]` públicos; `/crear`, `/imagenes` y `/post/[id]/editar` privados. Portada, acceso y perfil conservados sin aliases. |
+| Decisión aprobada 2026-10-15 | Categoría obligatoria y catálogo mínimo. | Historia, Ciencia, Arte, Tecnología y Matemáticas; comunidades, `community_id` y FK diferidos a Fase 5. |
+| Decisión aprobada 2026-10-15 | Límites de contenido e imagen. | Título 1–120 tras trim; descripción opcional 0–2000; JPEG/PNG/WebP estáticos hasta 5 MiB y 4096 por eje, normalizados sin metadatos. Contrato operativo detallado debajo. |
 | Riesgo | Un bucket público puede revelar cargas pendientes, publicaciones retiradas o archivos borrados solo en metadata. | Definir primero la visibilidad. Propuesta: lectura pública solo de publicaciones confirmadas y objetos asociados; cargas pendientes privadas. No suponer que RLS de tablas protege URLs públicas; definir entrega y caducidad de URLs firmadas cuando correspondan. |
 | Riesgo | La autoría utiliza `profiles.id`, mientras Storage y Clerk reconocen el `sub` textual. | Resolver el perfil en servidor, derivar rutas del `sub` y probar la asociación; no aceptar `user_id`, propietario, estado ni URL externa del formulario. |
 | Riesgo | Probar un feed público mediante joins podría ampliar lectura de perfiles privados. | Consumir únicamente la proyección pública de Fase 2; verificar también REST/RPC directo, no solo tipos o UI. |
 | Riesgo | Escribir metadata y objetos no es una única transacción; reintentos, edición o eliminación pueden dejar residuos. | Definir idempotencia, compensación y recuperación observable antes del upload. No informar éxito de limpieza cuando haya tareas pendientes; verificar residuos por sprint. |
-| Decisión pendiente | La seguridad base contempla moderación según alcance, pero no hay comunidades asignadas ni panel todavía. | En 1.1 fijar matriz propia para Fase 3 y diferir mutaciones ajenas privilegiadas a Fase 7. Un `moderator` no recibe permiso global implícito. Cualquier excepción admin debe documentarse y probarse antes de habilitarse. |
+| Decisión aprobada 2026-10-15 | Propiedad uniforme para todos los roles. | `user`, `moderator` y `admin` solo editan/eliminan publicaciones propias en Fase 3. Mutaciones ajenas privilegiadas y panel permanecen en Fase 7. |
 | Dependencia externa | Supabase y Clerk pueden haber cambiado desde las pruebas de septiembre/octubre; Preview y Production comparten temporalmente servicios. | Revalidar en entorno autorizado sin datos reales; probar objetos en entorno aislado. SQL reversible no revierte objetos Storage. No ejecutar reset o rollback destructivo contra el remoto compartido. |
 | Dependencia externa | Vercel requiere configuración compatible para servir imágenes y retornar desde autenticación. | Validar local primero; Preview/Production solo con autorización explícita, sin versionar secretos ni URLs firmadas de usuarios. |
 
 ## Hito 1 — Dependencias y barrera de datos comprobables
+
+### Actualización de dependencias — 2026-10-15
+
+La [Fase 2](fase02.md) está completada: 164 pruebas Vitest, cuatro E2E
+Chromium, tipos, lint, build, escaneo del cliente y matrices RLS/Storage
+superadas. El usuario confirmó revisión manual accesible, retirada aislada
+del bucket y flujo Google desplegado. La confirmación externa está
+identificada expresamente como tal en el cierre de Fase 2.
+El punto de partida y los riesgos anteriores se conservan como historial:
+el bloqueo por usuarios queda resuelto; las decisiones de publicaciones
+siguen pendientes hasta aprobación. No se ha creado esquema ni CRUD.
+
+### Contrato de hashtags aprobado — 2026-10-15
+
+El usuario decide adelantar solo hashtags, no comunidades; exige categoría
+y al menos un hashtag. Aprueba de 1 a 5 etiquetas únicas, de 2 a 30
+caracteres por etiqueta, con letras Unicode, números y guion bajo, sin
+espacios ni signos adicionales. Se normalizan a minúsculas y NFC,
+preservando tildes y `ñ`; el `#` inicial es opcional al escribir y no se
+almacena. Se deduplica después de normalizar y se valida entonces la
+cantidad. No se descartan etiquetas inválidas silenciosamente.
+
+La ampliación cubre alta, edición, persistencia y presentación como texto.
+No incluye links, página de hashtag, buscador, tendencias ni contadores.
+Las restricciones de escritura directa deben garantizar el mismo contrato
+que la acción; los hashtags y los otros campos se confirman atómicamente.
+Su representación SQL se fijará en 1.2. No se crea todavía código ni migraciones en este sprint documental.
+
+### Contrato operativo cerrado — 2026-10-15
+
+- Rutas aprobadas: `/inicio` y `/post/[id]` públicos; `/crear`, `/imagenes`
+  y `/post/[id]/editar` privados. Se conservan portada, autenticación y
+  perfiles existentes; no aliases ni cambio de retorno global de Clerk.
+- Campos aprobados: título 1–120 tras trim, descripción opcional 0–2000,
+  categoría obligatoria del catálogo inicial aprobado y hashtags del
+  contrato anterior. Comunidad y prompt no se ofrecen en este formulario.
+  ID, autor, estado, timestamps y referencia de Storage no son editables.
+- Imagen aprobada: JPEG, PNG o WebP estáticos, 1–5242880 bytes inclusive,
+  1–4096 píxeles por eje. Verificar MIME/contenido, rechazar animación,
+  SVG y archivo ilegible. Normalizar a WebP sin metadatos ni ampliación;
+  el resultado almacenado también debe respetar 5 MiB y 4096 por eje.
+- Visibilidad aprobada: publicaciones confirmadas públicas sin sesión,
+  bucket `posts` privado, cargas pendientes solo del propietario. Persistir
+  `image_path` canónico, nunca una URL firmada. Entrega con firma de 60
+  segundos, sin caché que prolongue la autorización ni credenciales admin.
+  Antes de firmar se comprueba visibilidad; una URL ya emitida puede durar
+  hasta expirar. No se prometen revocaciones de copias descargadas.
+- Propiedad aprobada: anónimo lee solo contenido confirmado; A crea con
+  perfil propio y edita/elimina solo A; B no modifica A. Moderador/admin
+  se comportan como propietarios ordinarios, sin excepción ajena. Formularios,
+  acciones directas, REST/RPC y Storage deben aplicar la misma matriz.
+- Parámetros técnicos: feed reciente con cursor `(created_at, id)`
+  descendente, 12 elementos por página, sin paginación offset. Autor público
+  con username, nombre visible y avatar seguro, sin identidad Clerk ni ID
+  privado del perfil. No se publican cargas pendientes ni retiradas.
+- Operación UUID vinculada a propietario y payload para idempotencia;
+  repetición devuelve el mismo resultado, payload distinto da conflicto.
+  Versión esperada en edición y confirmación explícita en borrado. Solo
+  filas completas `published` son públicas; cargas y cleanup son operativos
+  privados con lease de 10 minutos y recuperación invocada por propietario.
+  El borrado retira lectura primero y limpia objeto después; un fallo
+  produce aviso y reintento, nunca éxito de limpieza ficticio.
+- Límites y errores se prueban exactamente en TypeScript y PostgreSQL,
+  incluyendo Unicode y escrituras directas. Error de campo, sesión,
+  conflicto/idempotencia, edición obsoleta, 404, indisponibilidad y cleanup
+  pendiente se distinguen sin filtrar identificadores privados.
 
 ### Sprint 1.1 — Cierre previo y contrato aprobado
 
@@ -85,36 +152,62 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 
 **Alcance**
 
-- [ ] Verificación documental del cierre de Fase 2, sin absorber su trabajo.
-- [ ] Contrato aprobado de rutas, campos, imagen, visibilidad, categoría y permisos.
-- [ ] Matriz de vistas actuales, incrementos y elementos diferidos.
+- [x] Verificación documental del cierre de Fase 2, sin absorber su trabajo.
+- [x] Contrato aprobado de rutas, campos, imagen, visibilidad, categoría y permisos.
+- [x] Matriz de vistas actuales, incrementos y elementos diferidos.
 
 **Tareas**
 
-- [ ] `Sin identificador existente` Confirmar cierre de Fase 2 y enlazar sus evidencias; si sigue abierta, registrar bloqueo y detener el avance a 1.2.
-- [ ] `Sin identificador existente` Aprobar o resolver las decisiones pendientes de esta fase; actualizar documentos base afectados antes de implementar.
-- [ ] `VIA-010` Especificar campos, normalización, límites, obligatoriedad, estados publicables, errores y clave de idempotencia.
-- [ ] `VIA-009` Definir formatos, bytes y dimensiones máximos, validación real de contenido, rutas, visibilidad, recuperación y borrado de archivos.
-- [ ] `VIA-011` Acordar lectura pública/privada, orden reciente con desempate por ID, tamaño de página y proyección pública de autor.
-- [ ] `VIA-013` `VIA-014` Fijar matriz de propiedad y permisos directos; definir ruta de edición propuesta `/post/[id]/editar` y confirmación de borrado.
-- [ ] `Sin identificador existente` Aprobar catálogo mínimo de categorías y aplazamiento de comunidad/hashtags; documentar dependencia de Fase 5.
+- [x] `Sin identificador existente` Confirmar cierre de Fase 2 y enlazar sus evidencias; si sigue abierta, registrar bloqueo y detener el avance a 1.2.
+- [x] `Sin identificador existente` Aprobar o resolver las decisiones pendientes de esta fase; actualizar documentos base afectados antes de implementar.
+- [x] `VIA-010` Especificar campos, normalización, límites, obligatoriedad, estados publicables, errores y clave de idempotencia.
+- [x] `VIA-009` Definir formatos, bytes y dimensiones máximos, validación real de contenido, rutas, visibilidad, recuperación y borrado de archivos.
+- [x] `VIA-011` Acordar lectura pública/privada, orden reciente con desempate por ID, tamaño de página y proyección pública de autor.
+- [x] `VIA-013` `VIA-014` Fijar matriz de propiedad y permisos directos; definir ruta de edición propuesta `/post/[id]/editar` y confirmación de borrado.
+- [x] `Sin identificador existente` Aprobar catálogo mínimo de categorías; comunidades, búsqueda y navegación por hashtags permanecen en Fase 5. Alta/edición/visualización de hashtags obligatorios aprobadas para esta fase (`VIA-037`).
 
 **Criterios de aceptación**
 
-- [ ] CA-1.1.1 — Fase 2 está cerrada con evidencia, o el bloqueo impide expresamente comenzar 1.2.
-- [ ] CA-1.1.2 — No quedan decisiones abiertas necesarias para esquema, Storage o CRUD; contrato y documentos base son coherentes.
-- [ ] CA-1.1.3 — Las ocho pantallas tienen destino y fase responsable, sin controles prometidos que no se implementarán.
+- [x] CA-1.1.1 — Fase 2 está cerrada con evidencia, o el bloqueo impide expresamente comenzar 1.2.
+- [x] CA-1.1.2 — No quedan decisiones abiertas necesarias para esquema, Storage o CRUD; contrato y documentos base son coherentes.
+- [x] CA-1.1.3 — Las ocho pantallas tienen destino y fase responsable, sin controles prometidos que no se implementarán.
 
 **Pruebas**
 
-- [ ] P-1.1.1 — Unitarias: no aplica; se aprueban contratos, sin código (CA-1.1.2).
-- [ ] P-1.1.2 — Integración documental: contrastar salida y evidencias de Fase 2, permisos y dependencias del modelo; comprobar la puerta de avance (CA-1.1.1, CA-1.1.2).
-- [ ] P-1.1.3 — E2E documental: recorrer las ocho vistas en un guion de navegación, incluyendo login, alta pendiente y destinos diferidos (CA-1.1.3).
-- [ ] P-1.1.4 — Seguridad/RLS: revisar la matriz de lectura/escritura para anónimo, A, B, moderador y admin; sin ejecutar servicios en este sprint documental (CA-1.1.2).
+- [x] P-1.1.1 — Unitarias: no aplica; se aprueban contratos, sin código (CA-1.1.2).
+- [x] P-1.1.2 — Integración documental: contrastar salida y evidencias de Fase 2, permisos y dependencias del modelo; comprobar la puerta de avance (CA-1.1.1, CA-1.1.2).
+- [x] P-1.1.3 — E2E documental: recorrer las ocho vistas en un guion de navegación, incluyendo login, alta pendiente y destinos diferidos (CA-1.1.3).
+- [x] P-1.1.4 — Seguridad/RLS: revisar la matriz de lectura/escritura para anónimo, A, B, moderador y admin; sin ejecutar servicios en este sprint documental (CA-1.1.2).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Contratos y guion documental registrados a continuación; Sprint 1.1
+  completado el 2026-10-15.
+
+### Evidencia registrada del Sprint 1.1 — 2026-10-15
+
+- Fase 2 completada con sus pruebas y confirmación manual explícita del
+  usuario. Se elimina el bloqueo de usuarios, sin repetir su implementación.
+- Aprobaciones del usuario en esta sesión: hashtags obligatorios y solo
+  visuales, contrato Unicode 1–5/2–30, imágenes estáticas 5 MiB/4096,
+  lectura pública con bucket privado y firmas, título/descripción/catálogo,
+  mutación exclusivamente propia para todos los roles y rutas sin aliases.
+- ERS, alcance, modelo, seguridad, estructura, especificación, acciones,
+  UI, roadmap y backlog actualizados; nuevo identificador `VIA-037`.
+  Las garantías técnicas de cursor, idempotencia, versión y limpieza
+  quedan especificadas antes de diseñar el esquema.
+- Guion documental de las ocho vistas: portada conserva accesos → login
+  Clerk existente → sin perfil, completar primero → feed público →
+  crear exige sesión/perfil → detalle público con hashtags no clicables →
+  perfil/galería propias con edición y borrado autorizados. Búsqueda y
+  navegación por hashtags quedan en Fase 5; administración en Fase 7.
+  No se afirma que existan ni se hayan recorrido pantallas aún no creadas.
+- Matriz documental contrastada: anónimo solo lee publicado; A muta A,
+  B no muta A; moderador/admin no tienen excepción para contenido ajeno.
+  La tabla privada de perfiles y cargas pendientes no se exponen por joins,
+  RPC ni Storage. Las pruebas directas se implementarán en 1.2 y 2.1.
+- Sprint exclusivamente documental: no se han aplicado migraciones,
+  creado buckets de publicaciones ni desplegado. Sprint 1.2 queda pendiente.
 
 ### Sprint 1.2 — Esquema de publicaciones y RLS directa
 
@@ -122,36 +215,93 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 
 **Alcance**
 
-- [ ] Migración incremental de `posts` y catálogo mínimo aprobado, con restricciones e índices.
-- [ ] RLS, privilegios de columnas y proyecciones seguras para consultas.
-- [ ] Rollback/reaplicación sin pérdida de datos de usuarios.
+- [x] Migración incremental de `posts` y catálogo mínimo aprobado, con restricciones e índices.
+- [x] RLS, privilegios de columnas y proyecciones seguras para consultas.
+- [x] Rollback/reaplicación sin pérdida de datos de usuarios.
 
 **Tareas**
 
-- [ ] `VIA-004` Crear esquema según contrato aprobado: autor referenciado a `profiles`, categoría existente, título, descripción, referencia de imagen, estado y timestamps; no crear tablas sociales anticipadas.
-- [ ] `VIA-004` Versionar catálogo mínimo y restricciones de campos; preservar identidad, autor y timestamps no editables.
-- [ ] `VIA-004` Añadir índices para orden reciente, autor y categoría y probar paginación estable con fechas iguales.
-- [ ] `VIA-005` Resolver `profiles.id` desde el `sub` Clerk y aplicar la matriz aprobada de `SELECT`, `INSERT`, `UPDATE`, `DELETE`, incluidos `USING` y `WITH CHECK`.
-- [ ] `VIA-005` Limitar lectura pública al estado aprobado y evitar filtración de campos privados del autor; no usar `service_role` en consultas ordinarias.
+- [x] `VIA-004` Crear esquema según contrato aprobado: autor referenciado a `profiles`, categoría existente, título, descripción, referencia de imagen, estado y timestamps; no crear tablas sociales anticipadas.
+- [x] `VIA-037` Persistir hashtags con restricciones de cantidad, longitud, caracteres, forma canónica y unicidad por publicación; validar Unicode y escrituras directas sin publicar metadata parcial.
+- [x] `VIA-004` Versionar catálogo mínimo y restricciones de campos; preservar identidad, autor y timestamps no editables.
+- [x] `VIA-004` Añadir índices para orden reciente, autor y categoría y probar paginación estable con fechas iguales.
+- [x] `VIA-005` Resolver `profiles.id` desde el `sub` Clerk y aplicar la matriz aprobada de `SELECT`, `INSERT`, `UPDATE`, `DELETE`, incluidos `USING` y `WITH CHECK`.
+- [x] `VIA-005` Limitar lectura pública al estado aprobado y evitar filtración de campos privados del autor; no usar `service_role` en consultas ordinarias.
 - [ ] `VIA-004` Documentar rollback incremental, precondiciones y respaldo si hubiera datos; ensayar en base desechable y mantener intacto el catálogo de perfiles.
 
 **Criterios de aceptación**
 
 - [ ] CA-1.2.1 — Base limpia y actualización desde Fase 2 obtienen restricciones, catálogo e índices esperados; referencias inexistentes y datos inválidos se rechazan.
-- [ ] CA-1.2.2 — A solo escribe lo autorizado como A; B, anónimo, claims ausentes/malformados y roles no autorizados no pueden modificar filas ajenas ni reasignar autoría.
-- [ ] CA-1.2.3 — Lecturas públicas muestran solo contenido permitido y autor público, sin `clerk_user_id` ni datos privados.
-- [ ] CA-1.2.4 — Rollback y reaplicación preservan perfiles y reproducen el catálogo de la fase, sin fixtures residuales.
+- [x] CA-1.2.2 — A solo escribe lo autorizado como A; B, anónimo, claims ausentes/malformados y roles no autorizados no pueden modificar filas ajenas ni reasignar autoría.
+- [x] CA-1.2.3 — Lecturas públicas muestran solo contenido permitido y autor público, sin `clerk_user_id` ni datos privados.
+- [x] CA-1.2.4 — Rollback y reaplicación preservan perfiles y reproducen el catálogo de la fase, sin fixtures residuales.
 
 **Pruebas**
 
-- [ ] P-1.2.1 — Unitarias/SQL: límites, normalización, estados, FK inválidas e inmutabilidad; no duplicar lógica SQL en una utilidad ficticia (CA-1.2.1, CA-1.2.2).
+- [x] P-1.2.1 — Unitarias/SQL: límites, normalización, estados, FK inválidas e inmutabilidad; no duplicar lógica SQL en una utilidad ficticia (CA-1.2.1, CA-1.2.2).
 - [ ] P-1.2.2 — Integración: migrar base limpia y base de Fase 2; consultar catálogo, seed y paginación con empates; revertir/reaplicar y comparar objetos (CA-1.2.1, CA-1.2.4).
-- [ ] P-1.2.3 — E2E: no aplica aún; no hay UI de publicaciones. El flujo se verificará en 2.2 y 3.1.
-- [ ] P-1.2.4 — Seguridad/RLS: matriz SQL directa de CRUD con A/B, anónimo, moderador/admin según contrato, `sub` inválido y cambios de propietario; comprobar REST/RPC y columnas públicas (CA-1.2.2, CA-1.2.3).
+- [x] P-1.2.3 — E2E: no aplica aún; no hay UI de publicaciones. El flujo se verificará en 2.2 y 3.1.
+- [x] P-1.2.4 — Seguridad/RLS: matriz SQL directa de CRUD con A/B, anónimo, moderador/admin según contrato, `sub` inválido y cambios de propietario; comprobar REST/RPC y columnas públicas (CA-1.2.2, CA-1.2.3).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Parcial: falta instalación totalmente limpia en Supabase aislado.
+
+### Evidencia registrada del Sprint 1.2 — 2026-10-15
+
+- Usuario autoriza migración incremental y fixtures en transacciones
+  revertidas, sin bucket ni despliegue. Aplicada por MCP como
+  `20261015162153_add_posts_contract`; versión local y rollback alineados.
+  El intento de comprobación CLI `db push --dry-run` quedó esperando
+  conexión y se detuvo; no se usó para modificar la base.
+- `posts`/`categories` con RLS forzada, catálogo de cinco categorías,
+  autor derivado de `sub`, grants de columnas y matriz exclusivamente
+  propia para todos los roles. `text[]` unidimensional/base 1 con cantidad,
+  longitud por puntos de código, minúsculas/NFC y duplicados validados
+  en PostgreSQL 17 (`pg_c_utf8`), sin normalización silenciosa.
+- Referencias restrictivas sin `CASCADE`; imagen exige ruta propia y
+  objeto `storage.objects` existente con `owner_id` autenticado. No se
+  habilitan cargas reales: bucket, validación de bytes y tickets/limpieza
+  se incorporarán en 2.1 antes del formulario 2.2.
+- Operación única por autor, versión incrementada por trigger y campos
+  internos inmutables. Se prueban conflicto de operación, actualización
+  con versión obsoleta y atomicidad de errores; devolver idempotentemente
+  una operación repetida corresponde a la acción de Sprint 2.2.
+- `get_public_posts` expone doce campos públicos exactos con máximo doce
+  filas por página; feed/detalle/autor con cursor por fecha e ID.
+  Prueba con 17 fechas iguales obtiene páginas de 12 y 5 sin duplicados.
+  No expone identidad Clerk, ID privado de autor, operación ni versión.
+- `test:db:posts` y `test:db:posts:rollback` superados. El preflight desde
+  Fase 2 sin tablas de publicaciones también pasó sin persistir cambios.
+  Ensayo de rollback/reaplicación compara columnas, restricciones, índices,
+  funciones, grants, políticas, triggers y RLS; solo normaliza CRLF/LF
+  de las definiciones. Verifica rechazo con posts o categorías personalizadas
+  y preservación de filas/permisos de perfiles existentes.
+- `test:db:posts:api` superado con clave publicable: categorías y RPC
+  públicas disponibles, tablas privadas denegadas a anónimo/token alterado,
+  cursor incompleto rechazado con HTTP 400/SQLSTATE 22023. Es solo lectura;
+  la proyección no vacía se verifica en SQL con fixtures.
+- Regresión: 164 pruebas Vitest, typecheck, lint y matrices previas de
+  perfiles, jerarquía de roles, proyección pública y avatares superadas.
+  No se repiten build/E2E de UI: el incremento es SQL y scripts, sin
+  cambios adicionales de componentes o rutas en este sprint.
+- Consulta final: cero posts, cinco categorías, cero perfiles fixture,
+  cero objetos y buckets `posts`, cero tareas de limpieza. Los tests
+  usan solo metadatos Storage transaccionales, no archivos físicos.
+- **Pendiente real:** instalar toda la base desde cero y ensayar en un
+  Supabase desechable/aislado. No se encontraron `docker` ni `psql` en PATH.
+  El preflight en la base Fase 2 y su rollback transaccional no equivalen
+  a esa comprobación. CA-1.2.1, P-1.2.2 y la tarea de ensayo desechable
+  siguen abiertos; no se resetea el proyecto compartido ni se crea un
+  proyecto/rama con coste sin autorización.
+- Decisión posterior del usuario: usar la base existente, en el mismo
+  esquema que `profiles`, sin crear otra base. Se confirma por MCP que
+  `public.posts` y `public.categories` ya existen allí con RLS habilitada,
+  catálogo de cinco categorías y cero publicaciones de prueba. El ensayo
+  de instalación limpia queda diferido y no se ejecutará mediante un reset
+  del remoto compartido. La validación incremental anterior sí está completa;
+  los casilleros abiertos identifican solo ese ensayo adicional, no tablas
+  pendientes de crear ni un fallo de la migración aplicada.
 
 ## Hito 2 — Imagen publicada y persistente
 
@@ -206,7 +356,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 **Tareas**
 
 - [ ] `VIA-010` Crear validador compartido y acción de servidor; derivar autor de sesión/perfil y comprobar categoría y referencia de imagen propias.
-- [ ] `VIA-010` Construir `/crear` con imagen, título, descripción y categoría; omitir comunidad/hashtags activos hasta su fase.
+- [ ] `VIA-010` `VIA-037` Construir `/crear` con imagen, título, descripción, categoría y hashtags obligatorios; omitir comunidad hasta Fase 5.
 - [ ] `VIA-010` Revalidar sesión y perfil al enviar, gestionar doble envío y reintento idempotente, y devolver identificador confirmado.
 - [ ] `VIA-010` Ordenar upload/confirmación según contrato y compensar fallos; no publicar objetos pendientes por tener una URL.
 - [ ] `VIA-010` Mostrar confirmación mínima con ID real y revalidar las consultas afectadas; el enlace al detalle se incorporará en 3.1.
@@ -215,7 +365,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 **Criterios de aceptación**
 
 - [ ] CA-2.2.1 — Usuario con perfil y datos válidos obtiene exactamente una fila propia y una imagen asociada; ambos persisten tras recarga.
-- [ ] CA-2.2.2 — Falta de imagen/título/categoría, categoría inexistente o referencia de objeto ajeno se rechazan sin publicación parcial.
+- [ ] CA-2.2.2 — Falta de imagen/título/categoría/hashtags, categoría inexistente, hashtag inválido o referencia de objeto ajeno se rechazan sin publicación parcial.
 - [ ] CA-2.2.3 — Sesión ausente/expirada o perfil ausente impiden publicar, aunque se invoque directamente la acción.
 - [ ] CA-2.2.4 — Doble envío, pérdida de respuesta y fallo de inserción/confirmación no duplican publicación ni esconden limpieza pendiente.
 - [ ] CA-2.2.5 — Formulario tiene labels, foco, errores de campo y estado pendiente accesibles; funciona a 360, 768 y 1280 px.
@@ -224,6 +374,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 
 - [ ] P-2.2.1 — Unitarias: campos y límites exactos del contrato; normalización y clasificación segura de errores (CA-2.2.2, CA-2.2.4).
 - [ ] P-2.2.2 — Integración: acción + PostgreSQL + Storage, flujo válido, categorías inválidas, doble envío, respuesta perdida y fallos parciales; inspeccionar filas y objetos (CA-2.2.1, CA-2.2.2, CA-2.2.4).
+- [ ] `VIA-037` Unitarias/integración: límites 1/5 etiquetas y 2/30 caracteres, rechazo 0/6 y 1/31, Unicode/NFC, mayúsculas, prefijo, duplicados, caracteres inválidos y atomicidad en errores de hashtags (CA-2.2.2).
 - [ ] P-2.2.3 — E2E: login → `/crear` → corregir error → publicar → confirmación → recarga; comprobar teclado y responsive (CA-2.2.1, CA-2.2.5). `E2E-02` completo se cierra en 3.1.
 - [ ] P-2.2.4 — Seguridad/RLS: invocar sin sesión/perfil, con sesión expirada, autor alterado y archivo B; comprobar rechazo directo en PostgreSQL/Storage (CA-2.2.2, CA-2.2.3).
 
@@ -249,7 +400,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 - [ ] `VIA-011` Implementar feed reciente con cursor estable y galerías filtradas por propietario; no descargar todo para filtrar en el navegador.
 - [ ] `VIA-012` Implementar detalle y acceso a imagen original con el mismo permiso; validar ID y distinguir error de servicio de inexistencia.
 - [ ] `VIA-011` Incorporar galería y conteo real en perfil propio; mantener edición de perfil existente separada de edición de post.
-- [ ] `VIA-011` `VIA-012` Mostrar imagen, título, autor, descripción y categoría; mantener buscador, hashtags e interacciones diferidos sin botones engañosos.
+- [ ] `VIA-011` `VIA-012` `VIA-037` Mostrar imagen, título, autor, descripción, categoría y hashtags como texto; mantener buscador, navegación por hashtag e interacciones diferidos sin botones engañosos.
 - [ ] `Sin identificador existente` Conectar portada/acceso, feed, crear y volver; conservar retorno tras login. Dejar acciones editar/eliminar para sus sprints, sin enlaces rotos.
 - [ ] `Sin identificador existente` Optimizar imágenes con dimensiones estables, alternativa textual y origen permitido; asegurar contraste, foco y responsive.
 
@@ -288,6 +439,7 @@ La revisión inicial fue local y documental. La actualización de estado de Fase
 **Tareas**
 
 - [ ] `VIA-013` Cargar datos autorizados y reutilizar formulario/validadores de creación; conservar autor, ID y campos internos.
+- [ ] `VIA-037` Editar hashtags propios con el mismo contrato y persistencia atómica; comprobar sustitución, duplicados, rechazo de lista vacía, escritura ajena y recarga en feed/detalle.
 - [ ] `VIA-013` Comprobar sesión y propiedad en servidor y en la mutación RLS; no confiar en controles ocultos.
 - [ ] `VIA-013` Definir control de concurrencia conforme al contrato y avisar de edición obsoleta en lugar de perder cambios silenciosamente.
 - [ ] `VIA-013` Cargar imagen nueva, confirmar referencia y retirar la anterior en el orden aprobado; mantener original ante fallo y registrar cleanup pendiente si procede.

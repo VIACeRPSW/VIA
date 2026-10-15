@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: { serverActions: { bodySizeLimit: "3mb" } },
+  experimental: { serverActions: { bodySizeLimit: "6mb" } },
   images: {
     maximumRedirects: 0,
     remotePatterns: process.env.NEXT_PUBLIC_SUPABASE_URL

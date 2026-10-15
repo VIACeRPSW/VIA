@@ -1,19 +1,10 @@
 import { SignOutButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
-import { getOwnProfile } from "@/lib/profiles/read-profile.server";
+import { getProfileForRoute } from "@/lib/profiles/profile-route.server";
 
 export default async function ProfilePage() {
-  const result = await getOwnProfile();
-
-  if (result.status === "unauthorized") {
-    redirect("/sign-in");
-  }
-
-  if (result.status === "missing") {
-    redirect("/perfil/completar");
-  }
+  const result = await getProfileForRoute("existing");
 
   return (
     <main className="profile-page">
@@ -35,6 +26,7 @@ export default async function ProfilePage() {
         <>
           <ProfileDetails profile={result.profile} />
           <nav className="profile-actions" aria-label="Acciones de mi perfil">
+            <Link className="button button-primary" href="/crear">Crear publicación</Link>
             <Link className="button button-primary" href="/perfil/editar">Editar mi perfil</Link>
             <Link className="button button-secondary" href={`/usuario/${result.profile.username}`}>
               Ver perfil público

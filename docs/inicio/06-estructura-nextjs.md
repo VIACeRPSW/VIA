@@ -52,13 +52,14 @@ via/
 ## 2. Convención de rutas
 
 -   `/` --- portada.
--   `/inicio` --- feed autenticado.
+-   `/inicio` --- feed público de publicaciones confirmadas (Fase 3).
 -   `/explorar` --- descubrimiento.
 -   `/comunidades` --- comunidades.
 -   `/comunidades/[id]` --- detalle.
 -   `/crear` --- crear publicación.
 -   `/imagenes` --- publicaciones propias.
 -   `/post/[id]` --- publicación.
+-   `/post/[id]/editar` --- edición de publicación propia, autenticada.
 -   `/ranking` --- ranking.
 -   `/perfil` --- perfil propio.
 -   `/usuario/[username]` --- perfil público.

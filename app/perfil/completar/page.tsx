@@ -1,25 +1,12 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { CompleteProfileForm } from "@/components/profile/CompleteProfileForm";
 import { resolveWelcomeIdentity } from "@/lib/clerk/welcome-identity";
-import { getProfileDataStatus } from "@/lib/supabase/profile-status.server";
-import { getProfileDataStatusLabel } from "@/lib/supabase/profile-status";
+import { getProfileForRoute } from "@/lib/profiles/profile-route.server";
 
 export default async function CompleteProfilePage() {
-  const { isAuthenticated, userId } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    redirect("/sign-in");
-  }
-
-  const profileStatus = await getProfileDataStatus();
-
-  if (profileStatus === "profile-found") {
-    redirect("/perfil");
-  }
-
-  const canCreateProfile = profileStatus === "ready";
+  const result = await getProfileForRoute("onboarding");
+  const canCreateProfile = result.status === "missing";
   const identity = canCreateProfile
     ? await resolveWelcomeIdentity(currentUser)
     : null;
@@ -42,8 +29,7 @@ export default async function CompleteProfilePage() {
           <CompleteProfileForm initialDisplayName={identity.displayName} />
         ) : (
           <p className="form-status" role="status">
-            {getProfileDataStatusLabel(profileStatus)}. Inténtalo de nuevo más
-            tarde.
+            No pudimos cargar tu perfil. Inténtalo de nuevo más tarde.
           </p>
         )}
       </section>

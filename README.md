@@ -101,6 +101,15 @@ visitar un perfil público sin iniciar sesión, usando el username canónico
 en minúsculas; nombres inexistentes o no canónicos muestran el estado 404.
 Un fallo del servicio se distingue de un perfil inexistente.
 
+Las tres rutas privadas comparten una guarda de servidor que consulta el
+perfil de la identidad Clerk autenticada y valida su rol almacenado
+(`user`, `moderator` o `admin`). Una sesión ausente o expirada vuelve a
+`/sign-in`; sin perfil, consulta y edición dirigen a `/perfil/completar`;
+con perfil válido, el alta dirige a `/perfil`. Un rol ausente o desconocido
+o un fallo de datos impide mostrar formularios y no se interpreta como
+ausencia de perfil. El rol es de solo lectura en la interfaz; cada acción
+mantiene su propia comprobación de sesión y propiedad, además de RLS.
+
 La consulta pública usa la función PostgreSQL `get_public_profile`, que
 devuelve únicamente username, nombre visible, biografía, avatar y rol.
 No concede lectura anónima de `profiles` ni expone identificadores Clerk.
@@ -149,6 +158,7 @@ npm run build
 npm run test:client-secrets
 npm run test:db:auth-boundary
 npm run test:db:rls
+npm run test:db:roles
 npm run test:db:public-profiles
 npm run test:db:avatars
 npm run test:db:rollback
@@ -168,6 +178,55 @@ concurrencia y expiración dentro de una transacción revertida. El E2E
 `avatar.spec.ts` usa dos usuarios Clerk Development y archivos generados
 localmente; comprueba el flujo visual y la API real de Storage y limpia
 objetos físicos antes de eliminar las identidades de prueba.
+
+### Esquema de publicaciones (Fase 3)
+
+La migración `20261015162153_add_posts_contract.sql` añade `categories`
+con las cinco categorías aprobadas y `posts` con RLS forzada, autor derivado
+del JWT, restricciones de contenido y hashtags canónicos `text[]`.
+No crea todavía bucket, carga de imágenes ni páginas de publicaciones.
+Una inserción exige un objeto existente en `posts`, con ruta y `owner_id`
+propios; las políticas de carga y validación de imagen corresponden al
+Sprint 2.1.
+
+La tabla `posts` solo permite leer o mutar filas propias, también para
+moderador/admin. La RPC pública `get_public_posts` entrega una proyección
+sin identidad Clerk, ID privado de perfil, operación ni versión interna.
+Acepta ID para detalle, username para galería o cursor compuesto
+`p_before_created_at`/`p_before_id`, siempre con máximo 12 resultados.
+Ambas partes del cursor son obligatorias juntas; una consulta inválida
+produce un error explícito. La ruta de imagen se entrega sin firma;
+la entrega firmada de 60 segundos se implementará con Storage.
+
+```bash
+npm run test:db:posts
+npm run test:db:posts:api
+npm run test:db:posts:rollback
+```
+
+Las pruebas SQL usan perfiles y metadatos Storage efímeros dentro de una
+transacción revertida; no suben archivos físicos ni necesitan secretos
+administrativos en la aplicación. La prueba HTTP es de solo lectura y
+comprueba catálogo, frontera privada, RPC pública y cursor inválido.
+La matriz SQL verifica la forma de la proyección incluso si el feed real
+está vacío.
+
+El ensayo de rollback compara esquema, índices, restricciones, funciones,
+privilegios y políticas después de reaplicar y comprueba que perfiles
+existentes y sus políticas/triggers permanezcan intactos. Normaliza solo
+los finales de línea Windows al comparar definiciones de funciones.
+**Rechaza publicaciones existentes o categorías personalizadas**; antes
+de una retirada real se requiere respaldo y resolución de datos.
+No elimina buckets ni objetos físicos, ni usa `CASCADE`.
+
+Antes de aplicar esta migración a una base Fase 2 sin `posts`/`categories`,
+puede ensayarse sin persistir el esquema:
+
+```powershell
+node scripts\test-supabase-posts-migration.mjs --preflight
+```
+
+Este ensayo no equivale a reinstalar todo Supabase desde cero.
 
 Para ensayar el rollback de avatar con bucket, referencias y registro vacíos:
 

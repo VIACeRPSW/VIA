@@ -1,6 +1,7 @@
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
-export const AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
-export const AVATAR_PATH_PATTERN = /^[a-f0-9]{64}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.webp$/;
+export { IMAGE_MIME_TYPES as AVATAR_MIME_TYPES } from "@/lib/images/image-contract";
+import { IMAGE_PATH_PATTERN as AVATAR_PATH_PATTERN } from "@/lib/images/image-contract";
+export { AVATAR_PATH_PATTERN };
 
 export function isAvatarPath(path: string) {
   return AVATAR_PATH_PATTERN.test(path) && path === path.trim();

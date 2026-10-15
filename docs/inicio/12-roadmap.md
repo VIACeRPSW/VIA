@@ -52,6 +52,8 @@ datos.
 -   Detalle.
 -   Editar.
 -   Eliminar.
+-   Crear, editar y mostrar de 1 a 5 hashtags obligatorios por publicación
+    (ampliación aprobada el 2026-10-15). Sin búsqueda por hashtag todavía.
 
 **Salida:** CRUD completo.
 
@@ -71,6 +73,7 @@ datos.
 -   Categorías.
 -   Búsqueda.
 -   Filtros.
+-   Búsqueda y navegación por hashtags ya persistidos desde Fase 3.
 
 **Salida:** descubrimiento y organización.
 

@@ -84,13 +84,27 @@ Una publicación deberá permitir almacenar como mínimo:
 -   Título.
 -   Descripción.
 -   Categoría.
+-   Hashtags: de 1 a 5 etiquetas únicas obligatorias desde Fase 3.
 
-Podrá incluir comunidad, etiquetas y prompt.
+Podrá incluir comunidad y prompt en sus fases correspondientes.
+El 2026-10-15 se aprobó adelantar creación, edición y visualización de
+hashtags a Fase 3, sin búsqueda ni navegación por hashtag hasta Fase 5.
+Cada etiqueta tendrá de 2 a 30 caracteres Unicode (letras, números o
+guion bajo), en minúsculas y forma NFC, sin espacios; el prefijo `#`
+de entrada no se almacena. La cantidad se valida después de normalizar
+y eliminar duplicados. Una publicación sin etiquetas válidas no se publica.
 
 ### RF-05 CRUD de publicaciones
 
 El propietario podrá crear, consultar, modificar y eliminar sus
 publicaciones.
+
+Contrato aprobado para Fase 3 el 2026-10-15: título obligatorio de 1–120
+caracteres tras trim, descripción opcional de hasta 2000; imagen JPEG, PNG
+o WebP estático de hasta 5 MiB y 4096 píxeles por eje, normalizada sin
+metadatos. Publicaciones confirmadas públicas sin sesión; cargas pendientes
+privadas, entrega desde bucket privado mediante URLs firmadas de corta
+duración. Todos los roles editan/eliminan solo contenido propio en esta fase.
 
 ### RF-06 Categorías
 

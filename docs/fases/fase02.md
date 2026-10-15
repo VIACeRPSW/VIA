@@ -2,7 +2,7 @@
 
 ## Estado
 
-- Estado: En curso
+- Estado: Completada
 - Roadmap: Fase 2
 - Dependencias: Fase 1 completada; autenticación de Clerk y conexión autenticada a Supabase operativas; tabla `profiles` y RLS iniciales aplicadas; proyecto de Supabase Storage disponible; decisión temporal de usar la instancia Clerk Development fuera de datos reales hasta disponer de dominio propio.
 - Criterio de salida: sistema de usuarios funcional con perfil persistente asociado a Clerk, username único, avatar, edición propia, rol protegido y rutas públicas/privadas autorizadas correctamente.
@@ -213,7 +213,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] `VIA-008` Implementar acciones de subida y retirada que validen sesión, archivo, propiedad y referencia del perfil, y que manejen reemplazos sin objetos huérfanos.
 - [x] `VIA-008` Incorporar selector, previsualización, progreso/estado pendiente, reemplazo, eliminación, fallback y mensajes accesibles en la edición de perfil.
 - [x] `VIA-008` Servir el avatar de forma compatible con la optimización de imágenes y sin aceptar URLs arbitrarias aportadas por el cliente.
-- [ ] `Sin identificador existente` Documentar y ensayar rollback de bucket, políticas y referencias de prueba.
+- [x] `Sin identificador existente` Documentar y ensayar rollback de bucket, políticas y referencias de prueba.
 
 **Criterios de aceptación**
 
@@ -222,7 +222,7 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] CA-2.2.3 — Un usuario no puede escribir, reemplazar ni eliminar objetos de otro; la lectura se limita al contrato público definido.
 - [x] CA-2.2.4 — Reemplazar o retirar el avatar actualiza referencia y objeto sin dejar datos inconsistentes u objetos de prueba residuales.
 - [x] CA-2.2.5 — Fallos parciales de Storage o base de datos se presentan de forma recuperable y se registran sin rutas firmadas ni datos personales.
-- [ ] CA-2.2.6 — El avatar tiene texto alternativo o tratamiento decorativo correcto, dimensiones estables y no deforma la interfaz responsive.
+- [x] CA-2.2.6 — El avatar tiene texto alternativo o tratamiento decorativo correcto, dimensiones estables y no deforma la interfaz responsive.
 
 **Pruebas**
 
@@ -230,15 +230,22 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 - [x] P-2.2.2 — Integración: subir, reemplazar y retirar avatar; simular error de Storage y de actualización de perfil comprobando compensación (CA-2.2.1, CA-2.2.4, CA-2.2.5).
 - [x] P-2.2.3 — E2E: seleccionar imagen válida, verla tras recarga y en perfil público, reemplazarla, retirarla y probar un archivo inválido (CA-2.2.1, CA-2.2.2, CA-2.2.6).
 - [x] P-2.2.4 — Seguridad/RLS/Storage: probar lectura permitida y escrituras propias/ajenas directamente contra Storage, incluidas rutas manipuladas y sesión ausente (CA-2.2.3).
-- [ ] P-2.2.5 — Migración/rollback: aplicar y retirar bucket/políticas en entorno de prueba, verificando ausencia de objetos residuales (CA-2.2.4).
-- [ ] P-2.2.6 — Accesibilidad/responsive: comprobar nombre accesible de controles, foco, anuncio de errores, dimensiones estables y vistas móvil/escritorio (CA-2.2.6).
+- [x] P-2.2.5 — Migración/rollback: aplicar y retirar bucket/políticas en entorno de prueba, verificando ausencia de objetos residuales (CA-2.2.4).
+- [x] P-2.2.6 — Accesibilidad/responsive: comprobar nombre accesible de controles, foco, anuncio de errores, dimensiones estables y vistas móvil/escritorio (CA-2.2.6).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Evidencia automatizada y confirmación manual del usuario registradas a
+  continuación; completado el 2026-10-15.
 
 ### Evidencia registrada del Sprint 2.2
 
+- 2026-10-15: el usuario confirma satisfactoriamente la revisión manual
+  accesible y responsive del avatar y la retirada del bucket en un entorno
+  aislado. Evidencia declarada por el usuario, no ejecución de este agente;
+  no se aportaron logs ni identificador del entorno. Esta confirmación
+  cierra los pendientes manuales y de retirada física registrados debajo,
+  que se conservan como historial. El avatar del remoto compartido no se toca.
 - 2026-10-14: contrato aprobado por el usuario: JPEG, PNG y WebP, máximo
   2 MiB; autorización explícita para bucket público, políticas, registro
   privado y pruebas remotas con archivos efímeros.
@@ -282,48 +289,96 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 
 **Alcance**
 
-- [ ] Matriz de acceso para rutas públicas, privadas y de onboarding.
-- [ ] Rol visible de solo lectura y autorización centralizada.
-- [ ] Recorrido desplegado de alta, consulta, edición y avatar.
+- [x] Matriz de acceso para rutas públicas, privadas y de onboarding.
+- [x] Rol visible de solo lectura y autorización centralizada.
+- [x] Recorrido desplegado de alta, consulta, edición y avatar.
 
 **Tareas**
 
-- [ ] `Sin identificador existente` Centralizar guardas para `/perfil`, `/perfil/completar` y `/perfil/editar`, conservando `/usuario/[username]` como ruta pública de datos limitados.
-- [ ] `VIA-006` Resolver el rol desde `profiles` en servidor y tratar rol ausente, desconocido o fallo de datos de forma cerrada.
-- [ ] `VIA-007` Auditar que todas las mutaciones vuelvan a comprobar sesión, propiedad y referencias aunque el cliente altere formularios o invoque acciones directamente.
-- [ ] `VIA-008` Auditar que las políticas de Storage y datos sean equivalentes a las comprobaciones de aplicación.
-- [ ] `Sin identificador existente` Ejecutar el recorrido completo en los entornos autorizados y revisar que respuestas, logs y bundle no expongan secretos ni datos internos.
+- [x] `Sin identificador existente` Centralizar guardas para `/perfil`, `/perfil/completar` y `/perfil/editar`, conservando `/usuario/[username]` como ruta pública de datos limitados.
+- [x] `VIA-006` Resolver el rol desde `profiles` en servidor y tratar rol ausente, desconocido o fallo de datos de forma cerrada.
+- [x] `VIA-007` Auditar que todas las mutaciones vuelvan a comprobar sesión, propiedad y referencias aunque el cliente altere formularios o invoque acciones directamente.
+- [x] `VIA-008` Auditar que las políticas de Storage y datos sean equivalentes a las comprobaciones de aplicación.
+- [x] `Sin identificador existente` Ejecutar el recorrido completo en los entornos autorizados y revisar que respuestas, logs y bundle no expongan secretos ni datos internos.
 
 **Criterios de aceptación**
 
-- [ ] CA-3.1.1 — Las rutas privadas redirigen sesiones ausentes o expiradas; las rutas de completar/editar responden según exista o no perfil y la ruta pública no revela datos privados.
-- [ ] CA-3.1.2 — El rol almacenado se muestra como solo lectura y cualquier valor desconocido o intento de elevación falla cerrado.
-- [ ] CA-3.1.3 — Alterar cliente, formulario, username, identificador de perfil o ruta de Storage no permite actuar sobre otro usuario.
-- [ ] CA-3.1.4 — El flujo Google → alta de perfil → avatar → edición → perfil público → logout funciona en móvil y escritorio en cada entorno autorizado.
-- [ ] CA-3.1.5 — TypeScript estricto, lint, build, pruebas y escaneo de secretos terminan correctamente sin credenciales administrativas en la aplicación.
+- [x] CA-3.1.1 — Las rutas privadas redirigen sesiones ausentes o expiradas; las rutas de completar/editar responden según exista o no perfil y la ruta pública no revela datos privados.
+- [x] CA-3.1.2 — El rol almacenado se muestra como solo lectura y cualquier valor desconocido o intento de elevación falla cerrado.
+- [x] CA-3.1.3 — Alterar cliente, formulario, username, identificador de perfil o ruta de Storage no permite actuar sobre otro usuario.
+- [x] CA-3.1.4 — El flujo Google → alta de perfil → avatar → edición → perfil público → logout funciona en móvil y escritorio en cada entorno autorizado.
+- [x] CA-3.1.5 — TypeScript estricto, lint, build, pruebas y escaneo de secretos terminan correctamente sin credenciales administrativas en la aplicación.
 
 **Pruebas**
 
-- [ ] P-3.1.1 — Unitarias: probar decisión de ruta y rol con perfil ausente, `user`, rol desconocido y estado de datos no disponible (CA-3.1.1, CA-3.1.2).
-- [ ] P-3.1.2 — Integración: invocar consultas y acciones con sesión válida, ausente, expirada, identidad ajena y referencias manipuladas (CA-3.1.1 a CA-3.1.3).
-- [ ] P-3.1.3 — E2E: ejecutar el recorrido completo de usuario y repetir acceso directo anónimo a rutas privadas en móvil y escritorio (CA-3.1.4).
-- [ ] P-3.1.4 — Seguridad/RLS/Storage: ejecutar la matriz directa como anónimo, propietario y otro usuario para filas y objetos; confirmar rechazo de elevación de rol (CA-3.1.2, CA-3.1.3).
-- [ ] P-3.1.5 — Configuración/build: ejecutar typecheck, lint, build, suite completa y escaneo de secretos; inspeccionar que no exista `service_role` en código ni bundle (CA-3.1.5).
-- [ ] P-3.1.6 — Accesibilidad/responsive: recorrer alta, perfil, edición y avatar con teclado, lector de pantalla y vistas móvil/escritorio (CA-3.1.4).
+- [x] P-3.1.1 — Unitarias: probar decisión de ruta y rol con perfil ausente, `user`, rol desconocido y estado de datos no disponible (CA-3.1.1, CA-3.1.2).
+- [x] P-3.1.2 — Integración: invocar consultas y acciones con sesión válida, ausente, expirada, identidad ajena y referencias manipuladas (CA-3.1.1 a CA-3.1.3).
+- [x] P-3.1.3 — E2E: ejecutar el recorrido completo de usuario y repetir acceso directo anónimo a rutas privadas en móvil y escritorio (CA-3.1.4).
+- [x] P-3.1.4 — Seguridad/RLS/Storage: ejecutar la matriz directa como anónimo, propietario y otro usuario para filas y objetos; confirmar rechazo de elevación de rol (CA-3.1.2, CA-3.1.3).
+- [x] P-3.1.5 — Configuración/build: ejecutar typecheck, lint, build, suite completa y escaneo de secretos; inspeccionar que no exista `service_role` en código ni bundle (CA-3.1.5).
+- [x] P-3.1.6 — Accesibilidad/responsive: recorrer alta, perfil, edición y avatar con teclado, lector de pantalla y vistas móvil/escritorio (CA-3.1.4).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Evidencia automatizada y confirmación manual del usuario registradas a
+  continuación; completado el 2026-10-15.
+
+### Evidencia registrada del Sprint 3.1
+
+- 2026-10-15: cierre posterior confirmado por el usuario: los tres pendientes
+  (revisión manual accesible, retirada aislada del bucket y flujo Google
+  desplegado) ya fueron validados satisfactoriamente. Se registra como
+  confirmación del usuario, sin atribuir al agente un despliegue, una prueba
+  Google o la eliminación de un bucket. No se facilitaron URL del despliegue
+  ni logs del ensayo aislado. Esta confirmación resuelve los pendientes
+  descritos en la evidencia histórica siguiente y permite cerrar la fase.
+- 2026-10-15: las tres rutas privadas usan
+  [una guarda compartida](../../lib/profiles/profile-route.server.ts).
+  El alta consulta el mismo contrato de perfil y rol que consulta/edición;
+  un rol ausente o desconocido muestra indisponibilidad sin formulario.
+  No se confunde un fallo de datos con la ausencia de perfil.
+- 164 pruebas Vitest en 13 archivos, typecheck y lint superados. Build
+  de producción y escaneo de secretos del cliente superados. Inspección
+  del código de aplicación sin `service_role`, `SUPABASE_SERVICE_ROLE`
+  ni `sb_secret_`; cliente ordinario con clave publicable y JWT Clerk.
+- Cuatro E2E Chromium superados: alta/edición/proyección pública, avatar
+  completo con propiedad real de Storage, vista de perfil inexistente y
+  token realmente expirado. Logout y acceso directo anónimo a las tres
+  rutas privadas comprobados a 375 y 1280 px; un perfil existente no
+  puede volver al formulario de alta.
+- La prueba de expiración espera 67 segundos tras emitir un token de
+  60 segundos y verifica las tres rutas privadas sin campos editables.
+  Admite el 307 o el redirect mediante meta refresh de Next.js streaming
+  con HTTP 200, exigiendo explícitamente el destino `/sign-in`.
+  Las pruebas de avatar esperan a que finalice la respuesta de la acción,
+  no solo a recibir sus cabeceras.
+- Frontera HTTP anónima/token alterado, RLS de perfiles, jerarquía de
+  roles, proyección pública y RLS de avatar/journal/CAS superadas contra
+  el proyecto enlazado. El MCP volvió a responder tras autenticar.
+- Consulta posterior al E2E: cero perfiles `via_e2e_*`, cero tareas de
+  limpieza y un objeto/referencia de avatar, igual al estado previo del
+  usuario. Las limpiezas de fixtures terminaron sin error.
+- El ensayo de rollback se detuvo por su precondición: existe un avatar
+  real. No se retiró ni modificó ese recurso para forzar la prueba.
+  Sigue pendiente la retirada física del bucket en un entorno aislado.
+- El servidor de desarrollo registró fallos transitorios de lectura/token
+  y peticiones Clerk canceladas al cerrar contextos; las cuatro pruebas
+  terminaron correctamente. No se considera una ejecución sin avisos ni
+  evidencia de estabilidad del servicio desplegado.
+- Permanecen pendientes la revisión manual con lector de pantalla del
+  avatar y el flujo Google en los entornos desplegados autorizados.
+  El acceso E2E usa helpers de Clerk Development, no sustituye Google.
+  Fase 2 no se cierra y no se inicia código ni migraciones de Fase 3.
 
 ## Validación final de la fase
 
-- [ ] Todos los criterios de aceptación están verificados.
-- [ ] Pruebas unitarias, integración y E2E requeridas superadas.
-- [ ] Permisos de aplicación, RLS y Storage verificados cuando aplican.
-- [ ] Migraciones y procedimiento de rollback validados cuando aplican.
-- [ ] Accesibilidad y responsive comprobados cuando existe UI.
-- [ ] Documentación base actualizada si cambió una decisión.
-- [ ] Criterio de salida del roadmap demostrado.
+- [x] Todos los criterios de aceptación están verificados.
+- [x] Pruebas unitarias, integración y E2E requeridas superadas.
+- [x] Permisos de aplicación, RLS y Storage verificados cuando aplican.
+- [x] Migraciones y procedimiento de rollback validados cuando aplican.
+- [x] Accesibilidad y responsive comprobados cuando existe UI.
+- [x] Documentación base actualizada si cambió una decisión.
+- [x] Criterio de salida del roadmap demostrado.
 
 ## Registro de progreso
 
@@ -333,4 +388,5 @@ La fase no habilitará gestión administrativa de roles ni las funcionalidades s
 | 2026-10-14 | 1.2 | Completado | Consultas/vistas propias y públicas, RPC remota, pruebas locales, E2E responsive, permisos directos, rollback transaccional y revisión manual confirmada por el usuario. | P-1.2.5 completada; tercera captura en InPrivate. |
 | 2026-10-14 | 2.1 | Completado | Edición propia, 107 pruebas, dos E2E, RLS transaccional, tipos, lint, build y secretos superados; revisión manual confirmada por el usuario. | Cero fixtures residuales. |
 | 2026-10-14 | 2.2 | En validación | Avatar implementado, migración remota, RLS/CAS, 150 pruebas, 3 E2E, tipos, lint, build y secretos superados; cero fixtures residuales. | Pendientes revisión manual de nueva UI y ensayo aislado de retirada física del bucket por API; no se desactiva la protección de Storage. |
-| 2026-09-29 | 3.1 | Pendiente | — | Cierre integral tras completar los hitos anteriores. |
+| 2026-10-15 | 3.1 | En validación | Guarda compartida, validación de roles, 164 pruebas Vitest, 4 E2E Chromium, typecheck, lint, build, escaneo del cliente y matriz remota de perfiles, roles, proyección pública y Storage superados. | Pendientes revisión manual, ensayo aislado de retirada del bucket y recorrido Google desplegado autorizado; avatar real conservado. |
+| 2026-10-15 | 2.2 y 3.1 | Completados | Usuario confirma los tres pendientes manuales/externos validados satisfactoriamente; evidencia automatizada anterior conservada. | Fase 2 completada; sin despliegue ni retirada de bucket ejecutados por el agente. |

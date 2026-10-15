@@ -18,12 +18,20 @@ Usuario
  -> completar título
  -> completar descripción
  -> seleccionar categoría
- -> opcionalmente comunidad/etiquetas
+ -> completar entre 1 y 5 hashtags únicos obligatorios
+ -> opcionalmente comunidad cuando se habilite en Fase 5
  -> publicar
  -> guardar archivo
  -> guardar metadata
  -> mostrar publicación
 ```
+
+Desde Fase 3, los hashtags se crean, editan y muestran como texto, sin
+enlaces de búsqueda. Se aplica el contrato de [RF-04](01-ers.md):
+2–30 caracteres por etiqueta, letras Unicode, números y guion bajo;
+minúsculas y NFC, prefijo `#` opcional solo en entrada y deduplicación
+antes de validar la cantidad. Un error conserva los datos y no produce
+una publicación parcial. La búsqueda por hashtag corresponde a Fase 5.
 
 ## 3. Feed
 

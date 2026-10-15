@@ -34,6 +34,8 @@ IA.
 -   Título.
 -   Descripción.
 -   Categoría.
+-   Entre 1 y 5 hashtags obligatorios, editables y visibles desde Fase 3.
+    Su búsqueda y navegación se incorporan en Fase 5.
 
 ### Feed
 
