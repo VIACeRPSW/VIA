@@ -132,3 +132,38 @@ exitoso. Deben probarse también errores, permisos y datos inválidos.
   fallidas; no se presentan como una validación adicional de expiración.
 - Evidencia y casillas compuestas en
   [Fase 4](../fases/fase04.md#sprint-12--likeunlike-con-estado-y-conteo-reales).
+- El usuario aprobó su funcionamiento manual y difirió explícitamente
+  JWT vencido y rollback/reaplicación de likes para avanzar a comentarios.
+
+### Interacción — Sprint 2.1 de comentarios
+
+- `lib/posts/comment-contract.test.ts`, `actions/post-comments.test.ts` y
+  `lib/posts/read-comments.test.ts`: límites 0/1/999/1000/1001 por puntos
+  de código, emoji, trim Unicode, NUL/surrogates inválidos, IDs/actor,
+  idempotencia/conflicto, proyección, cursor, errores redactados y conteos
+  por lote sin convertir un fallo en cero.
+- `components/posts/post-comments.test.tsx` y pruebas de presentación/lectura
+  del feed: HTML como texto inerte, formulario etiquetado, lectura anónima,
+  vacío distinto de fallo y galerías sin consultas/controles de comentarios.
+- `npm run test:db:comments`: fixtures A/B/anónimo/sin perfil/moderador/admin,
+  protección de columnas, 26 comentarios en tres páginas con empates exactos
+  y microsegundos, conflicto por UUID, token sin expiración/inválido/vencido,
+  cascada al retirar post y conservación de perfiles, otro post y journal.
+  Prueba el rechazo del rollback con datos y compara seis funciones,
+  RLS, grants, trigger y política tras retirada/reaplicación en transacción.
+  Normaliza CRLF a LF antes de comparar definiciones, sin omitir contenido.
+- `e2e/post-comments.spec.ts`: seis envíos concurrentes de una operación
+  crean un solo comentario; 1000 emoji válidos, 1001 rechazados, B comenta A,
+  autor público y contador correctos, respuesta perdida después del commit,
+  reintento sin duplicados, fallo/reintento de paginación conservando borrador,
+  HTML inerte, lectura anónima, perfil ausente, teclado y 360/768/1280.
+  Un token real congelado se acepta vigente y se rechaza tras vencer; el
+  conteo no cambia. Al borrar el post desaparecen comentarios y se limpia
+  la imagen. Usuarios Clerk y filas temporales se retiran en `finally`.
+- Primera ejecución: el servicio aceptó una escritura después de `exp`.
+  Se añadió una migración correctiva para comprobar expiración en la
+  política/trigger y se repitieron SQL y E2E, esta vez aprobados. Los errores
+  de red registrados en el recorrido final corresponden a fallos inyectados.
+- No se probaron aún controles de eliminación individual de comentarios,
+  que corresponden al Sprint 2.2. Tampoco se ejecutó una regresión integral
+  ni se retomaron las dos comprobaciones de likes diferidas por el usuario.

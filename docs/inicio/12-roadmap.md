@@ -72,12 +72,14 @@ aprobadas, en [el cierre de Fase 3](../fases/fase03.md#puerta-de-fase-4).
 
 Plan ejecutable: [Fase 04 — Interacción](../fases/fase04.md).
 Estado: en curso desde el 2026-10-15. Sprint 1.1 consolidado; likes
-implementados en feed/detalle y migración aplicada por MCP, conservando
-la base y el diseño existentes. Unitarias, SQL y E2E enfocados aprobados;
-el cierre completo de 1.2 conserva pendientes el ensayo de rollback/
-reaplicación y JWT realmente vencido. Comentarios, compartir y seguimiento
-básico siguen pendientes; no se personaliza el feed. Las migraciones de
-comentarios/seguimiento requieren autorización independiente.
+implementados y aprobados manualmente, con JWT vencido y rollback/
+reaplicación diferidos explícitamente por el usuario, no aprobados.
+Sprint 2.1 autorizado e implementado: lectura/creación de comentarios,
+conteos, paginación e idempotencia, con migraciones por MCP y pruebas
+unitarias, SQL, rollback/reaplicación y E2E reales aprobadas, incluido
+JWT vencido de comentarios. Se conservan base y diseño existentes.
+Siguen eliminación propia (2.2), compartir (3.1) y seguimiento básico
+(4.1), sin personalizar el feed. Sin commit ni despliegue nuevo.
 
 ## Fase 5 --- Comunidades y búsqueda
 

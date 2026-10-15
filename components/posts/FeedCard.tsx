@@ -26,6 +26,10 @@ export function FeedCard({ item, likes }: { item: PostWithImage; likes?: {
       <div className="feed-card-footer">
         {likes && <LikeButton key={likes.viewerKey} postId={post.id} entry={likes.entry}
           onChange={likes.update} retry={likes.retry} />}
+        <Link href={`/post/${post.id}#comentarios`} prefetch={false}>
+          {item.commentCount === undefined ? "Ver comentarios" : item.commentCount === null
+            ? "Comentarios no disponibles" : `${item.commentCount} ${item.commentCount === 1 ? "comentario" : "comentarios"}`}
+        </Link>
         <time dateTime={post.created_at}>{new Date(post.created_at).toLocaleDateString("es")}</time>
         <Link href={`/post/${post.id}`} prefetch={false}>Ver publicación <span aria-hidden="true">↗</span></Link>
       </div>

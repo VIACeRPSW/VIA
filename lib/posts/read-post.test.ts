@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getOwnPostCount, getPostCategories, getPublicPost, getPublicPosts } from "./read-post.server";
+import { getOwnPostCount, getPostCategories, getPublicFeed, getPublicPost, getPublicPosts } from "./read-post.server";
 vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({
   client: vi.fn(), read: vi.fn(), sign: vi.fn(), categories: vi.fn(), rpc: vi.fn(),
-  list: vi.fn(), own: vi.fn(), count: vi.fn(),
+  list: vi.fn(), own: vi.fn(), count: vi.fn(), commentCounts: vi.fn(),
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createPublicSupabaseClient: mocks.client, createServerSupabaseClient: mocks.own,
 }));
+vi.mock("@/lib/posts/read-comments.server", () => ({ getPostCommentCounts: mocks.commentCounts }));
 const id = "b02e9ce0-0a90-4e7c-a5cb-f54ff20f228a";
 const path = `${"a".repeat(64)}/${id}.webp`;
 const origin = "https://example.supabase.co";
@@ -32,10 +33,20 @@ beforeEach(() => {
   mocks.read.mockResolvedValue({ data: row, error: null });
   mocks.sign.mockResolvedValue({ data: { signedUrl: `${origin}/storage/v1/object/sign/posts/${path}?token=private` }, error: null });
   mocks.categories.mockResolvedValue({ data: [{ id, name: "Ciencia" }], error: null });
+  mocks.commentCounts.mockResolvedValue({ status: "ready", counts: [{ post_id: id, comment_count: 2 }] });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 describe("public posts", () => {
+  it("adds batched public comment counts only to the feed, not galleries", async () => {
+    mocks.list.mockResolvedValue({ data: [row], error: null });
+    expect(await getPublicPosts()).toMatchObject({ status: "ready" });
+    expect(mocks.commentCounts).not.toHaveBeenCalled();
+    expect(await getPublicFeed()).toMatchObject({ status: "ready", posts: [{ commentCount: 2 }] });
+    expect(mocks.commentCounts).toHaveBeenCalledExactlyOnceWith([id]);
+    mocks.commentCounts.mockResolvedValue({ status: "unavailable" });
+    expect(await getPublicFeed()).toMatchObject({ status: "ready", posts: [{ commentCount: null }] });
+  });
   it("uses a 60-second signed image reference", async () => {
     expect(await getPublicPost(id)).toMatchObject({ status: "found", post: row, imageUrl: expect.stringContaining("?token=") });
     expect(mocks.sign).toHaveBeenCalledWith(path, 60);

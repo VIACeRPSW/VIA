@@ -2,14 +2,15 @@
 
 ## Estado
 
-- Estado: En curso — Sprint 1.1 consolidado el 2026-10-15; Sprint 1.2 implementado con validación local/remota y E2E, pendiente ensayo de rollback/reaplicación y JWT realmente vencido.
+- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprint 2.1 de lectura/creación de comentarios implementado y validado el 2026-10-15. Siguiente: Sprint 2.2, eliminación propia.
 - Roadmap: Fase 4
 - Dependencias: Fases 1 y 2 completadas; Fase 3 cerrada por decisión del usuario el 2026-10-15 con deuda de verificación explícita; Clerk y el Supabase existentes; aprobación de contratos del Sprint 1.1 antes de mutaciones sociales.
 - Criterio de salida: núcleo social funcional con like/unlike, lectura/creación/eliminación propia de comentarios, compartir enlaces y seguir/dejar de seguir usuarios, con permisos equivalentes en UI, servidor y RLS, contadores reales y diseño previo conservado.
 
 **Entrada para otra sesión: «comenzar fase 4».** Leer este documento y
-retomar los pendientes de validación del Sprint 1.2; el 1.1 ya está
-consolidado. La autorización específica de likes y la evidencia ejecutada
+retomar por el Sprint 2.2; el 1.1 está consolidado y el 2.1 validado.
+Las dos pruebas de likes están diferidas por decisión explícita, no
+aprobadas. Las autorizaciones de likes/comentarios y su evidencia
 figuran más abajo. No se autorizan por arrastre migraciones de otros
 incrementos, commits ni despliegues.
 
@@ -22,12 +23,13 @@ Guion de arranque:
    [roadmap](../inicio/12-roadmap.md), [backlog](../inicio/14-backlog-inicial.md)
    y contratos base afectados.
 3. Contrastar esquema/migraciones y superficies actuales antes de añadir
-   lógica. En la revisión de planificación no se encontraron tablas ni
-   acciones implementadas de likes, comentarios, compartidos o seguimiento.
-   Su presencia en el modelo conceptual no prueba que estén implementadas.
+   lógica. Ya existen likes y lectura/creación de comentarios; no asumir
+   implementados borrado individual, compartir ni seguimiento por estar
+   descritos en el modelo conceptual.
 4. Respetar los acuerdos de arranque y reanudación de 1.1; resolver solo nuevas decisiones.
-   registrar contratos aprobados en documentación base. No inventar acuerdos.
-5. Likes (1.2) está implementado: retomar sus pruebas pendientes antes de declararlo cerrado.
+   Registrar contratos aprobados en documentación base. No inventar acuerdos.
+5. Respetar el diferimiento de pruebas de likes y continuar eliminación
+   propia de comentarios tras confirmar alcance/autorización aplicable.
    Pedir autorización específica antes de aplicar SQL al remoto; si falta,
    dejar esa parte bloqueada y preparar solo trabajo local autorizado.
 6. Usar pruebas enfocadas y avisos breves. Abrir servidor solo si hace falta,
@@ -271,6 +273,18 @@ persistencia sin duplicados.
   fixtures de esta sesión. Usuarios Clerk eliminados por el `finally` del
   E2E y servidor Playwright detenido; no quedan recursos de prueba conocidos.
 
+### Aprobación manual de likes y autorización de comentarios — 2026-10-15
+
+- El usuario confirmó «funciona todo» y eligió explícitamente
+  **«Diferir esas pruebas y autorizar comentarios: migración incremental por
+  MCP, implementación y pruebas con fixtures y limpieza»**.
+- Likes queda aceptado manualmente; JWT vencido y rollback/reaplicación
+  de likes se conservan diferidos, sin casillas técnicas aprobadas por
+  arrastre. El ensayo equivalente de comentarios no cierra esa deuda.
+- Se autoriza el Sprint 2.1 de lectura/creación: migraciones incrementales
+  de comentarios por MCP en el mismo proyecto y pruebas temporales con
+  limpieza. No incluye reset, commits ni despliegue.
+
 ## Hito 2 — Conversación persistente y administrable por su autor
 
 ### Sprint 2.1 — Leer y crear comentarios
@@ -280,33 +294,71 @@ seguro y lectura paginada.
 
 **Alcance**
 
-- [ ] Esquema/RLS, consulta y formulario de comentarios en detalle.
-- [ ] Conteo/enlace a comentarios desde feed, sin formularios dentro del grid.
+- [x] Esquema/RLS, consulta y formulario de comentarios en detalle.
+- [x] Conteo/enlace a comentarios desde feed, sin formularios dentro del grid.
 
 **Tareas**
 
-- [ ] `VIA-016` `VIA-004` `VIA-005` Migrar comentarios según límites y FK aprobados en 1.1, autor derivado, campos protegidos, índices y rollback no destructivo con datos.
-- [ ] `VIA-016` Validar texto también en PostgreSQL; representar como texto seguro, sin ejecutar HTML ni aceptar autor/timestamps del formulario.
-- [ ] `VIA-016` Resolver doble envío/respuesta perdida con el contrato aprobado; conservar borrador al fallar, distinguir vacío de fallo de lectura y anunciar resultado.
-- [ ] `VIA-016` Paginar por cursor estable incluyendo empates; actualizar conteo, detalle y feed sin descargar todos los comentarios ni identidades privadas.
+- [x] `VIA-016` `VIA-004` `VIA-005` Migrar comentarios según límites y FK aprobados en 1.1, autor derivado, campos protegidos, índices y rollback no destructivo con datos.
+- [x] `VIA-016` Validar texto también en PostgreSQL; representar como texto seguro, sin ejecutar HTML ni aceptar autor/timestamps del formulario.
+- [x] `VIA-016` Resolver doble envío/respuesta perdida con el contrato aprobado; conservar borrador al fallar, distinguir vacío de fallo de lectura y anunciar resultado.
+- [x] `VIA-016` Paginar por cursor estable incluyendo empates; actualizar conteo, detalle y feed sin descargar todos los comentarios ni identidades privadas.
 
 **Criterios de aceptación**
 
-- [ ] CA-2.1.1 — Comentario válido persiste una sola vez según el contrato de reintento; autor y conteo correctos tras recarga.
-- [ ] CA-2.1.2 — Vacío/solo espacios, exceso de longitud, post retirado y suplantación se rechazan sin filas parciales; texto con etiquetas se muestra inerte.
-- [ ] CA-2.1.3 — Varias páginas con fechas iguales no omiten/duplican comentarios; servicio fallido no parece lista vacía; autor público no expone identidad privada.
-- [ ] CA-2.1.4 — Formulario usa labels, foco/errores y estado pendiente; anónimo lee según contrato, pero sesión vencida o perfil ausente no permiten enviar.
+- [x] CA-2.1.1 — Comentario válido persiste una sola vez según el contrato de reintento; autor y conteo correctos tras recarga.
+- [x] CA-2.1.2 — Vacío/solo espacios, exceso de longitud, post retirado y suplantación se rechazan sin filas parciales; texto con etiquetas se muestra inerte.
+- [x] CA-2.1.3 — Varias páginas con fechas iguales no omiten/duplican comentarios; servicio fallido no parece lista vacía; autor público no expone identidad privada.
+- [x] CA-2.1.4 — Formulario usa labels, foco/errores y estado pendiente; anónimo lee según contrato, pero sesión vencida o perfil ausente no permiten enviar.
 
 **Pruebas**
 
-- [ ] P-2.1.1 — Unitarias: límites L-1/L/L+1, trim/Unicode, IDs, idempotencia y estados de error (CA-2.1.1, CA-2.1.2).
-- [ ] P-2.1.2 — Integración: SQL directo, creación repetida, FK, proyección, contador, cursor con empates y rollback/reaplicación seguro (CA-2.1.1 a CA-2.1.3).
-- [ ] P-2.1.3 — E2E-04: B comenta A, recarga, verifica autor/conteo, corrige inválidos, pagina, conserva borrador con fallo y usa teclado a 360/768/1280 (CA-2.1.1 a CA-2.1.4).
-- [ ] P-2.1.4 — Seguridad/RLS: A/B/anónimo/sin perfil/sesión vencida, autor falso y HTML como texto; no lectura de columnas privadas (CA-2.1.2 a CA-2.1.4).
+- [x] P-2.1.1 — Unitarias: límites L-1/L/L+1, trim/Unicode, IDs, idempotencia y estados de error (CA-2.1.1, CA-2.1.2).
+- [x] P-2.1.2 — Integración: SQL directo, creación repetida, FK, proyección, contador, cursor con empates y rollback/reaplicación seguro (CA-2.1.1 a CA-2.1.3).
+- [x] P-2.1.3 — E2E-04: B comenta A, recarga, verifica autor/conteo, corrige inválidos, pagina, conserva borrador con fallo y usa teclado a 360/768/1280 (CA-2.1.1 a CA-2.1.4).
+- [x] P-2.1.4 — Seguridad/RLS: A/B/anónimo/sin perfil/sesión vencida, autor falso y HTML como texto; no lectura de columnas privadas (CA-2.1.2 a CA-2.1.4).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Migraciones `20261015231817_add_post_comments` y
+  `20261015232459_enforce_comment_token_expiry` aplicadas por Supabase MCP;
+  once versiones confirmadas en historial, sin reset ni nueva base.
+- `comments`: FK de post en cascada y perfil restrictiva, unicidad por
+  autor/operación, índice por post/fecha/ID, grants limitados a columnas,
+  lectura privada propia y RPC pública sin identidad/operación privadas.
+- `createCommentAction` y `loadPostComments` conectados al detalle; texto
+  plano Unicode de 1–1000, borrador y UUID conservados tras respuesta
+  perdida, error de lectura distinto de lista vacía y reintento de página.
+  Conteos del feed por lote de hasta 12, sin consultas ni controles nuevos
+  en galerías. Todavía no se ofrece eliminación individual.
+- 91 pruebas Vitest aprobadas en ocho archivos de comentarios, lectura y
+  presentación del feed y regresión de likes. TypeScript, lint enfocado,
+  build de producción y chequeo de secretos del bundle aprobados.
+- `npm run test:db:comments` aprobado: A/B/anónimo/sin perfil/moderador/admin,
+  límites Unicode, columnas protegidas, reintento/conflicto, 26 comentarios
+  en tres páginas con empates exactos y cursor de microsegundos, expiración
+  ausente/inválida/pasada, cascada y journal conservado. Fixtures revertidos.
+- El mismo ensayo prueba rechazo del rollback con datos y retirada/
+  reaplicación de ambas migraciones dentro de una transacción deshecha.
+  Se comparan seis funciones, RLS/grants, trigger y política restrictiva.
+  Se normaliza CRLF a LF para no confundir formato Windows con diferencias
+  de definición; el historial de migraciones no se modifica.
+- `npm run test:e2e -- post-comments` aprobado en Chromium: seis peticiones
+  iguales concurrentes crean una fila; B comenta A; 1000 emoji válidos y
+  1001 rechazados; HTML inerte; respuesta perdida tras commit y reintento
+  sin duplicados; recarga, paginación con fallo/reintento conservando texto,
+  conteo feed→detalle, anónimo, perfil ausente y teclado a 360/768/1280.
+- El E2E congeló un JWT real, comprobó escritura mientras estaba vigente
+  y rechazo tras `exp` sin cambiar el conteo. La primera ejecución había
+  aceptado una escritura tras vencer: se añadió comprobación explícita del
+  reloj de PostgreSQL mediante política restrictiva y trigger (también
+  dentro de RPC definer), y se repitieron SQL y E2E con resultado aprobado.
+  No se equipara este resultado a la prueba diferida de likes.
+- Borrar el post retira sus comentarios y mantiene la limpieza de imagen.
+  Consulta MCP posterior: cero comentarios, perfiles, posts y tickets de
+  fixtures de estas pruebas. Usuarios Clerk eliminados por el `finally`.
+- Sin commit ni despliegue. Siguiente incremento: Sprint 2.2, confirmación/
+  cancelación y eliminación exclusivamente del comentario propio.
 
 ### Sprint 2.2 — Eliminar solo comentarios propios
 

@@ -6,6 +6,7 @@ import { canonicalHashtagsSchema, categorySchema, ownPostSchema, type OwnPost } 
 import { createPublicSupabaseClient, createServerSupabaseClient } from "@/lib/supabase/server";
 import { getSafeCaughtErrorContext } from "@/lib/supabase/profile-status";
 import { postCursorSchema, type PostCursor } from "@/lib/posts/post-cursor";
+import { getPostCommentCounts } from "@/lib/posts/read-comments.server";
 
 const publicPostSchema = z.object({
   id: z.uuid(), title: z.string().min(1), description: z.string(), hashtags: canonicalHashtagsSchema,
@@ -16,7 +17,7 @@ const publicPostSchema = z.object({
   author_display_name: z.string(), author_avatar_url: z.string().nullable(),
 });
 type PublicPost = z.infer<typeof publicPostSchema>;
-export type PostWithImage = { post: PublicPost; imageUrl: string | null };
+export type PostWithImage = { post: PublicPost; imageUrl: string | null; commentCount?: number | null };
 export type PostListResult =
   | { status: "ready"; posts: PostWithImage[]; nextCursor: PostCursor | null }
   | { status: "unavailable" };
@@ -110,6 +111,17 @@ export async function getPostCategories(): Promise<
     console.error("Post categories unavailable", getSafeCaughtErrorContext(error));
     return { status: "unavailable" };
   }
+}
+
+export async function getPublicFeed(cursor?: PostCursor): Promise<PostListResult> {
+  const result = await getPublicPosts({ cursor });
+  if (result.status !== "ready" || !result.posts.length) return result;
+  const counts = await getPostCommentCounts(result.posts.map((item) => item.post.id));
+  return { ...result, posts: result.posts.map((item) => ({
+    ...item,
+    commentCount: counts.status === "ready"
+      ? counts.counts.find((row) => row.post_id === item.post.id)?.comment_count ?? null : null,
+  })) };
 }
 
 export async function getPublicPost(id: string): Promise<

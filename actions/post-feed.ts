@@ -1,6 +1,6 @@
 "use server";
 
-import { getPublicPost, getPublicPosts, type PostListResult } from "@/lib/posts/read-post.server";
+import { getPublicPost, getPublicFeed, type PostListResult } from "@/lib/posts/read-post.server";
 import { postCursorSchema, type PostCursor } from "@/lib/posts/post-cursor";
 
 export async function loadFeedPage(cursor: PostCursor): Promise<PostListResult> {
@@ -9,7 +9,7 @@ export async function loadFeedPage(cursor: PostCursor): Promise<PostListResult> 
     console.error("Invalid feed cursor");
     return { status: "unavailable" };
   }
-  return getPublicPosts({ cursor: parsed.data });
+  return getPublicFeed(parsed.data);
 }
 
 export async function refreshPostImage(id: string): Promise<string | null> {

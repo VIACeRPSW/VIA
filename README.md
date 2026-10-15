@@ -335,9 +335,12 @@ comprobaciones ampliadas no ejecutadas conservadas como diferidas, no aprobadas.
 La [Fase 4 — Interacción](docs/fases/fase04.md) está en curso. Los contratos
 del Sprint 1.1 están consolidados y el incremento de likes está implementado
 en feed/detalle, con migración `20261015223045` aplicada por MCP al proyecto
-existente. Las galerías conservan su grid solo-imágenes. Comentarios,
-compartir y seguimiento siguen pendientes; las migraciones de comentarios
-y seguimiento requieren autorización específica.
+existente. Las galerías conservan su grid solo-imágenes. El usuario aprobó
+manualmente los likes y decidió diferir sus pruebas de JWT vencido y
+rollback/reaplicación, sin marcarlas superadas. Autorizó el Sprint 2.1 de
+comentarios, ya implementado: lectura pública paginada, creación con
+sesión/perfil y conteos por lote en feed/detalle. Borrado individual,
+compartir y seguimiento siguen pendientes.
 
 Like/unlike exige sesión y perfil, permite publicaciones propias y usa
 estado deseado idempotente. Conteos públicos, estado personal privado,
@@ -358,6 +361,27 @@ está versionado y rechaza likes existentes; su ensayo de retirada/reaplicación
 no se da por ejecutado. Evidencia y pendientes exactos en
 [Sprint 1.2](docs/fases/fase04.md#sprint-12--likeunlike-con-estado-y-conteo-reales).
 No se hizo reset, otra base, commit ni despliegue.
+
+Comentarios: texto plano de 1–1000 puntos de código Unicode tras trim,
+UUID idempotente por envío y páginas de 12 recientes con cursor compuesto.
+La respuesta perdida conserva borrador/operación para reintentar sin
+duplicados. Solo se proyectan datos públicos del autor. Las migraciones
+`20261015231817` y `20261015232459` fueron aplicadas por MCP; la segunda
+exige expiración JWT futura también en PostgreSQL.
+
+```powershell
+npm run test -- lib\posts\comment-contract.test.ts actions\post-comments.test.ts lib\posts\read-comments.test.ts components\posts\post-comments.test.tsx lib\posts\read-post.test.ts components\posts\post-layout.test.tsx
+npm run test:db:comments
+npm run test:e2e -- post-comments
+```
+
+El ensayo SQL de comentarios prueba RLS, límites Unicode, idempotencia y
+cursor con fechas empatadas. También retira y reaplica ambas migraciones
+dentro de una transacción que se deshace: no tiene modo `--apply` ni cambia
+el historial remoto, y rechaza un rollback con comentarios existentes.
+El E2E usa usuarios/imágenes efímeros y valida un JWT realmente vencido,
+respuesta perdida, reintento y limpieza. No equivale a cerrar la deuda de
+likes ni a desplegar la funcionalidad.
 
 Antes de aplicar el esquema de publicaciones de Fase 3 a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:

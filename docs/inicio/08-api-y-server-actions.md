@@ -66,6 +66,16 @@ Lectura pública por cursor `(created_at, id)` descendente, 12 por página.
 Solo el autor elimina, con confirmación/cancelación en UI; repetir el
 borrado propio es idempotente, sin ampliar permisos a moderadores.
 
+Sprint 2.1 implementa `createCommentAction({ postId, content, operationId })`
+y `loadPostComments(postId, cursor?)`. Solo acepta esos tres campos, deriva
+el actor y confirma una proyección pública y conteo. Distingue inválido,
+sesión ausente/vencida, perfil requerido, conflicto y servicio no disponible.
+El formulario conserva texto/UUID tras respuesta perdida; un texto distinto
+representa un nuevo envío. La lectura distingue post inexistente, lista
+vacía y fallo; cursor conserva microsegundos y desempate por ID.
+Los conteos del feed se leen por lote en servidor y un fallo no se presenta
+como cero. No se implementa todavía `deleteComment`; no hay edición.
+
 ### Communities
 
 ``` text

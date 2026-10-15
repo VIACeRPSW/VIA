@@ -202,6 +202,22 @@ permite reintentos; reutilizarlo con otro post/texto da conflicto.
 Índice de lectura `(post_id, created_at DESC, id DESC)` y proyección pública
 explícita del autor, sin Clerk ID. Su migración corresponde al Sprint 2.1.
 
+Implementado en `20261015231817` y `20261015232459`: `id`, `post_id`,
+`user_id`, `operation_id`, `content` y `created_at`. No hay edición ni
+`updated_at` en este incremento. La escritura directa solo concede columnas
+post/operación/texto y deriva identidad y fecha; `create_post_comment`
+serializa por post y confirma comentario/conteo sin duplicar el envío.
+`get_public_post_comments` devuelve como máximo 12 y consulta un elemento
+adicional para determinar el siguiente cursor; `get_post_comment_counts`
+devuelve agregados públicos de hasta 12 posts por lote, solo en el feed.
+
+`comment_session_is_active` exige `exp` numérico futuro contra el reloj
+actual de PostgreSQL. Una política restrictiva lo exige para acceso privado
+y un trigger de INSERT también lo comprueba dentro de la RPC definer.
+Ambos rollbacks bloquean la tabla y rechazan contenido existente; deben
+retirarse en orden inverso. El borrado individual sigue en Sprint 2.2,
+sin grants DELETE/UPDATE ordinarios en 2.1.
+
 ## 9. likes
 
 ``` text

@@ -639,12 +639,51 @@ footer p {
 
 .feed-card-footer {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 1rem;
 	font-size: 0.75rem;
 	color: #617065;
 	padding-top: 0.75rem;
 	border-top: 1px solid #edf0e9;
+}
+
+.post-comments {
+	margin-block: 2rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--line);
+}
+
+.comment-form {
+	margin-block: 1rem 2rem;
+}
+
+.post-comments-list {
+	display: grid;
+	gap: 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.post-comments-list li {
+	min-width: 0;
+	padding: 1rem;
+	border: 1px solid var(--line);
+	border-radius: 1rem;
+	background: var(--surface);
+}
+
+.post-comments-list header {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.5rem;
+	font-size: 0.9rem;
+}
+
+.post-comments-list p {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 }
 
 .feed-load-more,

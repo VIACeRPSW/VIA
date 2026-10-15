@@ -109,6 +109,20 @@ sus likes y comentarios, no perfiles ni recursos ajenos, conservando el
 journal de limpieza de imágenes. Las respuestas personales no se
 almacenan en caché compartida y se descartan al cambiar de sesión.
 
+Incremento de comentarios 2.1 aplicado: la tabla solo permite lectura
+privada propia e INSERT de columnas post/operación/texto; no hay DELETE ni
+UPDATE ordinarios todavía. Las RPC públicas proyectan ID de comentario/post,
+texto, fecha y username/nombre del autor, nunca identidad Clerk, ID privado
+del perfil ni UUID de envío. Los conteos no enumeran relaciones privadas.
+
+Una prueba real aceptó una petición seis segundos después de `exp`; por
+ello la política restrictiva y el trigger de comentarios comprueban
+explícitamente `exp` numérico futuro con `clock_timestamp()`, también
+dentro de la RPC definer. Se rechazan expiración ausente, inválida o
+pasada, sin depender solo de la aceptación del JWT por el servicio.
+Esto no declara validadas ni corregidas las pruebas de expiración de likes
+que el usuario decidió diferir.
+
 ## 6. Storage
 
 Buckets iniciales:

@@ -38,4 +38,12 @@ describe("social post presentation", () => {
     expect(markup).toContain("No pudimos cargar");
     expect(markup).not.toContain("Todavía no hay");
   });
+  it("links feed comment counts to the detail without adding gallery controls", () => {
+    const markup = renderToStaticMarkup(<FeedCard item={{ ...item, commentCount: 2 }} />);
+    expect(markup).toContain(`href="/post/${item.post.id}#comentarios"`);
+    expect(markup).toContain("2 comentarios");
+    const unavailable = renderToStaticMarkup(<FeedCard item={{ ...item, commentCount: null }} />);
+    expect(unavailable).toContain("Comentarios no disponibles");
+    expect(unavailable).not.toContain("0 comentarios");
+  });
 });
