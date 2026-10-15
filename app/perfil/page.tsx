@@ -26,6 +26,8 @@ export default async function ProfilePage() {
         <>
           <ProfileDetails profile={result.profile} />
           <nav className="profile-actions" aria-label="Acciones de mi perfil">
+            <Link className="button button-secondary" href="/inicio">Ver feed</Link>
+            <Link className="button button-secondary" href="/imagenes">Mi galería</Link>
             <Link className="button button-primary" href="/crear">Crear publicación</Link>
             <Link className="button button-primary" href="/perfil/editar">Editar mi perfil</Link>
             <Link className="button button-secondary" href={`/usuario/${result.profile.username}`}>

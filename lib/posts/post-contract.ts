@@ -25,7 +25,7 @@ export const postInputSchema = z.object({
 export type PostInput = z.infer<typeof postInputSchema>;
 export type PostField = "title" | "description" | "categoryId" | "hashtags" | "image";
 export type PostActionState = {
-  status: "idle" | "invalid" | "error" | "unauthorized" | "busy" | "conflict" | "success";
+  status: "idle" | "invalid" | "error" | "unauthorized" | "busy" | "conflict" | "success" | "deleted";
   message?: string;
   fieldErrors?: Partial<Record<PostField, string>>;
   postId?: string;
@@ -33,3 +33,12 @@ export type PostActionState = {
 };
 export const initialPostState: PostActionState = { status: "idle" };
 export const categorySchema = z.object({ id: z.uuid(), name: z.string().min(1) });
+export const postLocatorSchema = z.object({
+  postId: z.uuid(),
+  version: z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+});
+export const ownPostSchema = z.object({
+  id: z.uuid(), title: z.string(), description: z.string(), category_id: z.uuid(),
+  hashtags: canonicalHashtagsSchema, version: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+});
+export type OwnPost = z.infer<typeof ownPostSchema>;

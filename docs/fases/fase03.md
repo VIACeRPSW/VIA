@@ -2,7 +2,7 @@
 
 ## Estado
 
-- Estado: En curso — Sprint 1.1 completado; Sprint 1.2 implementado, en validación
+- Estado: En curso — CRUD propio implementado; feed vertical continuo y galerías de imágenes; validación ampliada y cierre integral pendientes
 - Roadmap: Fase 3
 - Dependencias: cierre verificable de Fase 2; perfiles propios y proyección pública segura; autenticación Clerk → Supabase bajo RLS; Supabase PostgreSQL y Storage disponibles; aprobación de los contratos y diferencias con los wireframes en el Sprint 1.1.
 - Criterio de salida: CRUD completo de publicaciones con imagen persistente, listado, detalle, edición y eliminación propias, permisos equivalentes en aplicación, PostgreSQL y Storage, y vistas responsive comprobadas.
@@ -305,6 +305,52 @@ Su representación SQL se fijará en 1.2. No se crea todavía código ni migraci
 
 ## Hito 2 — Imagen publicada y persistente
 
+### Incremento de publicación mínima — 2026-10-15
+
+Se atendió la petición del usuario de llegar a probar una publicación real
+con lo mínimo del contrato aprobado, usando la misma base que `profiles`.
+
+- Migración aplicada: [20261015164718_add_post_publishing.sql](../../supabase/migrations/20261015164718_add_post_publishing.sql);
+  [rollback](../../supabase/rollbacks/20261015164718_add_post_publishing.sql)
+  protegido frente a datos existentes. Bucket `posts` privado, WebP, 5 MiB.
+- [Crear](../../app/crear/page.tsx) exige perfil propio y ofrece imagen,
+  título, categoría y 1–5 hashtags; descripción opcional. Enlace desde el perfil.
+  Selector con preview cancelable, foco en errores y bloqueo mientras publica.
+- [Acción](../../actions/posts.ts) revalida sesión/perfil, normaliza entrada
+  allowlist y bytes reales. Reutiliza el pipeline de avatar conservando su
+  límite independiente de 2 MiB; límite multipart compartido de 6 MiB.
+- Journal privado con lease de 10 minutos; begin/upload/commit, recuperación
+  de respuesta perdida y limpieza explícita. Autor y ruta se derivan del JWT.
+  Se revoca INSERT directo de posts y cambio directo de `image_path`.
+- [Detalle público](../../app/post/[id]/page.tsx) por petición con firma de
+  60 segundos, imagen sin optimizador Next, autor público y hashtags no navegables.
+- SQL transaccional y ensayo de rollback/reaplicación pasaron en la base
+  existente, sin conservar fixtures ni modificar perfiles reales.
+- [E2E real](../../e2e/post-publishing.spec.ts): login, error de título,
+  publicación de archivo exactamente 5 MiB, descripción vacía, recarga,
+  confirmación repetida al mismo ID, visitante anónimo e imagen WebP firmada.
+  Una carga pendiente no puede firmarse como anónimo. Detalle sin desbordamiento
+  a 375, 768 y 1280 px. Cleanup de posts, objetos, tickets e identidades propios.
+- Pruebas unitarias incluyen límites de bytes/codepoints, Unicode/NFC,
+  WebP animado real, sesión/perfil, allowlist, respuesta perdida, fallos de
+  limpieza y firma segura; no equivalen a inyectar todos esos fallos en remoto.
+- Resultado de regresión: 211 unitarias en 19 archivos y 5 E2E Chromium
+  aprobados; typecheck, lint, build y escaneo de secretos cliente aprobados.
+  Frontera HTTP pública/privada aprobada; consulta posterior confirmó cero
+  perfiles y tickets de fixtures de publicación. Servidor local comprobado
+  con portada HTTP 200 y `/crear` anónimo HTTP 307 hacia autenticación.
+- Confirmación manual del usuario el 2026-10-15: «ya cree». Confirma haber
+  creado una publicación; no se aportaron ID, captura ni confirmación manual
+  de recarga o lectura anónima. Estas últimas mantienen la evidencia E2E anterior.
+
+Este incremento no cierra íntegramente 2.1/2.2/3.1: siguen pendientes los
+casos ampliados del plan (arrastre/teclado completo, sesión expirada durante
+publicación, fallos remotos inyectados y retirada física de bucket aislado).
+En ese punto feed, galerías, edición y eliminación desde UI aún no estaban
+implementados; el avance de lectura posterior se registra en Sprint 3.1.
+Se mantiene diferido el ensayo de instalación limpia, sin
+resetear la base compartida ni crear otro proyecto.
+
 ### Sprint 2.1 — Storage seguro y carga recuperable
 
 **Objetivo:** subir una imagen válida a una ruta propia sin exposición prematura ni escritura ajena.
@@ -386,6 +432,33 @@ Su representación SQL se fijará en 1.2. No se crea todavía código ni migraci
 
 ### Sprint 3.1 — Feed, detalle y galerías propias
 
+**Rediseño solicitado y confirmado visualmente por el usuario el 2026-10-15:**
+feed en columna única con autor, imagen grande, título, descripción y
+hashtags; carga de lotes sucesivos al bajar sin cambiar de página, con
+botón accesible alternativo y reintento explícito. Las galerías propias
+y públicas usan tres columnas de imágenes cuadradas sin título,
+descripción ni datos de autor visibles en cada tile; el nombre accesible
+y el enlace al detalle se conservan. Se renueva una vez una imagen cuya
+firma haya fallado durante un scroll prolongado. El usuario indicó
+«se ven bien» sobre el diseño compartido; no equivale a validar el CRUD.
+
+**Avance 2026-10-15:** implementados `/inicio` público, `/imagenes` privado
+y publicaciones por autor en el perfil público. Tarjetas compartidas con
+imagen firmada, título, autor, categoría y hashtags; enlaces desde portada,
+perfil y detalle. Galería propia deriva el filtro del perfil autenticado,
+con conteo exacto bajo RLS. Cursores fecha/UUID, páginas de 12 sin convertir
+los timestamps a `Date`; entrada malformada, vacío y servicio fallido
+se distinguen. El detalle conserva la validación previa de entrega.
+
+E2E enfocado aprobado con un usuario Development efímero: galería vacía,
+crear desde perfil, galería con 1 publicación, feed anónimo → detalle →
+perfil público, 13 publicaciones propias → páginas 12/1 sin duplicar el
+post inicial, total exacto, regreso a recientes y rechazo de galería
+anónima. No desborda a 360/768/1280 px. Limpieza de fixtures al terminar.
+No se aplicaron nuevas migraciones ni se modificaron posts del usuario.
+Los casilleros pendientes conservan los casos ampliados aún no cerrados,
+incluida revisión manual integral y sección embebida en perfil propio.
+
 **Objetivo:** comprobar las pantallas 3, 5 y 7 con datos persistentes, imagen y autor público correctos.
 
 **Alcance**
@@ -428,6 +501,22 @@ Su representación SQL se fijará en 1.2. No se crea todavía código ni migraci
 
 ### Sprint 4.1 — Editar datos e imagen sin perder el original
 
+**Implementación 2026-10-15:** ruta `/post/[id]/editar` con guarda de perfil y
+lectura propia bajo RLS. Se reutiliza el formulario y contrato de creación:
+conservar imagen es el comportamiento por defecto y reemplazarla es opcional.
+No se resetean los campos después de errores. La mutación de metadata usa
+ID + versión; la sustitución usa la RPC de
+[20261015192000_add_post_image_replacement.sql](../../supabase/migrations/20261015192000_add_post_image_replacement.sql).
+La RPC bloquea post propio y ticket propio, verifica lease/objeto/versión,
+confirma metadata e imagen y agenda la anterior en una transacción.
+La repetición de una operación confirmada devuelve el mismo ID. Se conserva
+el original si hay fallo o conflicto y se informa si falla la limpieza.
+
+El preflight SQL, la aplicación incremental y el ensayo de rollback/
+reaplicación se ejecutaron en el proyecto existente. MCP solicitó
+reautenticación; se usó la CLI Management ya autenticada, registrando
+migración y DDL en la misma transacción, sin reset ni otro proyecto.
+
 **Objetivo:** editar una publicación propia y actualizar todas sus vistas sin modificar recursos ajenos.
 
 **Alcance**
@@ -465,6 +554,33 @@ Su representación SQL se fijará en 1.2. No se crea todavía código ni migraci
 - Pendiente.
 
 ### Sprint 4.2 — Eliminar con confirmación y limpieza verificable
+
+**Implementación 2026-10-15:** controles únicamente en detalle propio,
+diálogo nativo con foco inicial en cancelar, cancelación sin mutación y
+confirmación explícita. Acción autenticada con perfil/propiedad y versión;
+la retirada activa el journal ya existente y después intenta limpiar Storage.
+Se distingue post retirado de limpieza pendiente y hay recuperación desde
+la galería. No se acepta una ruta de imagen del navegador. Reintentar un
+ID ya ausente es seguro; una versión cambiada impide borrar.
+
+SQL transaccional aprobado: A/B/anónimo, objeto faltante, lease nulo,
+versión obsoleta, sustitución atómica, repetición, metadata sin imagen,
+eliminación propia y estados de limpieza. Unitarias enfocadas cubren
+66 casos de las superficies afectadas, incluidos fallos de servicio y
+cleanup; typecheck, lint, build y escaneo de secretos cliente aprobados.
+Los casos manuales ampliados del plan se mantienen abiertos.
+
+**E2E final aprobado (2 minutos):** publicación real de 5 MiB, galería
+solo-imágenes con páginas de 12/1, feed vertical y carga de lotes al bajar,
+edición de texto/hashtags conservando imagen, reemplazo a una imagen de
+48 píxeles con nueva versión y limpieza del journal anterior, controles
+ausentes para visitante, edición anónima redirigida, cancelar sin borrar
+y devolver foco, confirmar eliminación y volver a galería con total 12,
+fila y journal retirados y detalle anterior no disponible. La navegación
+tras borrar se realiza con redirect de servidor antes de renderizar el 404.
+Consulta posterior: cero perfiles de fixtures de posts; migración de
+reemplazo registrada; feed local HTTP 200. No se ejecutó la regresión E2E
+completa de perfiles/avatares en este incremento.
 
 **Objetivo:** retirar una publicación propia y recuperar fallos de borrado sin éxito ficticio.
 

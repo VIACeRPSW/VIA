@@ -8,7 +8,7 @@ if (args.length > 1 || (args.length === 1 && args[0] !== "--preflight")) {
   throw new Error("Usage: node scripts/test-supabase-post-publishing.mjs [--preflight]");
 }
 const preflight = args[0] === "--preflight";
-const name = "20261015170000_add_post_publishing.sql";
+const name = "20261015164718_add_post_publishing.sql";
 const [migration, rollback, tests] = await Promise.all([
   readFile(join(process.cwd(), "supabase", "migrations", name), "utf8"),
   readFile(join(process.cwd(), "supabase", "rollbacks", name), "utf8"),

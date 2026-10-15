@@ -127,8 +127,9 @@ La edición incluye subida, previsualización, reemplazo y retirada del avatar.
 Admite JPEG, PNG y WebP de hasta **2 MiB**, estáticos y con un máximo de
 4096 píxeles por lado. El servidor decodifica el contenido real, comprueba
 el MIME y lo convierte a WebP de hasta 512 × 512, sin ampliar ni conservar
-metadatos. El límite multipart de Server Actions es 3 MiB para alojar
-el archivo permitido más los campos del formulario.
+metadatos. El límite multipart compartido de Server Actions es 6 MiB
+para alojar publicaciones de hasta 5 MiB más los campos del formulario;
+el avatar mantiene su validación específica de 2 MiB.
 
 El bucket `avatars` es público: no debe usarse para información privada.
 Los objetos son inmutables y usan `SHA256(sub)/UUID.webp`, sin publicar
@@ -184,10 +185,77 @@ objetos físicos antes de eliminar las identidades de prueba.
 La migración `20261015162153_add_posts_contract.sql` añade `categories`
 con las cinco categorías aprobadas y `posts` con RLS forzada, autor derivado
 del JWT, restricciones de contenido y hashtags canónicos `text[]`.
-No crea todavía bucket, carga de imágenes ni páginas de publicaciones.
-Una inserción exige un objeto existente en `posts`, con ruta y `owner_id`
-propios; las políticas de carga y validación de imagen corresponden al
-Sprint 2.1.
+La migración incremental `20261015164718_add_post_publishing.sql` añade
+el bucket privado `posts`, el registro privado `post_uploads` y las RPC
+de preparación, confirmación y limpieza. Ambas están aplicadas en el
+proyecto existente, junto a `profiles`; no se crea otra base.
+
+### Probar una publicación mínima
+
+1. Ejecutar `npm run dev` y abrir [Crear publicación](http://localhost:3000/crear).
+2. Iniciar sesión y completar el perfil si todavía falta.
+3. Elegir una imagen JPEG, PNG o WebP estática de hasta **5 MiB** y
+   **4096 píxeles por lado**.
+4. Escribir título (1–120 caracteres), seleccionar categoría y añadir
+   al menos un hashtag; por ejemplo, `#ciencia`. La descripción es opcional.
+5. Pulsar **Publicar**. Al confirmar se abre `/post/[id]`; recargar
+   conserva los datos y la imagen. El detalle es público.
+
+Los hashtags se normalizan a minúsculas/NFC, sin `#`, con 1–5 valores
+únicos de 2–30 letras, números o guiones bajos. No son enlaces de búsqueda.
+El servidor comprueba el contenido real y convierte la imagen a WebP sin
+metadatos. El autor y la ruta se derivan de la sesión, no del formulario.
+La confirmación es atómica e idempotente por operación; no se concede
+INSERT directo de publicaciones ni UPDATE directo de su ruta de imagen.
+
+Si falla una carga, el formulario permite reintentar y limpiar pendientes.
+Una carga interrumpida conserva un lease de 10 minutos antes de poder
+limpiarse; no hay un limpiador automático. No recargar durante un reintento
+para conservar la identidad de la operación.
+
+### Ver publicaciones y galería
+
+- [Feed público](http://localhost:3000/inicio): publicaciones recientes,
+  una columna con imágenes grandes, autor, título, descripción y etiquetas.
+  Al acercarse al final se carga el siguiente lote sin cambiar de página;
+  hay un botón alternativo para cargar más o reintentar si falla.
+- [Mi galería](http://localhost:3000/imagenes): requiere sesión y perfil;
+  muestra solo tus publicaciones y un total real protegido por RLS.
+  Cuadrícula de tres columnas de imágenes, sin título ni descripción
+  visibles. Cada imagen conserva un nombre accesible y abre su detalle.
+- El perfil público `/usuario/[username]` muestra las publicaciones de
+  ese autor. El perfil propio ofrece acceso al feed y a la galería.
+
+Los listados se consultan en lotes de 12, ordenados por fecha e ID
+descendentes, con cursor compuesto sin redondear timestamps. En las galerías,
+**Ver anteriores** avanza y **Volver a las recientes** regresa al comienzo;
+en el feed las imágenes se agregan al bajar, sin repetir IDs. Un enlace de
+paginación malformado muestra un error explícito. Vacío, fallo de datos y
+fallo de imagen tienen estados distintos. Las imágenes mantienen firma de
+60 segundos sin optimizador Next. Si una imagen diferida falla, se intenta
+renovar su firma una vez; si sigue fallando se muestra un estado explícito.
+
+### Editar y eliminar tus posts
+
+Abre un post propio desde tu galería. El detalle ofrece **Editar publicación**
+y **Eliminar publicación**; estos controles no aparecen para otros autores
+ni para visitantes sin sesión.
+
+`/post/[id]/editar` permite cambiar título, descripción, categoría y hashtags
+y reemplazar opcionalmente la imagen. Sin seleccionar archivo se conserva
+el original. Una versión obsoleta se rechaza sin sobrescribir cambios.
+El reemplazo usa la migración `20261015192000_add_post_image_replacement.sql`:
+carga propia, confirmación atómica de la nueva referencia y registro de
+limpieza de la imagen anterior. Una respuesta perdida puede recuperarse
+reintentando la misma operación. No se habilita UPDATE directo de `image_path`.
+
+Eliminar abre una confirmación accesible; **Cancelar** no modifica nada.
+Confirmar retira la fila, actualiza las vistas y limpia el objeto. Si el
+objeto no se puede retirar, se informa por separado y puedes reintentar
+con **Limpiar imágenes pendientes** en tu galería. Una firma ya emitida
+puede conservar validez hasta 60 segundos; las copias descargadas no se revocan.
+Las acciones vuelven a comprobar sesión, perfil y propiedad bajo RLS,
+incluidos moderadores/admin, y no aceptan rutas de borrado del cliente.
 
 La tabla `posts` solo permite leer o mutar filas propias, también para
 moderador/admin. La RPC pública `get_public_posts` entrega una proyección
@@ -196,12 +264,14 @@ Acepta ID para detalle, username para galería o cursor compuesto
 `p_before_created_at`/`p_before_id`, siempre con máximo 12 resultados.
 Ambas partes del cursor son obligatorias juntas; una consulta inválida
 produce un error explícito. La ruta de imagen se entrega sin firma;
-la entrega firmada de 60 segundos se implementará con Storage.
+el detalle obtiene una firma de 60 segundos por petición y muestra la imagen
+sin pasar por el optimizador/caché de Next Image.
 
 ```bash
 npm run test:db:posts
 npm run test:db:posts:api
 npm run test:db:posts:rollback
+npm run test:db:posts:management
 ```
 
 Las pruebas SQL usan perfiles y metadatos Storage efímeros dentro de una
@@ -211,13 +281,30 @@ comprueba catálogo, frontera privada, RPC pública y cursor inválido.
 La matriz SQL verifica la forma de la proyección incluso si el feed real
 está vacío.
 
-El ensayo de rollback compara esquema, índices, restricciones, funciones,
-privilegios y políticas después de reaplicar y comprueba que perfiles
-existentes y sus políticas/triggers permanezcan intactos. Normaliza solo
+`test:db:posts:management` ensaya reemplazo, repetición idempotente,
+conflictos de versión, propiedad A/B, edición sin imagen, eliminación
+y journal de limpieza en transacciones revertidas, más rollback/reaplicación
+de su RPC. Para una retirada real, ejecutar rollbacks de más reciente a
+más antiguo. No retirar el contrato de Storage dejando instalada la RPC
+de reemplazo.
+
+`test:db:posts:rollback` ensaya el incremento de publicación y sus políticas
+dentro de transacciones revertidas; compara esquema, restricciones,
+funciones, privilegios, triggers, RLS y bucket después de reaplicar y
+comprueba que los perfiles existentes permanezcan intactos. Normaliza solo
 los finales de línea Windows al comparar definiciones de funciones.
-**Rechaza publicaciones existentes o categorías personalizadas**; antes
-de una retirada real se requiere respaldo y resolución de datos.
-No elimina buckets ni objetos físicos, ni usa `CASCADE`.
+**Rechaza publicaciones, tickets u objetos existentes**; antes de una
+retirada real se requiere respaldo y resolución de datos.
+No elimina buckets ni objetos físicos, ni usa `CASCADE`. El runner anterior
+`scripts/test-supabase-posts-migration.mjs` solo corresponde al contrato
+previo a Storage y rechaza ejecutarse mientras exista `post_uploads`.
+
+El E2E `post-publishing.spec.ts` publica un archivo de exactamente 5 MiB
+con descripción vacía, corrige un error, comprueba persistencia, lectura
+anónima, WebP firmado, confirmación repetida sin duplicación, privacidad
+de una carga pendiente y detalle sin desbordamiento a 375/768/1280 px.
+Retira únicamente sus propios posts, objetos, tickets, perfil y usuario
+Clerk de desarrollo al terminar.
 
 Antes de aplicar esta migración a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:

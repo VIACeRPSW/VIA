@@ -4,17 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { cleanupPostUploadsAction, createPostAction } from "@/actions/posts";
-import { IMAGE_MIME_TYPES, initialPostState, POST_MAX_BYTES } from "@/lib/posts/post-contract";
+import { cleanupPostUploadsAction, createPostAction, updatePostAction } from "@/actions/posts";
+import { IMAGE_MIME_TYPES, initialPostState, POST_MAX_BYTES, type OwnPost } from "@/lib/posts/post-contract";
 
-export function CreatePostForm({ operationId, categories }: {
+export function CreatePostForm({ operationId, categories, editing }: {
   operationId: string;
   categories: { id: string; name: string }[];
+  editing?: OwnPost;
 }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ title: "", description: "", categoryId: "", hashtags: "" });
+  const [draft, setDraft] = useState({
+    title: editing?.title ?? "", description: editing?.description ?? "",
+    categoryId: editing?.category_id ?? "", hashtags: editing?.hashtags.map((tag) => `#${tag}`).join(" ") ?? "",
+  });
   const formRef = useRef<HTMLFormElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
@@ -24,7 +28,8 @@ export function CreatePostForm({ operationId, categories }: {
     try {
       if (data.get("intent") === "cleanup") return await cleanupPostUploadsAction();
       if (file) data.set("image", file);
-      return await createPostAction(previous, data);
+      else if (editing) data.delete("image");
+      return await (editing ? updatePostAction(previous, data) : createPostAction(previous, data));
     } catch (error) {
       console.error("Post request failed", { errorType: error instanceof Error ? error.name : "UnknownError" });
       return { status: "error" as const, message: "No pudimos enviar la publicación. Reintenta sin recargar para recuperar la misma operación.", cleanupPending: true };
@@ -32,7 +37,7 @@ export function CreatePostForm({ operationId, categories }: {
   }, initialPostState);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   useEffect(() => {
-    if (state.status === "success" && state.postId) router.push(`/post/${state.postId}`);
+    if (state.status === "success" && state.postId && !state.cleanupPending) router.push(`/post/${state.postId}`);
     else if (state.message) {
       const invalid = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
       if (invalid) invalid.focus();
@@ -42,11 +47,17 @@ export function CreatePostForm({ operationId, categories }: {
   const errors = state.fieldErrors;
 
   return (
-    <form ref={formRef} className="profile-form" action={action} noValidate aria-busy={pending}>
+    <form ref={formRef} className="profile-form" action={action} noValidate aria-busy={pending}
+      onReset={(event) => event.preventDefault()}>
       <input type="hidden" name="operationId" value={operationId} />
+      {editing && <>
+        <input type="hidden" name="postId" value={editing.id} />
+        <input type="hidden" name="version" value={editing.version} />
+        <p className="field-help">Si no eliges otra imagen, se conserva la actual.</p>
+      </>}
       <div className="form-field">
-        <label htmlFor="post-image">Imagen de la publicación</label>
-        <input ref={imageRef} id="post-image" type="file" name="image" required disabled={pending}
+        <label htmlFor="post-image">{editing ? "Reemplazar imagen (opcional)" : "Imagen de la publicación"}</label>
+        <input ref={imageRef} id="post-image" type="file" name="image" required={!editing} disabled={pending}
           accept={IMAGE_MIME_TYPES.join(",")} aria-describedby="post-image-help post-image-error"
           aria-invalid={Boolean(errors?.image)}
           onChange={(event) => {
@@ -111,13 +122,13 @@ export function CreatePostForm({ operationId, categories }: {
       {state.status === "unauthorized" && <Link href="/sign-in">Volver a iniciar sesión</Link>}
       {state.postId && <Link href={`/post/${state.postId}`}>Ver publicación guardada</Link>}
       <div className="profile-actions">
-        <button className="button button-primary" type="submit" name="intent" value="publish" disabled={pending || !file}>
-          {pending ? "Publicando..." : "Publicar"}
+        <button className="button button-primary" type="submit" name="intent" value="publish" disabled={pending || (!editing && !file)}>
+          {pending ? "Guardando..." : editing ? "Guardar cambios" : "Publicar"}
         </button>
         {state.cleanupPending && <button className="button button-secondary" type="submit" name="intent" value="cleanup" disabled={pending}>
           Reintentar limpieza
         </button>}
-        <Link href="/perfil">Volver a mi perfil</Link>
+        <Link href={editing ? `/post/${editing.id}` : "/perfil"}>{editing ? "Cancelar edición" : "Volver a mi perfil"}</Link>
       </div>
     </form>
   );

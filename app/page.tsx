@@ -14,6 +14,7 @@ export default function Home() {
           VIA
         </a>
         <nav className="auth-nav" aria-label="Acceso a la cuenta">
+          <Link className="button button-secondary" href="/inicio">Ver feed</Link>
           <Show when="signed-out">
             <SignInButton mode="redirect">
               <button className="button button-secondary" type="button">

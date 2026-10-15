@@ -9,9 +9,12 @@ const mocks = vi.hoisted(() => ({
   notFound: vi.fn(),
   getAvatarCleanupStatus: vi.fn(),
   currentUser: vi.fn(),
+  getPublicPosts: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/server", () => ({ connection: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/posts/read-post.server", () => ({ getPublicPosts: mocks.getPublicPosts }));
 vi.mock("@clerk/nextjs/server", () => ({ currentUser: mocks.currentUser }));
 vi.mock("@/lib/profiles/read-profile.server", () => ({
   getOwnProfile: mocks.getOwnProfile,
@@ -51,6 +54,7 @@ const profile = {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.getAvatarCleanupStatus.mockResolvedValue({ pending: false, unavailable: false });
+  mocks.getPublicPosts.mockResolvedValue({ status: "ready", posts: [], nextCursor: null });
   mocks.currentUser.mockResolvedValue({ firstName: "Ada", fullName: "Ada Lovelace" });
   mocks.redirect.mockImplementation(() => { throw new Error("NEXT_REDIRECT"); });
   mocks.notFound.mockImplementation(() => { throw new Error("NEXT_NOT_FOUND"); });
@@ -157,6 +161,7 @@ describe("profile views", () => {
     mocks.getPublicProfile.mockResolvedValue({ status: "missing" });
     await expect(PublicProfilePage({
       params: Promise.resolve({ username: "absent_user" }),
+      searchParams: Promise.resolve({}),
     })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
@@ -164,6 +169,7 @@ describe("profile views", () => {
     mocks.getPublicProfile.mockResolvedValue({ status });
     const markup = renderToStaticMarkup(await PublicProfilePage({
       params: Promise.resolve({ username: "ada_42" }),
+      searchParams: Promise.resolve({}),
     }));
     expect(markup).toContain("Perfil no disponible");
     expect(mocks.notFound).not.toHaveBeenCalled();
@@ -173,6 +179,7 @@ describe("profile views", () => {
     mocks.getPublicProfile.mockResolvedValue({ status: "found", profile });
     const markup = renderToStaticMarkup(await PublicProfilePage({
       params: Promise.resolve({ username: "ada_42" }),
+      searchParams: Promise.resolve({}),
     }));
     expect(mocks.getPublicProfile).toHaveBeenCalledWith("ada_42");
     expect(markup).toContain("Ada Lovelace");

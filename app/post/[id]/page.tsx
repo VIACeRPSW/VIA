@@ -1,19 +1,23 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { getPublicPost } from "@/lib/posts/read-post.server";
+import { getOwnPost, getPublicPost } from "@/lib/posts/read-post.server";
+import { PostManagement } from "@/components/posts/PostManagement";
+import { PostImage } from "@/components/posts/PostImage";
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   await connection();
   const { id } = await params;
   const result = await getPublicPost(id);
   if (result.status === "missing") notFound();
+  const own = result.status === "found" ? await getOwnPost(id) : null;
   return (
     <main className="profile-page">
       <header className="profile-header">
         <Link className="brand" href="/" aria-label="VIA, volver al inicio">VIA</Link>
         <nav className="profile-actions" aria-label="Publicaciones">
+          <Link className="button button-secondary" href="/inicio">Ver feed</Link>
+          <Link className="button button-secondary" href="/imagenes">Mi galería</Link>
           <Link className="button button-primary" href="/crear">Crear publicación</Link>
           <Link className="button button-secondary" href="/perfil">Mi perfil</Link>
         </nav>
@@ -24,9 +28,9 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         <p>Por <Link href={`/usuario/${result.post.author_username}`}>
           {result.post.author_display_name} (@{result.post.author_username})
         </Link></p>
-        {result.imageUrl ? <div className="post-image-frame">
-          <Image src={result.imageUrl} alt={result.post.title} fill unoptimized sizes="(max-width: 768px) 100vw, 768px" />
-        </div> : <p className="form-status" role="status">
+        {own?.status === "found" && <PostManagement id={id} version={own.post.version} />}
+        {result.imageUrl ? <PostImage key={result.imageUrl} id={id} title={result.post.title}
+          initialUrl={result.imageUrl} sizes="(max-width: 768px) 100vw, 768px" /> : <p className="form-status" role="status">
           No pudimos cargar la imagen. <Link href={`/post/${id}`}>Volver a intentar</Link>
         </p>}
         {result.post.description && <p className="post-description">{result.post.description}</p>}

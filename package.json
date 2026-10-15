@@ -20,7 +20,8 @@
     "test:db:avatars": "supabase db query --linked --file supabase/tests/avatars_rls.sql --agent no --output-format text",
     "test:db:posts": "supabase db query --linked --file supabase/tests/post_publishing.sql --agent no --output-format text",
     "test:db:posts:api": "node scripts/test-supabase-posts-api.mjs",
-    "test:db:posts:rollback": "node scripts/test-supabase-posts-migration.mjs",
+    "test:db:posts:management": "node scripts/test-supabase-post-management.mjs",
+    "test:db:posts:rollback": "node scripts/test-supabase-post-publishing.mjs",
     "test:db:rollback": "node scripts/test-supabase-rollback.mjs"
   },
   "engines": {

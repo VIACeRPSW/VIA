@@ -39,9 +39,10 @@ describe("post image", () => {
     ]) expect((await preparePostImage(file)).success).toBe(false);
   });
   it("rejects animated WebP", async () => {
-    const bytes = await sharp(Buffer.alloc(2 * 2 * 2 * 3, 120), {
-      raw: { width: 2, height: 4, channels: 3, pageHeight: 2 },
-    }).webp({ loop: 0, delay: [100, 100] }).toBuffer();
+    const frames = await Promise.all(["#ff0000", "#0000ff"].map((background) =>
+      sharp({ create: { width: 2, height: 2, channels: 3, background } }).png().toBuffer()));
+    const bytes = await sharp(frames, { join: { animated: true } })
+      .webp({ loop: 0, delay: [100, 100] }).toBuffer();
     expect((await sharp(bytes).metadata()).pages).toBe(2);
     expect(await preparePostImage(new File([bytes], "animated.webp", { type: "image/webp" })))
       .toMatchObject({ success: false });
