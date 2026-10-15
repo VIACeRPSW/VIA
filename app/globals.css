@@ -9,6 +9,56 @@
 	--line: #cad4c8;
 }
 
+.post-like-controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.post-like-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	min-height: 44px;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	cursor: pointer;
+}
+
+.post-like-button svg {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+}
+
+.post-like-button[aria-pressed="true"] {
+	color: var(--leaf);
+	border-color: var(--leaf);
+}
+
+.post-like-button[aria-pressed="true"] svg {
+	fill: currentColor;
+}
+
+.post-like-button:focus-visible {
+	outline: 3px solid var(--sun);
+	outline-offset: 3px;
+}
+
+.post-like-button:disabled {
+	opacity: 0.65;
+	cursor: wait;
+}
+
+.post-like-status {
+	font-size: 0.875rem;
+}
+
 * {
 	box-sizing: border-box;
 }

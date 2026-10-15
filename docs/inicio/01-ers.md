@@ -136,19 +136,40 @@ por producto.
 
 Un usuario podrá dar y quitar un like por publicación.
 
+En Fase 4 se permite también sobre publicaciones propias. La mutación exige
+sesión y perfil y recibe el estado deseado, no un toggle: repetirla no
+duplica ni invierte el resultado. Los conteos son públicos; la relación
+personal solo es legible por su titular, sin listas públicas de likes.
+
 ### RF-11 Comentarios
 
 Un usuario autenticado podrá comentar publicaciones. Podrá eliminar sus
 propios comentarios.
 
+Contrato de Fase 4: texto plano de 1–1000 puntos de código Unicode tras
+trim, sin interpretar HTML/Markdown, envío con UUID idempotente y lectura
+pública en páginas de 12, recientes primero con cursor `(created_at, id)`.
+Eliminar exige confirmación y permite cancelar; ni el autor del post ni
+roles elevados pueden borrar comentarios ajenos en esta fase.
+
 ### RF-12 Compartir
 
 El sistema deberá permitir copiar/compartir el enlace de una publicación
-y podrá registrar el evento.
+y, en Fase 4, no registrará eventos ni métricas. También lo podrá usar un
+anónimo. Se ofrecerá copia y compartir nativo cuando esté disponible,
+distinguiendo cancelación, fallo y éxito. El enlace apunta al detalle,
+con origen configurado por entorno (localhost solo en desarrollo), nunca
+a una URL firmada de imagen.
 
 ### RF-13 Seguimiento
 
 Un usuario podrá seguir a otro usuario, excepto a sí mismo.
+
+En Fase 4 requiere sesión y perfil, usa estado deseado idempotente y
+destino estable por ID de perfil aunque cambie el username. Solo se
+publican conteos en perfiles y el estado propio para su titular, no listas
+de relaciones. No se personaliza el feed. Entre pestañas prevalece la
+última operación confirmada; se reconcilia al volver a la pestaña o recargar.
 
 ### RF-14 Ranking
 

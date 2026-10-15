@@ -290,7 +290,7 @@ test("keeps the missing-profile return link below its message", async ({ page })
   }
 });
 
-test("rejects an expired session on every private profile route", async ({ request }) => {
+test("rejects an expired session on private profile and publication routes", async ({ request }) => {
   test.setTimeout(120_000);
   const secretKey = process.env.CLERK_SECRET_KEY;
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -312,7 +312,10 @@ test("rejects an expired session on every private profile route", async ({ reque
     expect(valid.headers()["cache-control"] ?? "").not.toMatch(/(?:^|,)\s*(?:public|s-maxage)\b/i);
 
     await new Promise((resolve) => setTimeout(resolve, 67_000));
-    for (const path of ["/perfil", "/perfil/completar", "/perfil/editar"]) {
+    for (const path of [
+      "/perfil", "/perfil/completar", "/perfil/editar", "/crear", "/imagenes",
+      "/post/b02e9ce0-0a90-4e7c-a5cb-f54ff20f228a/editar",
+    ]) {
       const expired = await request.get(path, { headers, maxRedirects: 0 });
       const body = await expired.text();
       if (expired.status() === 307) {
@@ -325,6 +328,8 @@ test("rejects an expired session on every private profile route", async ({ reque
       expect(body).not.toContain('name="username"');
       expect(body).not.toContain('name="displayName"');
       expect(body).not.toContain('name="avatar"');
+      expect(body).not.toContain('name="operationId"');
+      expect(body).not.toContain('name="postId"');
     }
   } finally {
     await backend.users.deleteUser(user.id);

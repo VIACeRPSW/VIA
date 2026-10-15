@@ -84,15 +84,30 @@ publicaciones ni objetos Storage.
 
 ``` text
 comments:
-  INSERT -> usuario autenticado
-  DELETE -> autor o moderador/admin
+  SELECT -> proyección pública de comentarios de posts públicos
+  INSERT -> usuario autenticado con perfil, autor derivado
+  DELETE -> solo autor, todos los roles en Fase 4
 ```
 
 ``` text
 likes:
-  INSERT -> usuario autenticado
+  SELECT -> solo relación propia; agregados públicos por RPC acotada
+  INSERT -> usuario autenticado con perfil, sobre post público
   DELETE -> propietario del like
 ```
+
+En Fase 4, autor del post, moderador y administrador no pueden borrar
+comentarios o likes ajenos. La moderación se reserva a Fase 7. Las
+mutaciones sociales derivan al actor del JWT y no aceptan propietario o
+rol enviados por cliente. Un anónimo o usuario sin perfil solo puede leer
+agregados/comentarios públicos y compartir el enlace.
+
+Seguir exige sesión/perfil, unicidad y destino distinto del actor. La
+lectura pública se limita a conteos; estado personal solo para el titular,
+sin listas de likes ni seguidores. Borrar un post elimina atómicamente
+sus likes y comentarios, no perfiles ni recursos ajenos, conservando el
+journal de limpieza de imágenes. Las respuestas personales no se
+almacenan en caché compartida y se descartan al cambiar de sesión.
 
 ## 6. Storage
 

@@ -49,6 +49,9 @@ IA.
 -   Quitar like.
 -   Comentario.
 -   Eliminación de comentario propio.
+-   Compartir enlace sin métricas, también para anónimos.
+-   Seguir/dejar de seguir y conteos en perfiles, sin listas públicas ni
+    personalización del feed (acuerdo de Fase 4 del 2026-10-15).
 
 ### Comunidades
 
@@ -71,7 +74,7 @@ IA.
 ## 3. Segunda etapa
 
 -   Compartir con métricas.
--   Seguir usuarios.
+-   Personalización del feed por usuarios seguidos.
 -   Ranking.
 -   Medallas.
 -   Reportes completos.

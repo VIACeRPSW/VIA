@@ -2,11 +2,17 @@
 
 ## Estado
 
-- Estado: En curso — CRUD propio implementado; feed vertical continuo y galerías de imágenes; validación ampliada y cierre integral pendientes
+- Estado: Cerrada por decisión del usuario el 2026-10-15 — CRUD y diseño aprobados; comprobaciones ampliadas no ejecutadas diferidas explícitamente, sin marcarlas aprobadas
 - Roadmap: Fase 3
 - Dependencias: cierre verificable de Fase 2; perfiles propios y proyección pública segura; autenticación Clerk → Supabase bajo RLS; Supabase PostgreSQL y Storage disponibles; aprobación de los contratos y diferencias con los wireframes en el Sprint 1.1.
 - Criterio de salida: CRUD completo de publicaciones con imagen persistente, listado, detalle, edición y eliminación propias, permisos equivalentes en aplicación, PostgreSQL y Storage, y vistas responsive comprobadas.
 - Restricción: el usuario autorizó continuar la fase tras confirmar el cierre de Fase 2. El Sprint 1.1 resuelve contratos antes de implementar; las operaciones remotas, migraciones y despliegues requieren autorización específica.
+
+Las casillas de alcance/tareas indican implementación comprobada, no aprobación
+automática de todos los CA. Las pruebas compuestas permanecen abiertas cuando
+falta alguno de sus casos; su cobertura parcial se detalla en la revisión de
+cierre. La aprobación visual del usuario conserva el diseño, pero no sustituye
+las comprobaciones técnicas. No hay un despliegue nuevo confirmado.
 
 ## Objetivo
 
@@ -357,24 +363,24 @@ resetear la base compartida ni crear otro proyecto.
 
 **Alcance**
 
-- [ ] Bucket `posts`, políticas y configuración de imagen versionados.
-- [ ] Carga validada en servidor y componente accesible reutilizable en `/crear`.
-- [ ] Recuperación de fallos y limpieza de cargas canceladas.
+- [x] Bucket `posts`, políticas y configuración de imagen versionados.
+- [x] Carga validada en servidor y componente accesible reutilizable en `/crear`.
+- [x] Recuperación de fallos y limpieza de cargas canceladas.
 
 **Tareas**
 
-- [ ] `VIA-009` Reutilizar las utilidades de imagen/Storage de Fase 2 donde proceda, manteniendo límites específicos del contrato de publicaciones.
-- [ ] `VIA-009` Versionar bucket y políticas de lectura/escritura; usar ruta derivada de identidad y nombre no reutilizado, sin aceptar rutas del cliente.
-- [ ] `VIA-009` Validar bytes, tipo real, tamaño y dimensiones; rechazar SVG, contenido incompatible, archivo vacío y formato fuera del contrato.
-- [ ] `VIA-009` Implementar selector, previsualización, cancelación, estado pendiente y mensajes de error; el arrastre no será la única vía.
-- [ ] `VIA-009` Vincular cargas a una operación/propietario verificables y definir caducidad, compensación y recuperación de pendientes sin borrado global.
+- [x] `VIA-009` Reutilizar las utilidades de imagen/Storage de Fase 2 donde proceda, manteniendo límites específicos del contrato de publicaciones.
+- [x] `VIA-009` Versionar bucket y políticas de lectura/escritura; usar ruta derivada de identidad y nombre no reutilizado, sin aceptar rutas del cliente.
+- [x] `VIA-009` Validar bytes, tipo real, tamaño y dimensiones; rechazar SVG, contenido incompatible, archivo vacío y formato fuera del contrato.
+- [x] `VIA-009` Implementar selector, previsualización, cancelación, estado pendiente y mensajes de error; el arrastre no será la única vía.
+- [x] `VIA-009` Vincular cargas a una operación/propietario verificables y definir caducidad, compensación y recuperación de pendientes sin borrado global.
 - [ ] `VIA-009` Ensayar rollback de configuración/políticas y limpieza de objetos de prueba en Storage aislado; no confiar solo en rollback SQL.
 
 **Criterios de aceptación**
 
-- [ ] CA-2.1.1 — Imagen válida queda almacenada como propia; los límites aprobados se cumplen también en servidor y bucket.
+- [x] CA-2.1.1 — Imagen válida queda almacenada como propia; los límites aprobados se cumplen también en servidor y bucket.
 - [ ] CA-2.1.2 — Archivo inválido, sesión ausente/expirada y ruta ajena no crean un objeto usable ni exponen datos internos.
-- [ ] CA-2.1.3 — A no puede leer cargas privadas, sobrescribir o eliminar objetos de B; lectura de objetos publicados respeta el contrato aprobado.
+- [x] CA-2.1.3 — A no puede leer cargas privadas, sobrescribir o eliminar objetos de B; lectura de objetos publicados respeta el contrato aprobado.
 - [ ] CA-2.1.4 — Cancelación, reintento y fallo parcial tienen recuperación comprobada; rollback y cleanup dejan cero objetos de prueba residuales.
 - [ ] CA-2.1.5 — El selector es utilizable con teclado, muestra errores anunciables y no desborda móvil, tablet o escritorio.
 
@@ -387,7 +393,10 @@ resetear la base compartida ni crear otro proyecto.
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Implementación comprobada; publicación real, límites, validación y
+  permisos cubiertos por la evidencia del incremento mínimo y la revisión
+  de cierre. Permanecen abiertos el rollback físico aislado y los casos
+  ampliados de fallos/selector que se detallan al final.
 
 ### Sprint 2.2 — Crear una publicación sin duplicados
 
@@ -395,38 +404,40 @@ resetear la base compartida ni crear otro proyecto.
 
 **Alcance**
 
-- [ ] Formulario del wireframe adaptado al contrato aprobado.
-- [ ] Acción `createPost` con validación, identidad, categoría e imagen propia.
-- [ ] Confirmación persistente y errores recuperables sin duplicados.
+- [x] Formulario del wireframe adaptado al contrato aprobado.
+- [x] Acción `createPost` con validación, identidad, categoría e imagen propia.
+- [x] Confirmación persistente y errores recuperables sin duplicados.
 
 **Tareas**
 
-- [ ] `VIA-010` Crear validador compartido y acción de servidor; derivar autor de sesión/perfil y comprobar categoría y referencia de imagen propias.
-- [ ] `VIA-010` `VIA-037` Construir `/crear` con imagen, título, descripción, categoría y hashtags obligatorios; omitir comunidad hasta Fase 5.
-- [ ] `VIA-010` Revalidar sesión y perfil al enviar, gestionar doble envío y reintento idempotente, y devolver identificador confirmado.
-- [ ] `VIA-010` Ordenar upload/confirmación según contrato y compensar fallos; no publicar objetos pendientes por tener una URL.
-- [ ] `VIA-010` Mostrar confirmación mínima con ID real y revalidar las consultas afectadas; el enlace al detalle se incorporará en 3.1.
-- [ ] `Sin identificador existente` Registrar etapa y código de fallo sin tokens, contenido privado, rutas firmadas ni mensajes internos; no convertir un error de persistencia en éxito.
+- [x] `VIA-010` Crear validador compartido y acción de servidor; derivar autor de sesión/perfil y comprobar categoría y referencia de imagen propias.
+- [x] `VIA-010` `VIA-037` Construir `/crear` con imagen, título, descripción, categoría y hashtags obligatorios; omitir comunidad hasta Fase 5.
+- [x] `VIA-010` Revalidar sesión y perfil al enviar, gestionar doble envío y reintento idempotente, y devolver identificador confirmado.
+- [x] `VIA-010` Ordenar upload/confirmación según contrato y compensar fallos; no publicar objetos pendientes por tener una URL.
+- [x] `VIA-010` Mostrar confirmación mínima con ID real y revalidar las consultas afectadas; el enlace al detalle está incorporado en 3.1.
+- [x] `Sin identificador existente` Registrar etapa y código de fallo sin tokens, contenido privado, rutas firmadas ni mensajes internos; no convertir un error de persistencia en éxito.
 
 **Criterios de aceptación**
 
-- [ ] CA-2.2.1 — Usuario con perfil y datos válidos obtiene exactamente una fila propia y una imagen asociada; ambos persisten tras recarga.
-- [ ] CA-2.2.2 — Falta de imagen/título/categoría/hashtags, categoría inexistente, hashtag inválido o referencia de objeto ajeno se rechazan sin publicación parcial.
+- [x] CA-2.2.1 — Usuario con perfil y datos válidos obtiene exactamente una fila propia y una imagen asociada; ambos persisten tras recarga.
+- [x] CA-2.2.2 — Falta de imagen/título/categoría/hashtags, categoría inexistente, hashtag inválido o referencia de objeto ajeno se rechazan sin publicación parcial.
 - [ ] CA-2.2.3 — Sesión ausente/expirada o perfil ausente impiden publicar, aunque se invoque directamente la acción.
 - [ ] CA-2.2.4 — Doble envío, pérdida de respuesta y fallo de inserción/confirmación no duplican publicación ni esconden limpieza pendiente.
 - [ ] CA-2.2.5 — Formulario tiene labels, foco, errores de campo y estado pendiente accesibles; funciona a 360, 768 y 1280 px.
 
 **Pruebas**
 
-- [ ] P-2.2.1 — Unitarias: campos y límites exactos del contrato; normalización y clasificación segura de errores (CA-2.2.2, CA-2.2.4).
+- [x] P-2.2.1 — Unitarias: campos y límites exactos del contrato; normalización y clasificación segura de errores (CA-2.2.2, CA-2.2.4).
 - [ ] P-2.2.2 — Integración: acción + PostgreSQL + Storage, flujo válido, categorías inválidas, doble envío, respuesta perdida y fallos parciales; inspeccionar filas y objetos (CA-2.2.1, CA-2.2.2, CA-2.2.4).
-- [ ] `VIA-037` Unitarias/integración: límites 1/5 etiquetas y 2/30 caracteres, rechazo 0/6 y 1/31, Unicode/NFC, mayúsculas, prefijo, duplicados, caracteres inválidos y atomicidad en errores de hashtags (CA-2.2.2).
+- [x] `VIA-037` Unitarias/integración: límites 1/5 etiquetas y 2/30 caracteres, rechazo 0/6 y 1/31, Unicode/NFC, mayúsculas, prefijo, duplicados, caracteres inválidos y atomicidad en errores de hashtags (CA-2.2.2).
 - [ ] P-2.2.3 — E2E: login → `/crear` → corregir error → publicar → confirmación → recarga; comprobar teclado y responsive (CA-2.2.1, CA-2.2.5). `E2E-02` completo se cierra en 3.1.
 - [ ] P-2.2.4 — Seguridad/RLS: invocar sin sesión/perfil, con sesión expirada, autor alterado y archivo B; comprobar rechazo directo en PostgreSQL/Storage (CA-2.2.2, CA-2.2.3).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Flujo de creación aprobado en el E2E CRUD previo; unitarias, SQL y
+  comprobación de envío interrumpido aprobadas. No se cierra la matriz
+  completa de fallos remotos o sesión caducada durante el envío.
 
 ## Hito 3 — Vistas de lectura conectadas a datos reales
 
@@ -457,45 +468,50 @@ post inicial, total exacto, regreso a recientes y rechazo de galería
 anónima. No desborda a 360/768/1280 px. Limpieza de fixtures al terminar.
 No se aplicaron nuevas migraciones ni se modificaron posts del usuario.
 Los casilleros pendientes conservan los casos ampliados aún no cerrados,
-incluida revisión manual integral y sección embebida en perfil propio.
+incluida revisión accesible integral. La galería se abre desde «Mi galería»
+en `/perfil`: no se añadirá una segunda galería embebida que altere el diseño
+aprobado.
 
 **Objetivo:** comprobar las pantallas 3, 5 y 7 con datos persistentes, imagen y autor público correctos.
 
 **Alcance**
 
-- [ ] `/inicio`, `/post/[id]`, `/imagenes` y sección de publicaciones en `/perfil`.
-- [ ] Tarjetas reutilizables, listado paginado y conteos reales.
-- [ ] Estados de carga, vacío, inexistente/no visible y servicio no disponible.
+- [x] `/inicio`, `/post/[id]`, `/imagenes` y acceso a publicaciones desde `/perfil`, conforme al diseño aprobado.
+- [x] Tarjetas reutilizables, listado paginado y conteos reales.
+- [x] Estados de carga, vacío, inexistente/no visible y servicio no disponible.
 
 **Tareas**
 
-- [ ] `VIA-011` Centralizar consultas tipadas fuera de componentes visuales y reutilizar la proyección pública de perfiles.
-- [ ] `VIA-011` Implementar feed reciente con cursor estable y galerías filtradas por propietario; no descargar todo para filtrar en el navegador.
-- [ ] `VIA-012` Implementar detalle y acceso a imagen original con el mismo permiso; validar ID y distinguir error de servicio de inexistencia.
-- [ ] `VIA-011` Incorporar galería y conteo real en perfil propio; mantener edición de perfil existente separada de edición de post.
-- [ ] `VIA-011` `VIA-012` `VIA-037` Mostrar imagen, título, autor, descripción, categoría y hashtags como texto; mantener buscador, navegación por hashtag e interacciones diferidos sin botones engañosos.
+- [x] `VIA-011` Centralizar consultas tipadas fuera de componentes visuales y reutilizar la proyección pública de perfiles.
+- [x] `VIA-011` Implementar feed reciente con cursor estable y galerías filtradas por propietario; no descargar todo para filtrar en el navegador.
+- [x] `VIA-012` Implementar detalle y acceso a imagen original con el mismo permiso; validar ID y distinguir error de servicio de inexistencia.
+- [x] `VIA-011` Enlazar desde el perfil propio a `/imagenes`, con galería y conteo real allí; mantener edición de perfil separada de edición de post.
+- [x] `VIA-011` `VIA-012` `VIA-037` Mostrar imagen, título, autor, descripción, categoría y hashtags como texto en feed/detalle; galerías solo con imágenes y nombres accesibles. Mantener buscador, navegación por hashtag e interacciones diferidos sin botones engañosos.
 - [ ] `Sin identificador existente` Conectar portada/acceso, feed, crear y volver; conservar retorno tras login. Dejar acciones editar/eliminar para sus sprints, sin enlaces rotos.
 - [ ] `Sin identificador existente` Optimizar imágenes con dimensiones estables, alternativa textual y origen permitido; asegurar contraste, foco y responsive.
 
 **Criterios de aceptación**
 
-- [ ] CA-3.1.1 — Publicación confirmada aparece en feed, detalle y galería de A, con autor público correcto y conteo persistente; no aparece como propia en B.
-- [ ] CA-3.1.2 — Paginación no repite ni omite filas en un dataset estable con timestamps iguales; vacío, ID inválido y publicación inexistente/no visible tienen respuesta controlada.
-- [ ] CA-3.1.3 — Fallo de datos o de entrega de imagen se presenta como error recuperable, no como feed vacío exitoso; no se filtran campos privados.
-- [ ] CA-3.1.4 — Las vistas respetan el contrato público/privado y el original no evade permisos; navigation/login/logout no regresan.
+- [x] CA-3.1.1 — Publicación confirmada aparece en feed, detalle y galería de A, con autor público correcto y conteo persistente; no aparece como propia en B.
+- [x] CA-3.1.2 — Paginación no repite ni omite filas en un dataset estable con timestamps iguales; vacío, ID inválido y publicación inexistente/no visible tienen respuesta controlada.
+- [x] CA-3.1.3 — Fallo de datos o de entrega de imagen se presenta como error recuperable, no como feed vacío exitoso; no se filtran campos privados.
+- [x] CA-3.1.4 — Las vistas respetan el contrato público/privado y el original no evade permisos; navigation/login/logout no regresan.
 - [ ] CA-3.1.5 — Tarjetas, detalle y galerías no desbordan a 360, 768 y 1280 px, son utilizables con teclado y muestran imágenes sin saltos de layout evitables.
 
 **Pruebas**
 
-- [ ] P-3.1.1 — Unitarias: proyecciones públicas, cursor, ID y transformación de estados incluyendo imagen no disponible (CA-3.1.2, CA-3.1.3).
+- [x] P-3.1.1 — Unitarias: proyecciones públicas, cursor, ID y transformación de estados incluyendo imagen no disponible (CA-3.1.2, CA-3.1.3).
 - [ ] P-3.1.2 — Integración: publicaciones A/B, consultas propias, públicas, orden con empates, varias páginas y error de Supabase/Storage (CA-3.1.1 a CA-3.1.4).
-- [ ] P-3.1.3 — E2E: completar `E2E-02`, ir de feed a detalle y volver, visitar perfil/galería, recargar y repetir con B/anónimo según contrato; comprobar acceso y logout (CA-3.1.1, CA-3.1.4).
+- [x] P-3.1.3 — E2E: completar `E2E-02`, ir de feed a detalle y volver, visitar perfil/galería, recargar y repetir con B/anónimo según contrato; comprobar acceso y logout (CA-3.1.1, CA-3.1.4).
 - [ ] P-3.1.4 — Seguridad/RLS/Storage: consultas directas, payloads y URLs del original no exponen publicaciones privadas, cargas pendientes o datos internos del autor (CA-3.1.3, CA-3.1.4).
 - [ ] P-3.1.5 — Accesibilidad/responsive: teclado, jerarquía, textos alternativos, foco, contraste y capturas en los tres anchos definidos (CA-3.1.5).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Diseño confirmado por el usuario; lectura pública, galería propia,
+  paginación, aislamiento B, logout y anchos comprobados. Consultas/cursor
+  y estados de error tienen cobertura unitaria. Accesibilidad ampliada y
+  fallos de entrega en navegador siguen abiertos; véase revisión de cierre.
 
 ## Hito 4 — Publicaciones propias administrables
 
@@ -521,37 +537,41 @@ migración y DDL en la misma transacción, sin reset ni otro proyecto.
 
 **Alcance**
 
-- [ ] Formulario de edición y acción `updatePost`.
-- [ ] Reemplazo opcional de imagen con compensación.
-- [ ] Enlaces de edición propios en detalle y galerías.
+- [x] Formulario de edición y acción `updatePost`.
+- [x] Reemplazo opcional de imagen con compensación.
+- [x] Acceso desde las imágenes de la galería al detalle, donde se ofrecen los controles propios; sin controles visibles adicionales en el grid aprobado.
 
 **Tareas**
 
-- [ ] `VIA-013` Cargar datos autorizados y reutilizar formulario/validadores de creación; conservar autor, ID y campos internos.
-- [ ] `VIA-037` Editar hashtags propios con el mismo contrato y persistencia atómica; comprobar sustitución, duplicados, rechazo de lista vacía, escritura ajena y recarga en feed/detalle.
-- [ ] `VIA-013` Comprobar sesión y propiedad en servidor y en la mutación RLS; no confiar en controles ocultos.
-- [ ] `VIA-013` Definir control de concurrencia conforme al contrato y avisar de edición obsoleta en lugar de perder cambios silenciosamente.
-- [ ] `VIA-013` Cargar imagen nueva, confirmar referencia y retirar la anterior en el orden aprobado; mantener original ante fallo y registrar cleanup pendiente si procede.
-- [ ] `VIA-013` Revalidar feed, detalle, galería y perfil; preservar accesibilidad y mensajes recuperables.
+- [x] `VIA-013` Cargar datos autorizados y reutilizar formulario/validadores de creación; conservar autor, ID y campos internos.
+- [x] `VIA-037` Editar hashtags propios con el mismo contrato y persistencia atómica; comprobar sustitución, duplicados, rechazo de lista vacía, escritura ajena y recarga en feed/detalle.
+- [x] `VIA-013` Comprobar sesión y propiedad en servidor y en la mutación RLS; no confiar en controles ocultos.
+- [x] `VIA-013` Definir control de concurrencia conforme al contrato y avisar de edición obsoleta en lugar de perder cambios silenciosamente.
+- [x] `VIA-013` Cargar imagen nueva, confirmar referencia y retirar la anterior en el orden aprobado; mantener original ante fallo y registrar cleanup pendiente si procede.
+- [x] `VIA-013` Revalidar feed, detalle, galería y perfil; preservar accesibilidad y mensajes recuperables.
 
 **Criterios de aceptación**
 
-- [ ] CA-4.1.1 — A edita campos válidos y opcionalmente la imagen; todos los listados y el detalle muestran el resultado persistente.
-- [ ] CA-4.1.2 — Datos inválidos, categoría inexistente y edición obsoleta no sobrescriben la versión válida y muestran error comprensible.
-- [ ] CA-4.1.3 — B, anónimo y roles sin permiso aprobado no editan A ni reasignan autor/imagen; URL y acción directa también rechazan el intento.
+- [x] CA-4.1.1 — A edita campos válidos y opcionalmente la imagen; todos los listados y el detalle muestran el resultado persistente.
+- [x] CA-4.1.2 — Datos inválidos, categoría inexistente y edición obsoleta no sobrescriben la versión válida y muestran error comprensible.
+- [x] CA-4.1.3 — B, anónimo y roles sin permiso aprobado no editan A ni reasignan autor/imagen; URL y acción directa también rechazan el intento.
 - [ ] CA-4.1.4 — Fallo de Storage/base o pérdida de sesión conservan una publicación recuperable sin pérdida del original ni residuos no registrados.
 - [ ] CA-4.1.5 — Edición funciona con teclado y en los tres anchos definidos, incluidos estado pendiente y foco de error.
 
 **Pruebas**
 
-- [ ] P-4.1.1 — Unitarias: campos editables, límites, versión obsoleta y errores; autor e ID quedan fuera de entrada editable (CA-4.1.2, CA-4.1.3).
+- [x] P-4.1.1 — Unitarias: campos editables, límites, versión obsoleta y errores; autor e ID quedan fuera de entrada editable (CA-4.1.2, CA-4.1.3).
 - [ ] P-4.1.2 — Integración: editar con/sin imagen, dos ediciones concurrentes, fallo de carga/confirmación/limpieza y sesión expirada; comprobar referencias y objetos (CA-4.1.1, CA-4.1.2, CA-4.1.4).
 - [ ] P-4.1.3 — E2E: `E2E-05` y `E2E-06`, recarga y verificación en feed/perfil; teclado y responsive (CA-4.1.1, CA-4.1.3, CA-4.1.5).
 - [ ] P-4.1.4 — Seguridad/RLS/Storage: actualizar fila A como B, cambiar autor, vincular objeto ajeno y reemplazar directamente archivo ajeno (CA-4.1.3).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Edición y reemplazo aprobados en el E2E CRUD previo; SQL y unitarias
+  cubren versión y permisos. El E2E ampliado comprueba recarga con título
+  actualizado en detalle, feed, galería y perfil público, hashtags
+  persistentes y conservación de imagen al editar metadata. Fallos remotos
+  durante la operación y accesibilidad ampliada permanecen abiertos.
 
 ### Sprint 4.2 — Eliminar con confirmación y limpieza verificable
 
@@ -586,36 +606,39 @@ completa de perfiles/avatares en este incremento.
 
 **Alcance**
 
-- [ ] Confirmación accesible y acción `deletePost` idempotente.
-- [ ] Retirada de listados, detalle y conteo propio.
-- [ ] Limpieza de imagen y recuperación ante errores parciales.
+- [x] Confirmación accesible y acción `deletePost` idempotente.
+- [x] Retirada de listados, detalle y conteo propio.
+- [x] Limpieza de imagen y recuperación ante errores parciales.
 
 **Tareas**
 
-- [ ] `VIA-014` Incorporar confirmación explícita, cancelar sin cambios y prevenir doble envío.
-- [ ] `VIA-014` Comprobar sesión, propiedad y referencia almacenada; nunca borrar una ruta aportada por el cliente.
-- [ ] `VIA-014` Ejecutar el protocolo aprobado de retirada y limpieza; diferenciar contenido retirado, limpieza pendiente y eliminación terminada.
-- [ ] `VIA-014` Hacer reintentos seguros, preservar contexto de recuperación y registrar fallos sin secretos.
-- [ ] `VIA-014` Revalidar feed, detalle, galería y conteo; verificar caducidad o invalidación de entrega de imagen según contrato, sin prometer borrar copias descargadas.
+- [x] `VIA-014` Incorporar confirmación explícita, cancelar sin cambios y prevenir doble envío.
+- [x] `VIA-014` Comprobar sesión, propiedad y referencia almacenada; nunca borrar una ruta aportada por el cliente.
+- [x] `VIA-014` Ejecutar el protocolo aprobado de retirada y limpieza; diferenciar contenido retirado, limpieza pendiente y eliminación terminada.
+- [x] `VIA-014` Hacer reintentos seguros, preservar contexto de recuperación y registrar fallos sin secretos.
+- [x] `VIA-014` Revalidar feed, detalle, galería y conteo; verificar caducidad o invalidación de entrega de imagen según contrato, sin prometer borrar copias descargadas.
 
 **Criterios de aceptación**
 
-- [ ] CA-4.2.1 — Confirmar retira la publicación de las vistas y limpia su objeto; cancelar conserva fila e imagen.
-- [ ] CA-4.2.2 — B, anónimo y roles no autorizados no eliminan fila ni objeto de A, aun manipulando ID/ruta.
+- [x] CA-4.2.1 — Confirmar retira la publicación de las vistas y limpia su objeto; cancelar conserva fila e imagen.
+- [x] CA-4.2.2 — B, anónimo y roles no autorizados no eliminan fila ni objeto de A, aun manipulando ID/ruta.
 - [ ] CA-4.2.3 — Repetir la operación no afecta otras publicaciones; errores parciales se notifican y pueden resolverse hasta cero residuos.
-- [ ] CA-4.2.4 — Detalle retirado, conteos y URL de imagen cumplen el contrato después del borrado y su ventana de caducidad definida.
+- [x] CA-4.2.4 — Detalle retirado, conteos y URL de imagen cumplen el contrato después del borrado y su ventana de caducidad definida.
 - [ ] CA-4.2.5 — Confirmación anuncia alcance y errores, gestiona foco y funciona con teclado y responsive.
 
 **Pruebas**
 
-- [ ] P-4.2.1 — Unitarias: estados de borrado/reintento, clasificación de fallos y selección de referencia almacenada (CA-4.2.2, CA-4.2.3).
+- [x] P-4.2.1 — Unitarias: estados de borrado/reintento, clasificación de fallos y selección de referencia almacenada (CA-4.2.2, CA-4.2.3).
 - [ ] P-4.2.2 — Integración: confirmar/cancelar, doble intento, fallo de base/Storage/limpieza; inspeccionar filas, referencias, cero residuos finales y caducidad de acceso (CA-4.2.1, CA-4.2.3, CA-4.2.4).
 - [ ] P-4.2.3 — E2E: A elimina desde galería, vuelve a feed, visita detalle anterior y verifica conteo; cancelar y navegar por teclado en tres anchos (CA-4.2.1, CA-4.2.4, CA-4.2.5).
 - [ ] P-4.2.4 — Seguridad/RLS/Storage: borrar A como B/anónimo, manipular ruta e intentar reutilizar URL retirada según contrato (CA-4.2.2, CA-4.2.4).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Borrado/cancelación y limpieza propia aprobados en el CRUD previo;
+  teclado del diálogo y vencimiento de firma antes de limpiar el objeto
+  aprobados en el E2E ampliado. No se presenta esto como la matriz completa
+  de fallos parciales reales ni como revisión accesible integral.
 
 ## Hito 5 — CRUD demostrado y fase cerrable
 
@@ -635,7 +658,7 @@ completa de perfiles/avatares en este incremento.
 - [ ] `Sin identificador existente` Ampliar pruebas directas de base/Storage para publicaciones sin sustituir las pruebas de perfiles existentes ni usar fixtures reales.
 - [ ] `Sin identificador existente` Validar historial de migraciones y rollback/reaplicación en entorno aislado, con limpieza separada de objetos.
 - [ ] `Sin identificador existente` Recorrer portada → acceso → perfil completo → crear → feed → detalle → editar → eliminar → logout con A/B y permisos directos.
-- [ ] `Sin identificador existente` Verificar versiones de las guías locales de Next.js antes de implementar APIs/rutas y documentar solo decisiones realmente aprobadas.
+- [x] `Sin identificador existente` Verificar versiones de las guías locales de Next.js antes de implementar APIs/rutas y documentar solo decisiones realmente aprobadas.
 - [ ] `Sin identificador existente` Registrar comandos, entorno autorizado, resultados, capturas sin datos sensibles, recuperación de fallos y ausencia de fixtures. Despliegue solo si se autoriza explícitamente.
 
 **Criterios de aceptación**
@@ -644,19 +667,21 @@ completa de perfiles/avatares en este incremento.
 - [ ] CA-5.1.2 — Perfiles, avatar, roles, acceso y logout conservan los comportamientos de Fases 1 y 2; tipos, lint, build, pruebas y secretos pasan.
 - [ ] CA-5.1.3 — Migraciones reproducibles, rollback probado y cleanup final sin usuarios, filas ni objetos de prueba residuales.
 - [ ] CA-5.1.4 — Las vistas cubiertas tienen evidencia responsive/accesible; las diferidas están documentadas sin aparentar estar terminadas.
-- [ ] CA-5.1.5 — La salida del roadmap está respaldada por evidencia fechada y decisiones actualizadas, no solo por casillas.
+- [x] CA-5.1.5 — La salida del roadmap está respaldada por evidencia fechada y decisiones actualizadas, no solo por casillas.
 
 **Pruebas**
 
-- [ ] P-5.1.1 — Unitarias: ejecutar suites relacionadas de perfiles, validadores de imagen/publicación y estados de error (CA-5.1.2).
+- [x] P-5.1.1 — Unitarias: ejecutar suites relacionadas de perfiles, validadores de imagen/publicación y estados de error (CA-5.1.2).
 - [ ] P-5.1.2 — Integración: regresión de acciones, auth-boundary, RLS de perfiles y publicaciones, Storage, migraciones y rollback; comprobar cero fixtures (CA-5.1.1 a CA-5.1.3).
 - [ ] P-5.1.3 — E2E: recorrido CRUD completo A/B, `E2E-01`, `E2E-02`, `E2E-05`, `E2E-06`, acceso directo anónimo y sesiones expiradas; accesibilidad y tres anchos (CA-5.1.1, CA-5.1.2, CA-5.1.4).
 - [ ] P-5.1.4 — Seguridad/RLS/Storage: repetir matriz aprobada, inspeccionar entrega de originales, payloads, logs y bundle; sin acceso ordinario con credenciales administrativas (CA-5.1.1, CA-5.1.2).
-- [ ] P-5.1.5 — Verificación documental: contrastar cobertura del roadmap, backlog, ocho vistas, CA→P y decisiones aprobadas con evidencia de cada sprint (CA-5.1.4, CA-5.1.5).
+- [x] P-5.1.5 — Verificación documental: contrastar cobertura del roadmap, backlog, ocho vistas, CA→P y decisiones aprobadas con evidencia de cada sprint (CA-5.1.4, CA-5.1.5).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Revisión fechada y comandos/resultados registrados a continuación.
+  La salida funcional está demostrada; el usuario autorizó posteriormente
+  el cierre con diferimiento explícito de las comprobaciones ampliadas.
 
 ## Validación final de la fase
 
@@ -665,12 +690,107 @@ completa de perfiles/avatares en este incremento.
 - [ ] Permisos de aplicación, RLS y Storage verificados cuando aplican.
 - [ ] Migraciones y procedimiento de rollback validados cuando aplican.
 - [ ] Accesibilidad y responsive comprobados cuando existe UI.
-- [ ] Documentación base actualizada si cambió una decisión.
-- [ ] Criterio de salida del roadmap demostrado.
-- [ ] Fase 2 cerrada con evidencia antes de iniciar implementación de publicaciones.
-- [ ] Todos los puntos de Fase 3 del roadmap tienen sprint; cada CA tiene pruebas asociadas.
-- [ ] Ningún elemento diferido de Proyecto se declara implementado ni se muestra como funcional.
-- [ ] Pruebas finales dejan cero fixtures en Clerk, PostgreSQL y Storage.
+- [x] Documentación base actualizada si cambió una decisión.
+- [x] Criterio de salida del roadmap demostrado.
+- [x] Fase 2 cerrada con evidencia antes de iniciar implementación de publicaciones.
+- [x] Todos los puntos de Fase 3 del roadmap tienen sprint; cada CA tiene pruebas asociadas.
+- [x] Ningún elemento diferido de Proyecto se declara implementado ni se muestra como funcional.
+- [x] Pruebas finales dejan cero fixtures en Clerk, PostgreSQL y Storage.
+
+## Revisión de cierre — 2026-10-15
+
+### Resultado y límites
+
+El **CRUD del roadmap está implementado y demostrado**, con el diseño
+aprobado conservado. No se encontraron funcionalidades del CRUD que deban
+rehacerse. La revisión técnica no verificó todos los casos ampliados; el
+usuario decidió posteriormente cerrar la fase y avanzar. Las comprobaciones
+no realizadas quedan diferidas, no aprobadas. Una casilla abierta en una
+prueba compuesta no significa que todo su flujo esté ausente.
+
+No se creó otro proyecto/base, no se reseteó Supabase, no se cambiaron
+migraciones ni datos del usuario. Se utilizó el proyecto existente junto a
+`profiles`, con fixtures de desarrollo eliminados al finalizar. No se hizo
+commit ni despliegue. La aprobación visual del usuario cubre crear, feed
+continuo, galerías solo-imágenes, detalle, edición/reemplazo y borrado propio;
+no se interpreta como una revisión manual de accesibilidad.
+
+### Evidencia ejecutada en esta revisión
+
+| Comando o comprobación | Resultado y alcance exacto |
+| --- | --- |
+| `npm test -- actions\posts.test.ts actions\post-management.test.ts actions\profiles.test.ts actions\avatars.test.ts lib\posts components\posts\post-layout.test.tsx components\profile\profile-pages.test.tsx` | 116 pruebas en 12 archivos aprobadas. Contratos, acciones, imágenes, concurrencia, recuperación simulada, cursor, repositorio y presentación; regresión unitaria relacionada de perfiles y avatar. |
+| `npm run test:db:auth-boundary` | Aprobada la frontera de identidad con el proyecto existente. |
+| `npm run test:db:posts` | Aprobados leases, idempotencia, restricciones, catálogo, proyección pública y matriz de roles/Storage con metadatos transaccionales; no equivale a fallos de red reales. |
+| `npm run test:db:posts:management` | Aprobados reemplazo, conflictos de versión, propiedad, edición, borrado/journal y rollback/reaplicación de la RPC de reemplazo en transacciones revertidas. |
+| `npm run test:db:posts:api` | Aprobadas frontera HTTP privada, catálogo, RPC pública y validación de cursor. |
+| `node node_modules\supabase\dist\supabase.js migration list --linked` | Las ocho versiones locales coinciden con el historial remoto, incluida `20261015192000`. No se aplicaron migraciones. |
+| `npx playwright test post-closure.spec.ts --project=chromium`, incluido en la selección posterior | Aprobado en Chromium. Dos identidades efímeras: B lee el detalle público, no ve controles propios ni formulario de edición y su galería cuenta cero; SQL/Storage reales rechazan mutación y sobrescritura ajenas. Se comprueba que una eliminación ajena de Storage no retira objetos aunque la API devuelva una lista vacía sin error. |
+| Mismo [E2E ampliado](../../e2e/post-closure.spec.ts) | Crear, editar, detalle, galería y feed sin desbordamiento a 360/768/1280; diálogo con teclado, foco inicial en cancelar, Tab y restauración de foco. Selector con foco, preview, retirada y archivo ilegible corregible. Selección automatizada de archivo: no prueba el diálogo nativo del SO ni arrastre. |
+| Última ejecución enfocada del E2E ampliado | Una aprobada en 1,8 minutos, incluida edición real de título/hashtags, recarga en detalle/feed/galería/perfil público y comprobación de la referencia original de imagen. El grid continúa sin headings visibles. No se repitió el CRUD completo. |
+| Mismo E2E ampliado | Interrupción del POST antes de llegar al servidor muestra error, conserva borrador y no crea otra fila. Tras retirar el post no se emiten nuevas firmas; la firma previa deja de servir después de su vencimiento, manteniendo el objeto hasta comprobarlo. Limpieza desde galería termina con cero tickets/objetos propios. No simula pérdida de respuesta después del commit ni una caída remota de Storage. |
+| `npx playwright test post-closure.spec.ts avatar.spec.ts profile-onboarding.spec.ts --project=chromium` | Cuatro aprobadas y un fallo: avatar informó error de subida en Storage. No fue un falso éxito ni se ocultó el resultado. Perfiles, navegación, proyección pública y la comprobación ampliada de posts pasaron. |
+| `npx playwright test avatar.spec.ts profile-onboarding.spec.ts --project=chromium --grep "real Storage ownership\|expired session"` | Dos aprobadas en la repetición enfocada: avatar completo (subida, reemplazo, retirada y limpieza) y JWT vencido rechazado en las tres rutas privadas de perfil, `/crear`, `/imagenes` y edición de post. No se atribuye el fallo anterior a una causa confirmada. |
+| `npm run typecheck` y `npx eslint e2e\post-closure.spec.ts e2e\profile-onboarding.spec.ts` | Aprobados. No cambió código de aplicación; no se repitieron build, lint global ni escaneo de secretos, ya aprobados en el incremento anterior. Esa evidencia previa se conserva separada de esta ejecución. |
+| Limpieza final | Cero usuarios Clerk para los prefijos de fixtures ejecutados; cero perfiles `via_e2e_*`, `via_manage_*` y `via_publish_*`; cero tickets de posts/tareas de avatar huérfanos. Los tests comprueban los objetos físicos de sus carpetas. Se conserva una publicación existente y las cinco categorías. |
+| Procesos locales | Servidor abierto solo para las pruebas y detenido al terminar; comprobado que no queda listener en el puerto 3000. |
+
+La primera ejecución ampliada falló en un selector de prueba ambiguo
+(`role=status` también identifica el conteo de galería). Se restringió al
+formulario de limpieza y la prueba pasó. Al ampliar la propagación se detectó
+que la espera predeterminada de 5 segundos vencía mientras la acción seguía
+pendiente; se utilizó la misma espera de 30 segundos del CRUD existente y
+pasó la comprobación completa, sin ignorar errores ni modificar la aplicación.
+El runner del editor no descubrió Vitest; se usó el comando
+existente de npm. Playwright se selecciona por nombre de archivo, no con
+backslashes interpretados como una expresión regular.
+
+La consulta de logs por Supabase MCP quedó bloqueada por autenticación
+pendiente. La CLI enlazada sí permitió las comprobaciones descritas. No se
+solicitó ni reveló ningún secreto y no se infiere una causa remota a partir
+del nombre genérico `StorageApiError`.
+
+### Pendientes reales, no nueva implementación del CRUD
+
+| Pendiente | Casillas relacionadas | Evidencia que falta |
+| --- | --- | --- |
+| Fallos durante mutaciones reales | CA-2.1.2/4, CA-2.2.3/4, CA-4.1.4, CA-4.2.3; P-2.1.2, P-2.2.2/4, P-4.1.2, P-4.2.2 | Caducar/revocar sesión con formulario abierto y enviar; fallos de carga, confirmación y limpieza en la integración real; respuesta perdida después del commit. Unitarias, SQL y el POST abortado cubren partes, no toda esta matriz. |
+| Límites ampliados de imagen | P-2.1.1 | Están probados 5 MiB/byte siguiente, 4096/píxel siguiente, imágenes menores, formatos reales y rechazos. No se ejecutaron todos los vecinos inmediatos de cada límite que exige literalmente esta prueba compuesta; no se marca íntegramente aprobada. |
+| Accesibilidad ampliada | CA-2.1.5, CA-2.2.5, CA-3.1.5, CA-4.1.5, CA-4.2.5; P-2.1.3, P-3.1.5 y partes de P-4.1.3/P-4.2.3 | Se comprobaron anchos, foco y teclado indicados arriba, pero no contraste calculado de todas las vistas de posts, lector de pantalla, todos los estados pendientes/error ni arrastre. La selección nativa funciona; no se añadirá un dropzone para alterar el diseño aprobado. |
+| Matrices compuestas del cierre | CA-5.1.1 a CA-5.1.4; P-3.1.2/4, P-5.1.2/3/4 | Consolidar los casos faltantes anteriores, fallo de entrega de imagen en navegador y la comprobación ampliada de payloads/logs. No repetir todo el CRUD ni todas las regresiones para cada caso. |
+| Instalación desde cero y retirada física de bucket aislado | Tarea final de 1.2 y 2.1, CA-1.2.1, P-1.2.2 y parte de CA-2.1.4 | **Diferidos por la decisión de usar la base existente**, no por tablas faltantes. No se ejecutarán mediante reset del remoto, otra base ni retirada del bucket real. El ensayo incremental y los rollbacks transaccionales previos no equivalen a esto. |
+
+No hay un despliegue nuevo confirmado. Desplegar no se considera un requisito
+implícitamente autorizado para completar estas pruebas locales; cualquier
+smoke desplegado posterior debe registrarse por separado.
+
+### Puerta de Fase 4
+
+El 2026-10-15, después de conocer los pendientes, el usuario indicó:
+«cerramos fase 3 escribe la 4 dejando lista para comenzar en otra sesion
+que diga comenzar fase 4». Se registra el cierre de producto y el
+diferimiento de las comprobaciones ampliadas de la tabla anterior.
+Esta decisión habilita planificar/iniciar Fase 4, pero no demuestra
+pruebas no ejecutadas ni autoriza cambios remotos, commits o despliegues.
+No quedan pendientes de rediseño de crear/feed/galerías.
+
+Las casillas técnicas abiertas se conservan como deuda de verificación.
+No se reabre automáticamente el CRUD al comenzar Fase 4; si un incremento
+toca una superficie con deuda, se ejecuta la comprobación enfocada pertinente
+y se registra su resultado. Instalación limpia y retirada aislada de bucket
+no se intentarán en la base compartida.
+
+La siguiente fase del roadmap es **interacción**: likes, comentarios,
+compartir y seguimiento. Corresponde empezar por sus contratos y matriz de
+permisos, y un primer incremento de likes idempotentes por usuario y post
+con contador real, RLS y pruebas A/B/anónimo. Se reutilizan `profiles`, `posts`
+y la base existente; no se activan controles sociales ficticios. Comunidades,
+búsqueda y navegación por hashtag siguen en Fase 5. No se implementó Fase 4
+en esta revisión.
+
+El plan ejecutable siguiente es [Fase 4: Interacción](fase04.md).
+La frase **«comenzar fase 4»** inicia su Sprint 1.1 y no una nueva
+implementación de publicaciones.
 
 ## Registro de progreso
 
@@ -684,3 +804,10 @@ completa de perfiles/avatares en este incremento.
 | 2026-10-14 | 4.1 | Pendiente | — | Depende de 3.1; edición y sustitución segura de imagen. |
 | 2026-10-14 | 4.2 | Pendiente | — | Depende de 4.1; borrado y recuperación de fallos parciales. |
 | 2026-10-14 | 5.1 | Pendiente | — | Depende de todos los anteriores; cierre integral, no implementación automática. |
+| 2026-10-15 | 1.1 | Completado | Contratos y cierre de Fase 2 documentados | Entrada histórica del 14 conservada; ya no bloquea. |
+| 2026-10-15 | 1.2 | Incremental validado; ensayo limpio diferido | SQL, API e historial local/remoto coincidente | Sin otra base ni reset; no se marca instalación limpia aprobada. |
+| 2026-10-15 | 2.1 / 2.2 | Implementados; validación ampliada parcial | CRUD previo, 116 unitarias enfocadas, SQL y E2E ampliado | Selector nativo y recuperación implementados; faltan casos integrales indicados arriba. |
+| 2026-10-15 | 3.1 | Implementado y diseño aprobado | Feed continuo, galerías, lectura A/B/anónimo, cursor y anchos | Sin galería duplicada en perfil; pendiente accesibilidad ampliada/fallo de imagen en navegador. |
+| 2026-10-15 | 4.1 / 4.2 | CRUD propio validado; casos ampliados abiertos | Edición/reemplazo, propagación, borrado, permisos y firma vencida | Conservar diseño; fallos remotos y revisión accesible no se dan por probados. |
+| 2026-10-15 | 5.1 | Cierre integral todavía no declarado | Revisión de cierre, limpieza y regresión enfocada registradas | Sin commit ni despliegue nuevo; Fase 4 solo definida como siguiente paso. |
+| 2026-10-15 | Cierre de fase | Cerrada por decisión del usuario | Petición expresa posterior a la revisión de cierre | CRUD aceptado; pruebas ampliadas diferidas con casillas abiertas; Fase 4 habilitada sin autorización de operaciones remotas. |

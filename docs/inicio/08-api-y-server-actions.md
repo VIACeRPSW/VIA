@@ -42,15 +42,29 @@ pendiente ni retirado para terceros; la entrega debe respetar esa caducidad.
 ### Likes
 
 ``` text
-toggleLike(postId)
+setPostLike(postId, liked)
 ```
+
+UUID y booleano estricto; sesión y perfil se comprueban en cada petición.
+Actor derivado, nunca recibido. Repetir el mismo estado es idempotente.
+Devuelve estado y conteo autoritativos, o error/unauthorized explícito;
+no anuncia éxito ante respuesta perdida. La lectura de hasta 12 posts
+por RPC devuelve conteos públicos y estado propio sin listas de actores.
+Se revalidan feed/detalle; al recuperar foco se reconcilia el estado.
 
 ### Comments
 
 ``` text
-createComment(postId, content)
+createComment(postId, content, operationId)
 deleteComment(commentId)
 ```
+
+Contrato aprobado, implementación en Hito 2: texto plano de 1–1000 puntos
+de código tras trim y UUID de envío único por actor. Reintento idéntico
+devuelve el mismo comentario; mismo UUID con otro payload da conflicto.
+Lectura pública por cursor `(created_at, id)` descendente, 12 por página.
+Solo el autor elimina, con confirmación/cancelación en UI; repetir el
+borrado propio es idempotente, sin ampliar permisos a moderadores.
 
 ### Communities
 
@@ -62,8 +76,22 @@ leaveCommunity(communityId)
 ### Follows
 
 ``` text
-toggleFollow(userId)
+setFollow(profileId, following)
 ```
+
+Contrato aprobado, implementación en Hito 4: UUID estable de destino y
+booleano estricto; actor derivado de sesión con perfil, sin auto-seguimiento.
+El resultado confirma estado y conteos reales; no expone listas de
+relaciones. Entre pestañas prevalece la última operación confirmada.
+No modifica el orden reciente del feed.
+
+### Compartir
+
+Contrato aprobado, implementación en Hito 3: operación de navegador, sin
+mutación remota. URL de `/post/[id]` con origen de aplicación configurado
+por entorno; localhost permitido solo en desarrollo, nunca firma Storage.
+Copia y Web Share opcional, con resultados distintos para éxito,
+cancelación y error; alternativa accesible cuando faltan APIs.
 
 ### Profile
 

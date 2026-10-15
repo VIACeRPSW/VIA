@@ -38,7 +38,19 @@ La página deberá priorizar:
 
 ## 4. Tarjeta de publicación
 
-Debe mostrar:
+Diseño de Fase 3 aprobado visualmente el 2026-10-15:
+
+- `/inicio`: feed en columna única a todos los anchos, con autor, imagen
+  grande, título, descripción, categoría y hashtags de texto. Carga continua
+  al bajar, con botón alternativo de carga/reintento para teclado.
+- `/imagenes` y galería pública por autor: grid de fotos cuadradas sin
+  títulos, descripciones ni datos de autor visibles en los tiles. Cada imagen
+  conserva texto alternativo y un enlace con nombre accesible al detalle.
+- `/perfil` enlaza a «Mi galería»; no se duplica el grid dentro del perfil.
+- Editar y eliminar se ofrecen en el detalle propio, no sobre las fotos del
+  grid. El borrado exige confirmación y permite cancelar sin cambios.
+
+La tarjeta social del producto completo incorporará en Fase 4:
 
 ``` text
 Imagen
@@ -49,6 +61,18 @@ Like
 Comentarios
 Compartir
 ```
+
+Contratos aprobados de Fase 4: likes en feed/detalle, nunca sobre los
+tiles de galerías. Botón con `aria-pressed`, pendiente, contador real,
+foco visible y error recuperable, sin éxito optimista no confirmado.
+Anónimo ve conteos y acceso a login; sin perfil se invita a completarlo.
+Comentarios en detalle, texto plano, páginas de 12 recientes y borrador
+conservado al fallar. Borrar solo el propio exige confirmar o cancelar.
+Compartir en feed/detalle ofrece copia y opción nativa, sin métricas y
+con cancelación distinta de éxito. Seguir solo en perfil público ajeno;
+conteos de seguidores/seguidos en perfiles, sin listas ni feed personalizado.
+El diseño aprobado se conserva; cada control se habilita al implementar
+su incremento, no como promesa de una función inexistente.
 
 ## 5. Crear
 
@@ -72,6 +96,10 @@ botones de búsqueda ficticios. Comunidad no se muestra como control activo
 hasta Fase 5.
 
 ## 6. Responsive
+
+El feed aprobado de Fase 3 permanece en una columna; las galerías conservan
+el grid solo-imágenes. Las reglas generales siguientes no autorizan cambiar
+ese diseño ni añadir controles sociales antes de Fase 4.
 
 En móvil:
 

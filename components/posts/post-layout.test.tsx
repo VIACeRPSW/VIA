@@ -4,6 +4,7 @@ import { PostList } from "./PostList";
 import { FeedCard } from "./FeedCard";
 import type { PostWithImage } from "@/lib/posts/read-post.server";
 vi.mock("@/actions/post-feed", () => ({ refreshPostImage: vi.fn(), loadFeedPage: vi.fn() }));
+vi.mock("@/actions/post-likes", () => ({ loadPostLikes: vi.fn(), setPostLike: vi.fn() }));
 const item: PostWithImage = {
   imageUrl: "https://example.supabase.co/image.webp?token=test",
   post: {

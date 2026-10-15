@@ -5,6 +5,7 @@ import Link from "next/link";
 import { loadFeedPage } from "@/actions/post-feed";
 import type { PostListResult } from "@/lib/posts/read-post.server";
 import { FeedCard } from "./FeedCard";
+import { usePostLikes } from "./PostLikes";
 
 export function ScrollFeed({ initial }: { initial: Extract<PostListResult, { status: "ready" }> }) {
   const [posts, setPosts] = useState(initial.posts);
@@ -13,6 +14,7 @@ export function ScrollFeed({ initial }: { initial: Extract<PostListResult, { sta
   const [failed, setFailed] = useState(false);
   const lock = useRef(false);
   const sentinel = useRef<HTMLDivElement>(null);
+  const likes = usePostLikes(posts.map((item) => item.post.id));
   const load = useCallback(async () => {
     if (!cursor || lock.current) return;
     lock.current = true; setPending(true); setFailed(false);
@@ -44,7 +46,9 @@ export function ScrollFeed({ initial }: { initial: Extract<PostListResult, { sta
       <p>Todavía no hay publicaciones. Comparte la primera imagen.</p>
       <Link className="button button-primary" href="/crear">Crear publicación</Link>
     </div> : <ul className="feed-stream" aria-label="Publicaciones">
-      {posts.map((item) => <li key={item.post.id}><FeedCard item={item} /></li>)}
+      {posts.map((item) => <li key={item.post.id}><FeedCard item={item} likes={{
+        entry: likes.rows[item.post.id], viewerKey: likes.viewerKey, update: likes.update, retry: likes.retry,
+      }} /></li>)}
     </ul>}
     <div ref={sentinel} className="feed-load-more" aria-busy={pending}>
       <p role="status">{pending ? "Cargando más imágenes..." : failed ? "No pudimos cargar más publicaciones." : !cursor && posts.length > 0 ? "Estás al día. Vuelve pronto para inspirarte." : ""}</p>

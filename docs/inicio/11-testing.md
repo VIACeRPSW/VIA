@@ -88,7 +88,47 @@ directamente en Supabase/RLS, no solamente en la interfaz.
 - Paginación con timestamps iguales y desempate por ID; reintento con misma
   operación sin duplicados, payload cambiado con conflicto, edición obsoleta
   rechazada y limpieza parcial observable después de borrar.
-- Estos son casos requeridos, no pruebas de publicaciones ya ejecutadas.
+- La evidencia ejecutada y los casos ampliados aún abiertos se distinguen
+  en la [revisión de cierre de Fase 3](../fases/fase03.md#revisión-de-cierre--2026-10-15).
+  Las casillas compuestas no se aprueban con un único caso exitoso.
+
+Pruebas de publicaciones existentes:
+
+- `e2e/post-publishing.spec.ts`: CRUD completo con archivo de 5 MiB,
+  feed continuo, galería de 12/1, edición/reemplazo y borrado confirmado.
+- `e2e/post-closure.spec.ts`: segundo usuario, permisos reales de Storage,
+  teclado y responsive, interrupción de envío y vencimiento de firma antes
+  de limpiar el objeto retirado.
+- `e2e/profile-onboarding.spec.ts`: la comprobación de JWT vencido también
+  recorre crear, galería propia y edición de publicaciones.
+- Los casos de fallos de repositorio simulados en Vitest y los metadatos
+  Storage en transacciones SQL no se presentan como inyección de fallos
+  de red en el servicio remoto. La base existente no se resetea para probar.
 
 Una funcionalidad no se considera terminada si solo funciona en el caso
 exitoso. Deben probarse también errores, permisos y datos inválidos.
+
+### Interacción — Fase 4, incremento de likes
+
+- `actions/post-likes.test.ts`: entrada estricta, sesión/perfil, estado
+  deseado repetido, confirmación autoritativa, errores redactados y RPC de
+  lectura de hasta 12 posts sin consultas por tarjeta.
+- `components/posts/post-likes.test.tsx`: estado accesible, conteo real,
+  carga/error sin cero ficticio, login anónimo y perfil incompleto.
+- `supabase/tests/post_likes.sql`: fixtures A/B/anónimo/sin perfil,
+  moderador/admin sin acceso ajeno, unicidad, grants, cascada al borrar
+  post y conservación de perfiles/journal. Termina con rollback; los
+  metadatos de imagen de esta prueba no equivalen a subir un objeto real.
+- `e2e/post-likes.spec.ts`: usuarios e imágenes reales efímeros; ocho
+  peticiones iguales concurrentes sin duplicación, persistencia, unlike,
+  fallo antes de enviar y respuesta perdida después de confirmar, reintento,
+  lectura anónima, scroll, aislamiento tras cambio de sesión, recuperación
+  de foco, teclado y 360/768/1280. Mide un lote de 12 al entrar al feed
+  y otro solo de IDs nuevos tras scroll; cada lote tiene como máximo 12.
+  Un JWT malformado se prueba contra la API real, no como JWT vencido.
+- No se declara probado el rollback/reaplicación del esquema ni un JWT
+  realmente vencido de este incremento. El E2E observó avisos de desarrollo
+  de Clerk/Realtime y streams cancelados al cambiar sesión, sin aserciones
+  fallidas; no se presentan como una validación adicional de expiración.
+- Evidencia y casillas compuestas en
+  [Fase 4](../fases/fase04.md#sprint-12--likeunlike-con-estado-y-conteo-reales).

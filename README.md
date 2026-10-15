@@ -306,7 +306,60 @@ de una carga pendiente y detalle sin desbordamiento a 375/768/1280 px.
 Retira únicamente sus propios posts, objetos, tickets, perfil y usuario
 Clerk de desarrollo al terminar.
 
-Antes de aplicar esta migración a una base Fase 2 sin `posts`/`categories`,
+Para las comprobaciones ampliadas sin repetir ese CRUD:
+
+```powershell
+npx playwright test post-closure.spec.ts --project=chromium
+npx playwright test profile-onboarding.spec.ts --project=chromium --grep "expired session"
+```
+
+`post-closure.spec.ts` usa dos identidades efímeras para contrastar permisos
+de posts y Storage, galería ajena vacía, logout, teclado y anchos
+360/768/1280. Comprueba preview/cancelación, un envío interrumpido con borrador
+conservado, propagación de la edición tras recargar detalle/feed/galerías
+y caducidad de una firma tras retirar el post, antes de limpiar
+el objeto. La prueba de JWT expirado cubre rutas privadas de perfiles y
+publicaciones. No equivalen a simular todos los fallos remotos de
+carga/confirmación/limpieza ni a una auditoría accesible completa.
+
+El estado verificable y los pendientes de cierre se registran en
+[Fase 3](docs/fases/fase03.md#revisión-de-cierre--2026-10-15).
+El diseño aprobado conserva feed en columna única con carga continua,
+galerías solo-imágenes y controles de edición/borrado en el detalle propio.
+No hay un despliegue nuevo confirmado.
+
+### Continuar el desarrollo
+
+La Fase 3 quedó cerrada por decisión del usuario el 2026-10-15, con sus
+comprobaciones ampliadas no ejecutadas conservadas como diferidas, no aprobadas.
+La [Fase 4 — Interacción](docs/fases/fase04.md) está en curso. Los contratos
+del Sprint 1.1 están consolidados y el incremento de likes está implementado
+en feed/detalle, con migración `20261015223045` aplicada por MCP al proyecto
+existente. Las galerías conservan su grid solo-imágenes. Comentarios,
+compartir y seguimiento siguen pendientes; las migraciones de comentarios
+y seguimiento requieren autorización específica.
+
+Like/unlike exige sesión y perfil, permite publicaciones propias y usa
+estado deseado idempotente. Conteos públicos, estado personal privado,
+lectura por lotes de hasta 12 y reconciliación al recuperar foco, sin listas
+de personas. Un error permite reintentar sin anunciar éxito ficticio.
+
+Comprobaciones enfocadas del incremento:
+
+```powershell
+npm run test -- actions\post-likes.test.ts actions\post-management.test.ts components\posts\post-likes.test.tsx components\posts\post-layout.test.tsx lib\posts\read-post.test.ts
+npm run test:e2e -- post-likes
+npm run test:db:likes
+```
+
+La prueba SQL usa una transacción con rollback; el E2E crea identidades,
+posts e imágenes temporales y los limpia al terminar. El rollback de esquema
+está versionado y rechaza likes existentes; su ensayo de retirada/reaplicación
+no se da por ejecutado. Evidencia y pendientes exactos en
+[Sprint 1.2](docs/fases/fase04.md#sprint-12--likeunlike-con-estado-y-conteo-reales).
+No se hizo reset, otra base, commit ni despliegue.
+
+Antes de aplicar el esquema de publicaciones de Fase 3 a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:
 
 ```powershell

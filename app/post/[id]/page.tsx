@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { getOwnPost, getPublicPost } from "@/lib/posts/read-post.server";
 import { PostManagement } from "@/components/posts/PostManagement";
 import { PostImage } from "@/components/posts/PostImage";
+import { PostLikes } from "@/components/posts/PostLikes";
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   await connection();
@@ -38,6 +39,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           {result.post.hashtags.map((tag) => <li key={tag}>#{tag}</li>)}
         </ul>
         <time dateTime={result.post.created_at}>{new Date(result.post.created_at).toLocaleDateString("es")}</time>
+        <PostLikes postId={id} />
       </article> : <section className="profile-form-panel">
         <h1>Publicación no disponible</h1>
         <p className="form-status" role="status">No pudimos cargar la publicación. Inténtalo de nuevo más tarde.</p>

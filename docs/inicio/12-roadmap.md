@@ -57,6 +57,10 @@ datos.
 
 **Salida:** CRUD completo.
 
+Cerrada por decisión del usuario el 2026-10-15, con CRUD y diseño aceptados.
+Las comprobaciones ampliadas no ejecutadas se conservan como diferidas, no
+aprobadas, en [el cierre de Fase 3](../fases/fase03.md#puerta-de-fase-4).
+
 ## Fase 4 --- Interacción
 
 -   Likes.
@@ -65,6 +69,15 @@ datos.
 -   Seguimiento.
 
 **Salida:** núcleo social.
+
+Plan ejecutable: [Fase 04 — Interacción](../fases/fase04.md).
+Estado: en curso desde el 2026-10-15. Sprint 1.1 consolidado; likes
+implementados en feed/detalle y migración aplicada por MCP, conservando
+la base y el diseño existentes. Unitarias, SQL y E2E enfocados aprobados;
+el cierre completo de 1.2 conserva pendientes el ensayo de rollback/
+reaplicación y JWT realmente vencido. Comentarios, compartir y seguimiento
+básico siguen pendientes; no se personaliza el feed. Las migraciones de
+comentarios/seguimiento requieren autorización independiente.
 
 ## Fase 5 --- Comunidades y búsqueda
 

@@ -1,8 +1,12 @@
 import Link from "next/link";
 import type { PostWithImage } from "@/lib/posts/read-post.server";
 import { PostImage } from "./PostImage";
+import { LikeButton, type LikeEntry } from "./PostLikes";
+import type { PostLike } from "@/lib/posts/like-contract";
 
-export function FeedCard({ item }: { item: PostWithImage }) {
+export function FeedCard({ item, likes }: { item: PostWithImage; likes?: {
+  entry?: LikeEntry; viewerKey: string; update: (like: PostLike) => void; retry: () => void;
+} }) {
   const { post, imageUrl } = item;
   return <article className="feed-card" aria-labelledby={`feed-post-${post.id}`}>
     <header className="feed-card-header">
@@ -20,6 +24,8 @@ export function FeedCard({ item }: { item: PostWithImage }) {
       {post.description && <p className="feed-caption">{post.description}</p>}
       <ul className="post-hashtags" aria-label="Hashtags">{post.hashtags.map((tag) => <li key={tag}>#{tag}</li>)}</ul>
       <div className="feed-card-footer">
+        {likes && <LikeButton key={likes.viewerKey} postId={post.id} entry={likes.entry}
+          onChange={likes.update} retry={likes.retry} />}
         <time dateTime={post.created_at}>{new Date(post.created_at).toLocaleDateString("es")}</time>
         <Link href={`/post/${post.id}`} prefetch={false}>Ver publicación <span aria-hidden="true">↗</span></Link>
       </div>

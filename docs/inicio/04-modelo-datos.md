@@ -195,6 +195,13 @@ created_at
 updated_at
 ```
 
+Contrato de Fase 4: comentarios con autor derivado de la sesión, FK de
+post con `ON DELETE CASCADE` y de perfil restrictiva; texto plano de
+1–1000 puntos de código tras trim. Un UUID de envío único por autor
+permite reintentos; reutilizarlo con otro post/texto da conflicto.
+Índice de lectura `(post_id, created_at DESC, id DESC)` y proyección pública
+explícita del autor, sin Clerk ID. Su migración corresponde al Sprint 2.1.
+
 ## 9. likes
 
 ``` text
@@ -212,6 +219,16 @@ Restricción:
 UNIQUE(post_id, user_id)
 ```
 
+Fase 4: FK de post con `ON DELETE CASCADE`, FK de perfil restrictiva e
+índice por usuario para lectura propia. Identidad y fecha se generan en
+base; no hay UPDATE ordinario ni lectura de relaciones ajenas.
+`set_post_like(postId, liked)` serializa operaciones por post y confirma
+estado y conteo tras insertar con conflicto ignorado o retirar solo la
+pareja propia. `get_post_likes(postIds)` limita cada lote a 12 IDs y
+proyecta únicamente post, conteo, estado propio (null para anónimo) y
+permiso de mutación. Ambas RPC tienen `search_path` vacío y grants mínimos.
+No se cambian la proyección ni las políticas de perfiles/publicaciones.
+
 ## 10. shares
 
 ``` text
@@ -222,6 +239,9 @@ post_id
 user_id
 created_at
 ```
+
+`shares` queda conceptual: no se crea tabla ni se registran eventos en
+Fase 4; compartir solo construye el enlace público del detalle.
 
 ## 11. follows
 
@@ -240,6 +260,13 @@ Restricciones:
 UNIQUE(follower_id, following_id)
 follower_id != following_id
 ```
+
+Contrato de Fase 4: ambas FK de perfil son restrictivas; actor derivado
+de sesión, estado deseado idempotente, sin auto-seguimiento ni privilegios
+de moderación. Índices por cada extremo permiten conteos por lote.
+Solo se publican agregados; no hay listas públicas de seguidores/seguidos.
+Cambiar username no rompe la relación por ID. Migración en Sprint 4.1,
+con autorización independiente de la otorgada para likes.
 
 ## 12. badges
 
