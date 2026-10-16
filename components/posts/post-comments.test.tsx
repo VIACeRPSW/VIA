@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { CommentComposer, CommentList, PostComments } from "./PostComments";
-vi.mock("@/actions/post-comments", () => ({ createCommentAction: vi.fn(), loadPostComments: vi.fn() }));
+vi.mock("@/actions/post-comments", () => ({
+  createCommentAction: vi.fn(), loadPostComments: vi.fn(), deleteCommentAction: vi.fn(), loadCommentViewer: vi.fn(),
+}));
 vi.mock("@clerk/nextjs", () => ({ useAuth: () => ({ isLoaded: true, userId: null }) }));
 const id = "b02e9ce0-0a90-4e7c-a5cb-f54ff20f228a";
 const row = { id, post_id: id, content: '<img src=x onerror="alert(1)">', created_at: "2026-10-15T23:00:00Z",
@@ -42,5 +44,21 @@ describe("comment presentation", () => {
       status: "ready", page: { comments: [], commentCount: 0, nextCursor: null },
     }} />);
     expect(empty).toContain("Todavía no hay comentarios.");
+  });
+  it("offers confirmation/cancellation only for the matching author", () => {
+    const props = { comments: [row], onDeleted: vi.fn(), onBusy: vi.fn() };
+    const own = renderToStaticMarkup(<CommentList {...props} viewerUsername="public_author" />);
+    expect(own).toContain("Eliminar comentario");
+    expect(own).toContain("Cancelar");
+    expect(own).toContain("Confirmar eliminación");
+    expect(own).toContain("<dialog");
+    expect(own).toContain(`aria-labelledby="delete-comment-title-${id}"`);
+    expect(renderToStaticMarkup(<CommentList {...props} viewerUsername="post_owner" />)).not.toContain("<dialog");
+    expect(renderToStaticMarkup(<CommentList {...props} />)).not.toContain("Eliminar comentario");
+  });
+  it("disables the composer during deletion without losing its stable identity", () => {
+    const markup = renderToStaticMarkup(<CommentComposer postId={id} onCreated={vi.fn()} disabled />);
+    expect(markup).toMatch(/<textarea[^>]*disabled/);
+    expect(markup).toMatch(/<button[^>]*disabled/);
   });
 });

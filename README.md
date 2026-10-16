@@ -339,8 +339,9 @@ existente. Las galerías conservan su grid solo-imágenes. El usuario aprobó
 manualmente los likes y decidió diferir sus pruebas de JWT vencido y
 rollback/reaplicación, sin marcarlas superadas. Autorizó el Sprint 2.1 de
 comentarios, ya implementado: lectura pública paginada, creación con
-sesión/perfil y conteos por lote en feed/detalle. Borrado individual,
-compartir y seguimiento siguen pendientes.
+sesión/perfil y conteos por lote en feed/detalle. Sprint 2.2 implementado y
+validado: eliminación exclusivamente propia con confirmación/cancelación.
+Siguen compartir (3.1) y seguimiento (4.1).
 
 Like/unlike exige sesión y perfil, permite publicaciones propias y usa
 estado deseado idempotente. Conteos públicos, estado personal privado,
@@ -368,6 +369,10 @@ La respuesta perdida conserva borrador/operación para reintentar sin
 duplicados. Solo se proyectan datos públicos del autor. Las migraciones
 `20261015231817` y `20261015232459` fueron aplicadas por MCP; la segunda
 exige expiración JWT futura también en PostgreSQL.
+La migración `20261016000443` habilita retirada propia idempotente con RLS.
+No permite moderar comentarios ajenos, ni siquiera al autor del post o
+roles elevados. La confirmación devuelve la primera página reciente y
+conteo real, conserva el borrador y permite recuperar una respuesta perdida.
 
 ```powershell
 npm run test -- lib\posts\comment-contract.test.ts actions\post-comments.test.ts lib\posts\read-comments.test.ts components\posts\post-comments.test.tsx lib\posts\read-post.test.ts components\posts\post-layout.test.tsx
@@ -376,12 +381,16 @@ npm run test:e2e -- post-comments
 ```
 
 El ensayo SQL de comentarios prueba RLS, límites Unicode, idempotencia y
-cursor con fechas empatadas. También retira y reaplica ambas migraciones
-dentro de una transacción que se deshace: no tiene modo `--apply` ni cambia
-el historial remoto, y rechaza un rollback con comentarios existentes.
+cursor con fechas empatadas, retirada propia/ajena y último comentario.
+Prueba rollback/reaplicación dentro de una transacción que se deshace:
+sin comentarios retira el esquema completo; si existen, solo retira/reaplica
+los permisos de eliminación y compara el contenido para preservar datos.
+No tiene modo `--apply` ni cambia el historial remoto; los rollbacks de la
+tabla/protección siguen rechazando comentarios existentes.
 El E2E usa usuarios/imágenes efímeros y valida un JWT realmente vencido,
 respuesta perdida, reintento y limpieza. No equivale a cerrar la deuda de
-likes ni a desplegar la funcionalidad.
+likes ni a desplegar la funcionalidad. Sprint 2.2 validado con 117 pruebas
+enfocadas, SQL, E2E Chromium, TypeScript/lint/build y escaneo del cliente.
 
 Antes de aplicar el esquema de publicaciones de Fase 3 a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:

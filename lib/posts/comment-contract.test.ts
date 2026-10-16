@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { commentContentSchema, commentInputSchema } from "./comment-contract";
+import { commentContentSchema, commentDeleteInputSchema, commentInputSchema } from "./comment-contract";
 const id = "b02e9ce0-0a90-4e7c-a5cb-f54ff20f228a";
 describe("comment contract", () => {
   it.each([1, 999, 1000])("accepts %i Unicode code points without counting UTF-16 units", (length) => {
@@ -20,5 +20,13 @@ describe("comment contract", () => {
     expect(commentInputSchema.parse(input)).toEqual({ ...input, content: "Texto" });
     expect(commentInputSchema.safeParse({ ...input, user_id: id }).success).toBe(false);
     expect(commentInputSchema.safeParse({ ...input, operationId: "invalid" }).success).toBe(false);
+  });
+  it("requires confirmed own-comment deletion without client identity or role", () => {
+    const input = { postId: id, commentId: id, confirmed: true };
+    expect(commentDeleteInputSchema.parse(input)).toEqual(input);
+    for (const payload of [{ ...input, confirmed: false }, { postId: id, commentId: id },
+      { ...input, user_id: id }, { ...input, role: "admin" }, { ...input, commentId: "invalid" }]) {
+      expect(commentDeleteInputSchema.safeParse(payload).success).toBe(false);
+    }
   });
 });

@@ -215,8 +215,15 @@ devuelve agregados públicos de hasta 12 posts por lote, solo en el feed.
 actual de PostgreSQL. Una política restrictiva lo exige para acceso privado
 y un trigger de INSERT también lo comprueba dentro de la RPC definer.
 Ambos rollbacks bloquean la tabla y rechazan contenido existente; deben
-retirarse en orden inverso. El borrado individual sigue en Sprint 2.2,
-sin grants DELETE/UPDATE ordinarios en 2.1.
+retirarse en orden inverso. En 2.1 no se concedieron DELETE/UPDATE ordinarios.
+
+Sprint 2.2 (`20261016000443`) añade DELETE ordinario limitado por autoría
+y sesión vigente, sin UPDATE. `delete_own_post_comment(post, comentario)`
+comprueba actor/post/expiración, bloquea la publicación igual que la creación
+y retira solo la fila propia. Un ID ausente admite reintento; una fila ajena
+o de otro post se rechaza. Devuelve primera página pública y conteo coherentes;
+un post retirado devuelve null. Su rollback solo revoca esta capacidad, sin
+eliminar datos, por lo que puede ensayarse con comentarios existentes.
 
 ## 9. likes
 

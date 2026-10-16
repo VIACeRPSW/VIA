@@ -109,11 +109,20 @@ sus likes y comentarios, no perfiles ni recursos ajenos, conservando el
 journal de limpieza de imágenes. Las respuestas personales no se
 almacenan en caché compartida y se descartan al cambiar de sesión.
 
-Incremento de comentarios 2.1 aplicado: la tabla solo permite lectura
-privada propia e INSERT de columnas post/operación/texto; no hay DELETE ni
-UPDATE ordinarios todavía. Las RPC públicas proyectan ID de comentario/post,
+Incrementos de comentarios 2.1/2.2 aplicados: la tabla permite lectura
+privada propia, INSERT de columnas post/operación/texto y DELETE propio;
+no hay UPDATE ordinario. Las RPC públicas proyectan ID de comentario/post,
 texto, fecha y username/nombre del autor, nunca identidad Clerk, ID privado
 del perfil ni UUID de envío. Los conteos no enumeran relaciones privadas.
+
+`delete_own_post_comment` comprueba sesión/perfil, propiedad y pertenencia
+al post sin recibir autor ni rol. Verifica expiración también tras esperar
+el bloqueo del post, devuelve una página/conteo autoritativos y rechaza
+comentarios ajenos para cualquier rol ordinario. El DELETE directo queda
+limitado por RLS y la política restrictiva. La confirmación de UI no es
+una barrera de permisos; el servidor exige `confirmed: true` y la DB
+vuelve a autorizar. El username usado para mostrar controles se obtiene
+de perfil propio y se liga al usuario actual, sin caché compartida.
 
 Una prueba real aceptó una petición seis segundos después de `exp`; por
 ello la política restrictiva y el trigger de comentarios comprueban

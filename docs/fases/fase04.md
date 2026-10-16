@@ -2,13 +2,13 @@
 
 ## Estado
 
-- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprint 2.1 de lectura/creación de comentarios implementado y validado el 2026-10-15. Siguiente: Sprint 2.2, eliminación propia.
+- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprints 2.1 y 2.2 de comentarios implementados y validados el 2026-10-15. Siguiente: Sprint 3.1, compartir enlaces públicos.
 - Roadmap: Fase 4
 - Dependencias: Fases 1 y 2 completadas; Fase 3 cerrada por decisión del usuario el 2026-10-15 con deuda de verificación explícita; Clerk y el Supabase existentes; aprobación de contratos del Sprint 1.1 antes de mutaciones sociales.
 - Criterio de salida: núcleo social funcional con like/unlike, lectura/creación/eliminación propia de comentarios, compartir enlaces y seguir/dejar de seguir usuarios, con permisos equivalentes en UI, servidor y RLS, contadores reales y diseño previo conservado.
 
 **Entrada para otra sesión: «comenzar fase 4».** Leer este documento y
-retomar por el Sprint 2.2; el 1.1 está consolidado y el 2.1 validado.
+retomar por el Sprint 3.1; el 1.1 está consolidado y el Hito 2 validado.
 Las dos pruebas de likes están diferidas por decisión explícita, no
 aprobadas. Las autorizaciones de likes/comentarios y su evidencia
 figuran más abajo. No se autorizan por arrastre migraciones de otros
@@ -23,13 +23,13 @@ Guion de arranque:
    [roadmap](../inicio/12-roadmap.md), [backlog](../inicio/14-backlog-inicial.md)
    y contratos base afectados.
 3. Contrastar esquema/migraciones y superficies actuales antes de añadir
-   lógica. Ya existen likes y lectura/creación de comentarios; no asumir
-   implementados borrado individual, compartir ni seguimiento por estar
+   lógica. Ya existen likes y lectura/creación/eliminación propia de comentarios; no asumir
+   implementados compartir ni seguimiento por estar
    descritos en el modelo conceptual.
 4. Respetar los acuerdos de arranque y reanudación de 1.1; resolver solo nuevas decisiones.
    Registrar contratos aprobados en documentación base. No inventar acuerdos.
-5. Respetar el diferimiento de pruebas de likes y continuar eliminación
-   propia de comentarios tras confirmar alcance/autorización aplicable.
+5. Respetar el diferimiento de pruebas de likes y continuar compartir
+   enlaces según el contrato aprobado, sin añadir analítica.
    Pedir autorización específica antes de aplicar SQL al remoto; si falta,
    dejar esa parte bloqueada y preparar solo trabajo local autorizado.
 6. Usar pruebas enfocadas y avisos breves. Abrir servidor solo si hace falta,
@@ -367,32 +367,81 @@ conceder moderación anticipada.
 
 **Alcance**
 
-- [ ] Acción, RLS y control accesible de eliminación propia.
-- [ ] Compatibilidad del borrado de posts con comentarios/likes.
+- [x] Acción, RLS y control accesible de eliminación propia.
+- [x] Compatibilidad del borrado de posts con comentarios/likes.
 
 **Tareas**
 
-- [ ] `VIA-017` Implementar retirada idempotente según propiedad, sin confiar en controles ocultos ni propietario enviado por cliente.
-- [ ] `VIA-017` Aplicar confirmación/cancelación acordadas en 1.1, estado pendiente, error recuperable y foco; no añadir edición de comentarios.
-- [ ] `VIA-017` Revalidar lista/conteos y resolver retirada del último elemento de una página sin omisiones ni total ficticio.
-- [ ] `VIA-017` Verificar borrado del post con hijos sociales y journal Storage existente; no bloquear el CRUD previo con FK incompatibles.
+- [x] `VIA-017` Implementar retirada idempotente según propiedad, sin confiar en controles ocultos ni propietario enviado por cliente.
+- [x] `VIA-017` Aplicar confirmación/cancelación acordadas en 1.1, estado pendiente, error recuperable y foco; no añadir edición de comentarios.
+- [x] `VIA-017` Revalidar lista/conteos y resolver retirada del último elemento de una página sin omisiones ni total ficticio.
+- [x] `VIA-017` Verificar borrado del post con hijos sociales y journal Storage existente; no bloquear el CRUD previo con FK incompatibles.
 
 **Criterios de aceptación**
 
-- [ ] CA-2.2.1 — Eliminar el comentario propio lo retira y actualiza conteos; cancelar conserva datos y repetir no afecta otro comentario.
-- [ ] CA-2.2.2 — Terceros, autor del post y roles elevados no borran comentarios ajenos por URL, acción ni SQL ordinario.
-- [ ] CA-2.2.3 — Fallos muestran error sin desaparición ficticia; retirar un post elimina sus hijos según contrato y mantiene la limpieza de imagen.
+- [x] CA-2.2.1 — Eliminar el comentario propio lo retira y actualiza conteos; cancelar conserva datos y repetir no afecta otro comentario.
+- [x] CA-2.2.2 — Terceros, autor del post y roles elevados no borran comentarios ajenos por URL, acción ni SQL ordinario.
+- [x] CA-2.2.3 — Fallos muestran error sin desaparición ficticia; retirar un post elimina sus hijos según contrato y mantiene la limpieza de imagen.
 
 **Pruebas**
 
-- [ ] P-2.2.1 — Unitarias: ID/propiedad, repetición, error y revalidación (CA-2.2.1 a CA-2.2.3).
-- [ ] P-2.2.2 — Integración: retiro propio/ajeno, conteos, última página, borrado del post y conservación de recursos ajenos (CA-2.2.1 a CA-2.2.3).
-- [ ] P-2.2.3 — E2E: cancelar/confirmar con teclado, recargar y comprobar contador, B no ve control ajeno y error de red no aparenta éxito; tres anchos (CA-2.2.1 a CA-2.2.3).
-- [ ] P-2.2.4 — Seguridad/RLS: comentario A como B, propietario del post, anónimo y moderador/admin; manipular autor/ID y usar sesión vencida (CA-2.2.2).
+- [x] P-2.2.1 — Unitarias: ID/propiedad, repetición, error y revalidación (CA-2.2.1 a CA-2.2.3).
+- [x] P-2.2.2 — Integración: retiro propio/ajeno, conteos, última página, borrado del post y conservación de recursos ajenos (CA-2.2.1 a CA-2.2.3).
+- [x] P-2.2.3 — E2E: cancelar/confirmar con teclado, recargar y comprobar contador, B no ve control ajeno y error de red no aparenta éxito; tres anchos (CA-2.2.1 a CA-2.2.3).
+- [x] P-2.2.4 — Seguridad/RLS: comentario A como B, propietario del post, anónimo y moderador/admin; manipular autor/ID y usar sesión vencida (CA-2.2.2).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Autorización específica del usuario: migración incremental por MCP y
+  pruebas con fixtures temporales y limpieza, sin reset, commit ni deploy.
+  `20261016000443_delete_own_post_comments` aplicada al Supabase existente;
+  doce versiones en historial. No se reescribieron las migraciones previas.
+- `delete_own_post_comment` deriva el perfil, verifica propiedad y post,
+  exige expiración futura antes y después del bloqueo de publicación,
+  serializa con creación/borrado del post y permite repetir un ID ausente
+  sin afectar otras filas. Post retirado devuelve ausencia, no página vacía.
+- DELETE ordinario limitado por RLS a la autoría, incluida la política
+  restrictiva de sesión vigente. Anónimo/sin perfil/tercero/autor del post/
+  moderador/admin no retiran comentarios ajenos. Los roles elevados sí
+  retiran los propios. No se concedió UPDATE ni moderación.
+- `deleteCommentAction` acepta solo post/ID/confirmación explícita; valida
+  la confirmación pública y revalida feed/detalle. Los controles usan el
+  username canónico ligado al actor actual, no la identidad enviada por
+  cliente. Cambiar actor desmonta controles y descarta lecturas anteriores.
+- Diálogo nativo con foco inicial en Cancelar, Escape/cancelación con
+  retorno al disparador, bloqueo durante petición y foco en el encabezado
+  después del éxito. La primera prueba detectó foco inicial incorrecto y
+  claves React compartidas entre compositor/lista; se corrigieron y el E2E
+  se repitió, incluyendo comprobación de ausencia de claves duplicadas.
+- Tras confirmar, la RPC devuelve la primera página reciente y su conteo
+  en la misma transacción: rellena huecos, elimina cursores fantasma y
+  conserva el borrador. El diálogo avisa de esta actualización de orden.
+  Sin confirmación recibida, la UI conserva comentario y permite repetir
+  exactamente el ID, incluso cuando el primer borrado ya se confirmó en DB.
+- 117 pruebas enfocadas aprobadas en ocho archivos, con regresión de likes,
+  feed y lectura; TypeScript, lint enfocado, build y escaneo de secretos
+  del cliente aprobados.
+- `npm run test:db:comments` aprobado: RLS A/B/anónimo/sin perfil/roles,
+  expiración ausente/inválida/pasada, retirada propia directa/RPC,
+  repetición, post manipulado, conteos, último comentario, cascada de
+  comentarios/likes y conservación de otro post/like/perfiles/journal.
+- Ya existía un comentario real: el primer intento rechazó retirar la
+  protección del esquema con datos. No se borró ni alteró ese contenido.
+  El runner ahora prueba rollback/reaplicación de permisos de 2.2 con datos,
+  compara siete funciones, RLS/grants y digest/conteo de filas, y deshace
+  toda la transacción. La retirada completa de tabla solo se ensaya si está
+  vacía; no se repitió con datos ni se declara ejecutada en este incremento.
+- E2E Chromium aprobado: cancelación/teclado a 360/768/1280; fallo antes
+  del commit y pérdida de respuesta después; pendiente bloqueado y Escape
+  deshabilitado; reintento sin doble descuento, borrador conservado,
+  repaginación sin duplicados, última página/último comentario, recarga y
+  conteo del feed. Se rechaza DELETE con JWT real vencido sin variar total;
+  seis retiradas concurrentes de un ID ya ausente mantienen cero.
+- Limpieza MCP posterior: cero perfiles/posts/tickets de fixtures; se
+  conserva el comentario real previo. Usuarios Clerk e imágenes efímeras
+  retirados por `finally`. Sin commit ni despliegue.
+- Siguiente: Sprint 3.1, copiar/compartir URL pública. Las dos pruebas de
+  likes siguen diferidas por decisión del usuario.
 
 ## Hito 3 — Compartir el recurso correcto con resultado honesto
 

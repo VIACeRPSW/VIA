@@ -164,6 +164,31 @@ exitoso. Deben probarse también errores, permisos y datos inválidos.
   Se añadió una migración correctiva para comprobar expiración en la
   política/trigger y se repitieron SQL y E2E, esta vez aprobados. Los errores
   de red registrados en el recorrido final corresponden a fallos inyectados.
-- No se probaron aún controles de eliminación individual de comentarios,
-  que corresponden al Sprint 2.2. Tampoco se ejecutó una regresión integral
-  ni se retomaron las dos comprobaciones de likes diferidas por el usuario.
+- El cierre de 2.1 no incluía controles de eliminación individual.
+
+### Interacción — Sprint 2.2 de eliminación propia
+
+- 117 pruebas enfocadas en ocho archivos: contrato estricto de confirmación,
+  IDs/autor manipulado, sesión/perfil, respuesta autoritativa, errores
+  redactados, revalidación y controles propios; regresión de lectura/feed
+  y likes. TypeScript/lint/build y escaneo de secretos aprobados.
+- SQL ampliado: eliminación propia por RPC y DELETE ordinario, rechazo
+  ajeno para A/B/anónimo/sin perfil/moderador/admin, roles elevados con
+  comentarios propios, sesión sin `exp`/inválida/vencida, post manipulado,
+  repetición sin doble descuento, primera página rellenada y último
+  comentario sin cursor fantasma. Cascada de likes/comentarios preserva
+  otro post/like, perfiles y journal de limpieza.
+- El runner compara siete funciones/RLS/grants y digest/conteo de datos.
+  Si hay comentarios, solo retira/reaplica permisos de 2.2 y preserva filas;
+  si está vacío, puede ensayar el esquema completo. En este cierre se
+  probó la primera rama: había un comentario real, que se conservó.
+  Los rollbacks de tabla/protección siguen rechazando datos existentes.
+- Chromium real: cancelar/Escape y foco a 360/768/1280, pendiente bloqueado,
+  fallo antes del commit, respuesta perdida después, reintento del mismo
+  ID, borrador conservado, repaginación sin duplicados, último comentario,
+  recarga y conteo del feed. Un JWT real vencido no borra; seis peticiones
+  concurrentes sobre ID ausente conservan el cero. Se comprueba ausencia
+  de claves React duplicadas tras corregir un fallo inicial de foco/claves.
+- Cero fixtures tras limpieza; un comentario real previo conservado.
+  No se ejecutó una regresión integral ni se retomaron las dos
+  comprobaciones de likes diferidas por el usuario.

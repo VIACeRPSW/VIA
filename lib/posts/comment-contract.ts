@@ -22,6 +22,18 @@ export const commentPageSchema = z.object({
   commentCount: countSchema, nextCursor: postCursorSchema.nullable(),
 });
 export const commentCreatedSchema = z.object({ comment: publicCommentSchema, commentCount: countSchema.min(1) });
+export const commentDeleteInputSchema = z.object({
+  postId: z.uuid(), commentId: z.uuid(), confirmed: z.literal(true),
+}).strict();
+export const commentDeletedSchema = z.object({
+  postId: z.uuid(), commentId: z.uuid(), page: commentPageSchema,
+});
+export type CommentViewerResult =
+  | { status: "ready"; userId: string; username: string }
+  | { status: "unauthorized" | "profile-required" | "error"; message: string };
+export type CommentDeleteResult =
+  | ({ status: "success" } & z.infer<typeof commentDeletedSchema>)
+  | { status: "invalid" | "unauthorized" | "profile-required" | "missing" | "error"; message: string };
 export const commentCountSchema = z.object({ post_id: z.uuid(), comment_count: countSchema });
 export type PublicComment = z.infer<typeof publicCommentSchema>;
 export type CommentCursor = PostCursor;

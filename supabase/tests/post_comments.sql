@@ -80,7 +80,6 @@ begin
   perform pg_temp.expect_comment_failure(format(
     'insert into public.comments(post_id,content,operation_id) values(%L,'' '',gen_random_uuid())', f.post_id), '23514');
   perform pg_temp.expect_comment_failure('update public.comments set content=''Changed''', '42501');
-  perform pg_temp.expect_comment_failure('delete from public.comments', '42501');
   if (select count(*) from public.comments where post_id = f.post_id) <> 1 then raise exception 'Failed mutation left content'; end if;
 end;
 $$;
@@ -99,6 +98,10 @@ begin
       'select public.create_post_comment(%L,''Expired'',gen_random_uuid())', f.post_id), '42501');
     perform pg_temp.expect_comment_failure(format(
       'insert into public.comments(post_id,content,operation_id) values(%L,''Expired'',gen_random_uuid())', f.post_id), '42501');
+    perform pg_temp.expect_comment_failure(format(
+      'select public.delete_own_post_comment(%L,%L)', f.post_id, f.comment_id), '42501');
+    delete from public.comments where id = f.comment_id;
+    if found then raise exception 'Expired session deleted a comment'; end if;
   end loop;
   perform set_config('request.jwt.claims', jsonb_build_object(
     'sub', f.actor_b, 'role', 'authenticated', 'exp', extract(epoch from now()) + 1800)::text, true);
@@ -145,6 +148,8 @@ begin
   perform pg_temp.expect_comment_failure(format(
     'select public.create_post_comment(%L,''Anonymous'',gen_random_uuid())', f.post_id), '42501');
   perform pg_temp.expect_comment_failure(format(
+    'select public.delete_own_post_comment(%L,%L)', f.post_id, f.comment_id), '42501');
+  perform pg_temp.expect_comment_failure(format(
     'select public.get_public_post_comments(%L,now(),null)', f.post_id), '22023');
   perform pg_temp.expect_comment_failure('select public.get_post_comment_counts(array[]::uuid[])', '22023');
   perform pg_temp.expect_comment_failure('select public.get_post_comment_counts(array_fill(gen_random_uuid(),array[13]))', '22023');
@@ -152,15 +157,60 @@ end;
 $$;
 
 set local role authenticated;
+select set_config('request.jwt.claims', jsonb_build_object('sub', actor_b, 'role', 'authenticated',
+  'exp', extract(epoch from now()) + 1800)::text, true) from comment_fixture;
 do $$
-declare f comment_fixture; actor text;
+declare f comment_fixture; target uuid; result jsonb; item record;
+begin
+  select * into f from comment_fixture;
+  perform pg_temp.expect_comment_failure(format(
+    'select public.delete_own_post_comment(%L,%L)', f.other_post_id, f.comment_id), '42501');
+  perform pg_temp.expect_comment_failure(
+    'select public.delete_own_post_comment(null,gen_random_uuid())', '22023');
+  select id into target from public.comments where post_id = f.post_id order by created_at, id limit 1;
+  result := public.delete_own_post_comment(f.post_id, target);
+  if result->>'commentId' <> target::text or result->>'postId' <> f.post_id::text
+    or result->'page'->>'commentCount' <> '25' or jsonb_array_length(result->'page'->'comments') <> 12
+    or result::text ~ '"(clerk_user_id|user_id|operation_id)"' then
+    raise exception 'Deletion confirmation/refilled page mismatch';
+  end if;
+  if result <> public.delete_own_post_comment(f.post_id, target) then raise exception 'Deletion retry changed content'; end if;
+  for item in select id from public.comments where post_id = f.post_id and id <> f.comment_id loop
+    perform public.delete_own_post_comment(f.post_id, item.id);
+  end loop;
+  result := public.delete_own_post_comment(f.post_id, f.comment_id);
+  if result->'page'->>'commentCount' <> '0' or result->'page'->'comments' <> '[]'::jsonb
+    or result->'page'->'nextCursor' <> 'null'::jsonb then raise exception 'Last comment left a phantom page/count'; end if;
+  if result <> public.delete_own_post_comment(f.post_id, f.comment_id) then raise exception 'Last deletion retry changed count'; end if;
+  result := public.create_post_comment(f.post_id, 'Cascade child', gen_random_uuid());
+  update comment_fixture set comment_id = (result->'comment'->>'id')::uuid;
+  perform public.set_post_like(f.post_id, true);
+  perform public.set_post_like(f.other_post_id, true);
+  result := public.create_post_comment(f.post_id, 'Direct own deletion', gen_random_uuid());
+  delete from public.comments where id = (result->'comment'->>'id')::uuid;
+  if not found then raise exception 'Direct own deletion blocked'; end if;
+  if (public.get_public_post_comments(f.post_id)->>'commentCount')::int <> 1 then
+    raise exception 'Direct own deletion changed foreign resources'; end if;
+end;
+$$;
+do $$
+declare f comment_fixture; actor text; owned jsonb;
 begin
   select * into f from comment_fixture;
   foreach actor in array array[f.actor_a, f.actor_mod, f.actor_admin, f.actor_missing] loop
     perform set_config('request.jwt.claims', jsonb_build_object('sub', actor, 'role', 'authenticated',
       'exp', extract(epoch from now()) + 1800)::text, true);
     if exists (select 1 from public.comments where post_id = f.post_id) then raise exception 'Foreign private comments visible'; end if;
-    perform pg_temp.expect_comment_failure('delete from public.comments', '42501');
+    delete from public.comments where id = f.comment_id;
+    if found then raise exception 'Foreign ordinary deletion permitted'; end if;
+    perform pg_temp.expect_comment_failure(format(
+      'select public.delete_own_post_comment(%L,%L)', f.post_id, f.comment_id), '42501');
+    if actor in (f.actor_mod, f.actor_admin) then
+      owned := public.create_post_comment(f.post_id, 'Elevated own comment', gen_random_uuid());
+      perform public.delete_own_post_comment(f.post_id, (owned->'comment'->>'id')::uuid);
+      if (public.get_public_post_comments(f.post_id)->>'commentCount')::int <> 1 then
+        raise exception 'Elevated own deletion damaged foreign comment'; end if;
+    end if;
   end loop;
   perform pg_temp.expect_comment_failure(format(
     'select public.create_post_comment(%L,''Missing profile'',gen_random_uuid())', f.post_id), '42501');
@@ -169,6 +219,8 @@ begin
   delete from public.posts where id = f.post_id;
   if not found then raise exception 'Author post deletion failed'; end if;
   if public.get_public_post_comments(f.post_id) is not null then raise exception 'Deleted post still readable'; end if;
+  if public.delete_own_post_comment(f.post_id, f.comment_id) is not null then
+    raise exception 'Retired post deletion returned a phantom page'; end if;
   if not exists (select 1 from public.post_uploads where title = 'Comment fixture'
     and state = 'cleanup' and post_id is null) then raise exception 'Cleanup journal lost'; end if;
   perform pg_temp.expect_comment_failure(format(
@@ -180,6 +232,10 @@ do $$
 begin
   if exists (select 1 from public.comments where post_id = (select post_id from comment_fixture)) then
     raise exception 'Post cascade left foreign comments';
+  end if;
+  if exists (select 1 from public.likes where post_id = (select post_id from comment_fixture))
+    or not exists (select 1 from public.likes where post_id = (select other_post_id from comment_fixture)) then
+    raise exception 'Post deletion damaged like cascade/isolation';
   end if;
   if not exists (select 1 from public.posts where id = (select other_post_id from comment_fixture))
     or (select count(*) from public.profiles where clerk_user_id in (

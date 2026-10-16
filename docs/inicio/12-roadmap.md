@@ -77,8 +77,11 @@ reaplicación diferidos explícitamente por el usuario, no aprobados.
 Sprint 2.1 autorizado e implementado: lectura/creación de comentarios,
 conteos, paginación e idempotencia, con migraciones por MCP y pruebas
 unitarias, SQL, rollback/reaplicación y E2E reales aprobadas, incluido
-JWT vencido de comentarios. Se conservan base y diseño existentes.
-Siguen eliminación propia (2.2), compartir (3.1) y seguimiento básico
+JWT vencido de comentarios. Sprint 2.2 autorizado y validado: eliminación
+propia con confirmación/cancelación, RLS, reintento y repaginación/conteos
+coherentes; rollback de permisos probado conservando el comentario existente.
+Se conservan base y diseño existentes.
+Siguen compartir (3.1) y seguimiento básico
 (4.1), sin personalizar el feed. Sin commit ni despliegue nuevo.
 
 ## Fase 5 --- Comunidades y búsqueda

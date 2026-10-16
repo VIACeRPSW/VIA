@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createCommentAction, loadPostComments } from "./post-comments";
+import { createCommentAction, deleteCommentAction, loadCommentViewer, loadPostComments } from "./post-comments";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(), profile: vi.fn(), client: vi.fn(), rpc: vi.fn(), revalidate: vi.fn(), read: vi.fn(),
 }));
@@ -22,6 +22,81 @@ beforeEach(() => {
   mocks.client.mockResolvedValue({ rpc: mocks.rpc });
   mocks.rpc.mockResolvedValue({ data: created, error: null });
   vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+describe("own comment deletion", () => {
+  const deletion = { postId: id, commentId: id, confirmed: true };
+  const deleted = { postId: id, commentId: id, page: { comments: [], commentCount: 0, nextCursor: null } };
+  it("loads only the current actor's canonical username for controls", async () => {
+    expect(await loadCommentViewer()).toEqual({ status: "ready", userId: "own", username: "own_user" });
+  });
+  it("deletes and retries the same ID without a client-supplied owner", async () => {
+    mocks.rpc.mockResolvedValue({ data: deleted, error: null });
+    expect(await deleteCommentAction(deletion)).toEqual({ status: "success", ...deleted });
+    expect(await deleteCommentAction(deletion)).toEqual({ status: "success", ...deleted });
+    expect(mocks.rpc.mock.calls).toEqual(Array.from({ length: 2 }, () => [
+      "delete_own_post_comment", { p_post_id: id, p_comment_id: id },
+    ]));
+    expect(mocks.revalidate).toHaveBeenCalledWith("/inicio");
+    expect(mocks.revalidate).toHaveBeenCalledWith(`/post/${id}`);
+  });
+  it.each([
+    { ...deletion, confirmed: false }, { postId: id, commentId: id },
+    { ...deletion, commentId: "bad" }, { ...deletion, postId: "bad" },
+    { ...deletion, user_id: id }, { ...deletion, role: "admin" },
+  ])("requires valid IDs, explicit confirmation and no identity fields", async (payload) => {
+    expect(await deleteCommentAction(payload)).toMatchObject({ status: "invalid" });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("requires a session before reading private permissions", async () => {
+    mocks.auth.mockResolvedValue({ isAuthenticated: false, userId: null });
+    expect(await deleteCommentAction(deletion)).toMatchObject({ status: "unauthorized" });
+    expect(mocks.profile).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it.each([
+    { profile: { status: "missing" }, status: "profile-required" },
+    { profile: { status: "unauthorized" }, status: "unauthorized" },
+    { profile: { status: "unavailable" }, status: "error" },
+    { profile: { status: "found", profile: { clerkUserId: "other", username: "own_user" } }, status: "error" },
+  ])("rejects missing, unavailable or different actor profiles", async ({ profile, status }) => {
+    mocks.profile.mockResolvedValue(profile);
+    expect(await deleteCommentAction(deletion)).toMatchObject({ status });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it.each(["42501", "UNAVAILABLE"])("reports SQL rejection without revalidation or raw payloads", async (code) => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code, message: "private-token" } });
+    expect(await deleteCommentAction(deletion)).toMatchObject({ status: code === "42501" ? "unauthorized" : "error" });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("private-token");
+  });
+  it("distinguishes post withdrawal from an empty comments page", async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
+    expect(await deleteCommentAction(deletion)).toMatchObject({ status: "missing" });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+  it.each([
+    { ...deleted, commentId: "b02e9ce0-0a90-4e7c-a5cb-f54ff20f228b" },
+    { ...deleted, postId: "b02e9ce0-0a90-4e7c-a5cb-f54ff20f228b" },
+    { ...deleted, page: { ...deleted.page, commentCount: -1 } },
+    { ...deleted, page: { ...deleted.page, comments: [created.comment], commentCount: 1 } },
+    { ...deleted, page: { ...deleted.page, nextCursor: { before: created.comment.created_at, beforeId: id } } },
+  ])("requires a matching authoritative deletion and page", async (data) => {
+    mocks.rpc.mockResolvedValue({ data, error: null });
+    expect(await deleteCommentAction(deletion)).toMatchObject({ status: "error" });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+  it("keeps lost confirmation recoverable and redacts service failures", async () => {
+    mocks.rpc.mockRejectedValue(new Error("private-token"));
+    expect(await deleteCommentAction(deletion)).toMatchObject({ status: "error", message: expect.stringContaining("mismo comentario") });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("private-token");
+  });
+  it("surfaces failure to read viewer permissions", async () => {
+    mocks.profile.mockRejectedValue(new Error("private-token"));
+    expect(await loadCommentViewer()).toMatchObject({ status: "error" });
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("private-token");
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 describe("comment actions", () => {

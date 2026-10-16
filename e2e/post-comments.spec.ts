@@ -6,8 +6,10 @@ import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 import { deleteProfile } from "./profile-fixture";
 
-test("creates plain-text comments once, paginates publicly and preserves drafts on failed requests", async ({ page, browser }) => {
+test("creates, paginates and removes only own comments with recoverable requests", async ({ page, browser }) => {
   test.setTimeout(300_000);
+  const duplicateKeys: string[] = [];
+  page.on("console", (message) => { if (message.text().includes("same key")) duplicateKeys.push(message.text()); });
   const secretKey = process.env.CLERK_SECRET_KEY;
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const origin = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,6 +25,7 @@ test("creates plain-text comments once, paginates publicly and preserves drafts 
   }[] = [];
   const visitor = await browser.newContext();
   const incomplete = await browser.newContext();
+  const authorContext = await browser.newContext();
   try {
     for (const name of ["owner", "other", "missing"]) {
       const email = `via.comment.${name}.${suffix}+clerk_test@example.com`;
@@ -193,13 +196,147 @@ test("creates plain-text comments once, paginates publicly and preserves drafts 
     expect([401, 403]).toContain(expired.status);
     expect(expired.error).not.toBeNull();
     expect((await other.client.rpc("get_public_post_comments", { p_post_id: postId })).data.commentCount).toBe(14);
+    const expiredDelete = await expiring.rpc("delete_own_post_comment", {
+      p_post_id: postId, p_comment_id: concurrent[0].data.comment.id,
+    });
+    expect([401, 403]).toContain(expiredDelete.status);
+    expect(expiredDelete.error).not.toBeNull();
+    expect((await other.client.rpc("get_public_post_comments", { p_post_id: postId })).data.commentCount).toBe(14);
+    expect((await owner.client.rpc("delete_own_post_comment", {
+      p_post_id: postId, p_comment_id: persisted.data![0].id,
+    })).error?.code).toBe("42501");
+    expect((await owner.client.from("comments").delete().eq("id", persisted.data![0].id).select("id")).data).toEqual([]);
+    expect((await missing.client.rpc("delete_own_post_comment", {
+      p_post_id: postId, p_comment_id: persisted.data![0].id,
+    })).error?.code).toBe("42501");
+    await expect(publicPage.getByRole("button", { name: "Eliminar comentario", exact: true })).toHaveCount(0);
+    const authorPage = await authorContext.newPage();
+    await setupClerkTestingToken({ page: authorPage });
+    await authorPage.goto("/");
+    await authorPage.waitForFunction(() => Boolean(window.Clerk?.loaded));
+    await clerk.signIn({ emailAddress: owner.email, page: authorPage });
+    await authorPage.goto(detail);
+    await expect(authorPage.getByRole("heading", { name: "Comentarios (14)", exact: true })).toBeVisible();
+    await expect(authorPage.getByRole("button", { name: "Eliminar comentario", exact: true })).toHaveCount(0);
+
+    await textarea.fill("Borrador conservado al eliminar");
+    const target = page.locator(`#comment-${persisted.data![0].id}`);
+    const remove = target.getByRole("button", { name: "Eliminar comentario", exact: true });
+    await expect(remove).toBeVisible();
+    const confirmation = page.getByRole("dialog", { name: "¿Eliminar tu comentario?", exact: true });
+    for (const width of [360, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await remove.focus();
+      await page.keyboard.press("Enter");
+      await expect(confirmation).toBeVisible();
+      await expect(confirmation.getByRole("button", { name: "Cancelar", exact: true })).toBeFocused();
+      expect(await confirmation.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return box.left >= 0 && box.right <= window.innerWidth;
+      })).toBe(true);
+      await page.keyboard.press("Escape");
+      await expect(confirmation).not.toBeVisible();
+      await expect(remove).toBeFocused();
+    }
+    await remove.click();
+    await confirmation.getByRole("button", { name: "Cancelar", exact: true }).click();
+    await expect(confirmation).not.toBeVisible();
+    await expect(remove).toBeFocused();
+    expect((await other.client.rpc("get_public_post_comments", { p_post_id: postId })).data.commentCount).toBe(14);
+    const deleteError = "No pudimos confirmar la eliminación. Reintenta para comprobar el mismo comentario.";
+    await page.route(`**/post/${postId}`, async (route) => {
+      if (route.request().method() === "POST" && route.request().postData()?.includes('"confirmed":true')) {
+        await route.abort("failed");
+      } else await route.continue();
+    });
+    await remove.click();
+    await confirmation.getByRole("button", { name: "Confirmar eliminación", exact: true }).click();
+    await expect(confirmation.getByText(deleteError, { exact: true })).toBeVisible();
+    await expect(target).toBeVisible();
+    expect((await other.client.rpc("get_public_post_comments", { p_post_id: postId })).data.commentCount).toBe(14);
+    await page.unroute(`**/post/${postId}`);
+    let deletionLost = false;
+    let releaseDeletion: () => void = () => {};
+    const heldDeletion = new Promise<void>((resolve) => { releaseDeletion = resolve; });
+    let deletionStarted: () => void = () => {};
+    const deletionRequest = new Promise<void>((resolve) => { deletionStarted = resolve; });
+    await page.route(`**/post/${postId}`, async (route) => {
+      if (!deletionLost && route.request().method() === "POST" && route.request().postData()?.includes('"confirmed":true')) {
+        deletionLost = true;
+        await route.fetch();
+        deletionStarted();
+        await heldDeletion;
+        await route.abort("failed");
+      } else await route.continue();
+    });
+    await confirmation.getByRole("button", { name: "Confirmar eliminación", exact: true }).click();
+    await deletionRequest;
+    try {
+      await expect(confirmation.getByRole("button", { name: "Eliminando...", exact: true })).toBeDisabled();
+      await expect(confirmation.getByRole("button", { name: "Cancelar", exact: true })).toBeDisabled();
+      await expect(textarea).toBeDisabled();
+      await page.keyboard.press("Escape");
+      await expect(confirmation).toBeVisible();
+    } finally {
+      releaseDeletion();
+    }
+    await expect(confirmation.getByText(deleteError, { exact: true })).toBeVisible();
+    await expect(target).toBeVisible();
+    expect((await other.client.rpc("get_public_post_comments", { p_post_id: postId })).data.commentCount).toBe(13);
+    await page.unroute(`**/post/${postId}`);
+    await confirmation.getByRole("button", { name: "Confirmar eliminación", exact: true }).click();
+    await expect(confirmation).not.toBeVisible();
+    await expect(target).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Comentarios (13)", exact: true })).toBeFocused();
+    await expect(textarea).toHaveValue("Borrador conservado al eliminar");
+    await expect(list.getByRole("listitem")).toHaveCount(12);
+    await page.getByRole("button", { name: "Ver comentarios anteriores", exact: true }).click();
+    await expect(list.getByRole("listitem")).toHaveCount(13);
+    const expandedIds = await list.getByRole("listitem").evaluateAll((items) => items.map((item) => item.id));
+    expect(new Set(expandedIds).size).toBe(13);
+    await list.getByRole("listitem").last().getByRole("button", { name: "Eliminar comentario", exact: true }).click();
+    await confirmation.getByRole("button", { name: "Confirmar eliminación", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Comentarios (12)", exact: true })).toBeVisible();
+    await expect(list.getByRole("listitem")).toHaveCount(12);
+    await expect(page.getByRole("button", { name: "Ver comentarios anteriores", exact: true })).toHaveCount(0);
+    await page.goto("/inicio");
+    await expect(card.getByRole("link", { name: "12 comentarios", exact: true })).toBeVisible();
+    const remaining = await other.client.from("comments").select("id").eq("post_id", postId);
+    expect(remaining.error).toBeNull();
+    expect(remaining.data).toHaveLength(12);
+    for (const comment of remaining.data ?? []) {
+      expect((await other.client.rpc("delete_own_post_comment", { p_post_id: postId, p_comment_id: comment.id })).error).toBeNull();
+    }
+    const last = await other.client.rpc("create_post_comment", {
+      p_post_id: postId, p_content: "Last comment", p_operation_id: randomUUID(),
+    });
+    expect(last.error).toBeNull();
+    await page.goto(detail);
+    await expect(page.getByRole("heading", { name: "Comentarios (1)", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Eliminar comentario", exact: true }).click();
+    await confirmation.getByRole("button", { name: "Confirmar eliminación", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Comentarios (0)", exact: true })).toBeFocused();
+    await expect(page.getByText("Todavía no hay comentarios.", { exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Comentarios (0)", exact: true })).toBeVisible();
+    const retries = await Promise.all(Array.from({ length: 6 }, () => other.client!.rpc("delete_own_post_comment", {
+      p_post_id: postId, p_comment_id: last.data.comment.id,
+    })));
+    expect(retries.every((result) => !result.error && result.data.page.commentCount === 0)).toBe(true);
+    expect((await other.client.rpc("create_post_comment", {
+      p_post_id: postId, p_content: "Cascade comment", p_operation_id: randomUUID(),
+    })).error).toBeNull();
+    expect((await other.client.rpc("set_post_like", { p_post_id: postId, p_liked: true })).error).toBeNull();
     expect((await owner.client.from("posts").delete().eq("id", postId).select("id")).data).toHaveLength(1);
     expect((await other.client.from("comments").select("id").eq("post_id", postId)).data).toEqual([]);
+    expect((await other.client.from("likes").select("id").eq("post_id", postId)).data).toEqual([]);
     expect((await other.client.rpc("get_public_post_comments", { p_post_id: postId })).data).toBeNull();
+    expect(duplicateKeys).toEqual([]);
   } finally {
     await page.goto("about:blank");
     await visitor.close();
     await incomplete.close();
+    await authorContext.close();
     const failures: Error[] = [];
     for (const fixture of fixtures) {
       try {

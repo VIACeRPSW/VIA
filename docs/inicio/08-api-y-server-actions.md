@@ -74,7 +74,19 @@ El formulario conserva texto/UUID tras respuesta perdida; un texto distinto
 representa un nuevo envío. La lectura distingue post inexistente, lista
 vacía y fallo; cursor conserva microsegundos y desempate por ID.
 Los conteos del feed se leen por lote en servidor y un fallo no se presenta
-como cero. No se implementa todavía `deleteComment`; no hay edición.
+como cero. No hay edición de comentarios.
+
+Sprint 2.2 implementa `deleteCommentAction({ postId, commentId, confirmed: true })`.
+Rechaza campos extra, deriva sesión/perfil y llama a
+`delete_own_post_comment`, que vuelve a verificar autoría, post y expiración.
+Repetir un ID ausente no elimina otra fila; post retirado se distingue de
+lista vacía. El éxito confirma ambos IDs y primera página/conteo públicos,
+sin identidades privadas, y revalida feed/detalle. La UI avisa que vuelve
+a los comentarios recientes para rellenar huecos y conserva el borrador.
+Un fallo o respuesta perdida conserva el comentario visible y permite
+reintentar el mismo ID, sin descontar conteos de forma optimista.
+`loadCommentViewer()` resuelve username propio ligado al actor actual
+únicamente para mostrar controles; nunca sustituye la autorización SQL.
 
 ### Communities
 
