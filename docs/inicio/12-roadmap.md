@@ -85,7 +85,14 @@ Sprint 3.1 implementado y validado: copiar/compartir URL pública desde
 feed/detalle, origen por entorno y alternativas accesibles, sin métricas
 ni nueva persistencia. Clipboard real en Chromium; Web Share/fallos
 simulados explícitamente; detalle anónimo y 404 al retirarlo comprobados.
-Sigue seguimiento básico (4.1), sin personalizar el feed.
+Sprint 4.1 autorizado, implementado y validado: seguimiento propio,
+conteos públicos/estado privado, UUID estable ante renombrado y sesión
+vigente exigida también en PostgreSQL. 219 pruebas enfocadas, SQL/RLS/
+rollback y E2E reales con expiración/firma inválida, tipos/lint/build/
+escaneo aprobados; fixtures limpiados y datos previos conservados.
+Sigue Sprint 5.1: cierre integrado de Fase 4, sin personalizar el feed.
+Revisar el aviso de hidratación de `UserButton` de Clerk observado en
+alternancia de sesiones; no equivale a cerrar la fase ni su deuda diferida.
 Sin commit ni despliegue nuevo.
 
 ## Fase 5 --- Comunidades y búsqueda

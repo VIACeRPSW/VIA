@@ -98,14 +98,29 @@ leaveCommunity(communityId)
 ### Follows
 
 ``` text
-setFollow(profileId, following)
+loadProfileFollows({ username } | { profileId })
+setProfileFollow({ profileId, following })
 ```
 
-Contrato aprobado, implementación en Hito 4: UUID estable de destino y
-booleano estricto; actor derivado de sesión con perfil, sin auto-seguimiento.
-El resultado confirma estado y conteos reales; no expone listas de
-relaciones. Entre pestañas prevalece la última operación confirmada.
-No modifica el orden reciente del feed.
+Sprint 4.1 implementado: UUID estable de destino y booleano estricto,
+sin campos extra; actor derivado de sesión con perfil, sin auto-seguimiento.
+`getProfileFollows(input, viewer=false)` usa cliente público por defecto;
+la lectura personal usa el cliente autenticado. Ambas validan proyección
+y destino exactos, distinguiendo perfil ausente de servicio indisponible.
+
+`get_profile_follows` devuelve `profile_id`, `username`, `follower_count`,
+`following_count`, `viewer` y `following`. `viewer` distingue anonymous,
+expired, profile-required, self y ready; `following` es booleano únicamente
+en ready, null en los demás. No expone listas, actor UUID ni identidad Clerk.
+`loadProfileFollows` etiqueta el resultado con `actorKey` actual para evitar
+reutilizar estado de otra sesión.
+
+`set_profile_follow` devuelve `{ actor_username, summary }` autoritativo.
+La acción confirma destino/estado deseado y revalida `/perfil` y las rutas
+canónicas actuales de actor y destino, incluso tras renombrado. La UI retiene
+UUID e intención de reintento tras respuesta perdida y reconcilia al recuperar
+foco/visibilidad; lecturas anteriores no pisan la mutación confirmada.
+No modifica el orden reciente del feed ni usa caché personal compartida.
 
 ### Compartir
 

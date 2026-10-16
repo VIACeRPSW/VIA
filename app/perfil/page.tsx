@@ -2,9 +2,12 @@ import { SignOutButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import { getProfileForRoute } from "@/lib/profiles/profile-route.server";
+import { ProfileFollows } from "@/components/profile/ProfileFollows";
+import { getProfileFollows } from "@/lib/profiles/read-follows.server";
 
 export default async function ProfilePage() {
   const result = await getProfileForRoute("existing");
+  const follows = result.status === "found" ? await getProfileFollows({ profileId: result.profile.id }) : null;
 
   return (
     <main className="profile-page">
@@ -25,6 +28,7 @@ export default async function ProfilePage() {
       {result.status === "found" ? (
         <>
           <ProfileDetails profile={result.profile} />
+          {follows && <ProfileFollows key={result.profile.id} username={result.profile.username} initial={follows} />}
           <nav className="profile-actions" aria-label="Acciones de mi perfil">
             <Link className="button button-secondary" href="/inicio">Ver feed</Link>
             <Link className="button button-secondary" href="/imagenes">Mi galería</Link>

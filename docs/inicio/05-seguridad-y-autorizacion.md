@@ -132,6 +132,28 @@ pasada, sin depender solo de la aceptación del JWT por el servicio.
 Esto no declara validadas ni corregidas las pruebas de expiración de likes
 que el usuario decidió diferir.
 
+Seguimiento 4.1 aplicado mediante `20261016003306`: RLS forzada, SELECT y
+DELETE solo de relaciones salientes propias; INSERT únicamente del destino,
+con actor/ID/fecha generados, sin UPDATE. Moderador/administrador ordinarios
+no pueden ver ni retirar relaciones ajenas. Las FK restrictivas impiden
+borrar un perfil con relaciones sin retirarlas primero.
+
+`follow_session_is_active()` exige `exp` numérico futuro y, si existe,
+`nbf` numérico no futuro mediante `clock_timestamp()`. Se aplica también
+en las RPC definer con search path vacío; la mutación vuelve a comprobar
+sesión tras bloquear ambos perfiles en orden UUID. Se rechazan actor sin
+perfil, destino inexistente, auto-follow y payloads con propietario/rol.
+Esta protección es independiente de comentarios y no cambia likes.
+
+La proyección pública incluye UUID estable del destino, username y
+conteos, nunca filas de relación ni identidad Clerk/UUID del actor.
+El estado personal solo se expone al actor autorizado; respuestas de
+acciones etiquetadas con el actor se contrastan con la sesión actual.
+La UI reinicia su estado por actor y UUID de destino, descarta lecturas
+obsoletas y conserva errores visibles, sin convertir indisponibilidad
+en conteos cero o éxito. JWT real vencido y firma inválida comprobados
+en el E2E de seguimiento; roles/nbf adicionales cubiertos en SQL sintético.
+
 ## 6. Storage
 
 Buckets iniciales:

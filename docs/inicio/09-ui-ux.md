@@ -83,6 +83,20 @@ No hay controles nuevos en las galerías ni rediseño del feed.
 Si el origen de aplicación no está configurado correctamente, el control
 se deshabilita y explica el motivo, en lugar de inventar un enlace.
 
+Sprint 4.1 implementado: conteos reales «Seguidores» y «Seguidos» en
+perfil propio y público, con control seguir/dejar de seguir solo para
+visitante autenticado con perfil y destino distinto. Anónimo/sesión
+vencida ofrece login; sin perfil, completar perfil; el propio no ofrece
+auto-follow. Mientras carga la identidad no muestra controles personales.
+
+Pendiente, fallo y reintento se anuncian sin éxito optimista. Una respuesta
+perdida permite «Reintentar seguimiento» con el mismo estado deseado.
+Indisponibilidad conserva conteos conocidos y explica el fallo, no inventa
+ceros. Foco/visibilidad reconcilian cambios de otras pestañas; cambio de
+actor o UUID de destino reinicia estado personal. Tras renombrado se
+ofrece el enlace canónico conservando el UUID seguido.
+Teclado y anchos 360/768/1280 comprobados; feed/galerías sin cambios.
+
 ## 5. Crear
 
 La pantalla deberá reducir fricción:

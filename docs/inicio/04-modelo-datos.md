@@ -284,12 +284,24 @@ UNIQUE(follower_id, following_id)
 follower_id != following_id
 ```
 
-Contrato de Fase 4: ambas FK de perfil son restrictivas; actor derivado
-de sesión, estado deseado idempotente, sin auto-seguimiento ni privilegios
-de moderación. Índices por cada extremo permiten conteos por lote.
-Solo se publican agregados; no hay listas públicas de seguidores/seguidos.
-Cambiar username no rompe la relación por ID. Migración en Sprint 4.1,
-con autorización independiente de la otorgada para likes.
+Implementado en Sprint 4.1 mediante migración autorizada
+`20261016003306_add_profile_follows`. ID UUID generado, actor derivado de
+sesión y fecha generada; ambas FK a `profiles(id)` son restrictivas
+(`NO ACTION`, no diferibles), sin cascadas. Índice único por par y otro
+por `(following_id, follower_id)` para ambos conteos.
+
+Estado deseado idempotente, sin auto-seguimiento ni privilegios de
+moderación. RLS forzada; lectura/borrado solo de relaciones salientes
+propias, INSERT ordinario únicamente de `following_id`, sin UPDATE.
+La sesión exige expiración futura y `nbf` válido si existe.
+
+`get_profile_follows` publica un resumen de un único destino por username
+o UUID: UUID público estable del destino, username y conteos. No enumera
+relaciones, identidades Clerk ni UUID del actor; la bandera personal solo
+se devuelve al visitante autorizado. Cambiar username no rompe relaciones.
+`set_profile_follow` bloquea ambos perfiles en orden UUID, verifica de
+nuevo la sesión y devuelve estado/conteos autoritativos. El rollback se
+niega a retirar la tabla si existe cualquier relación.
 
 ## 12. badges
 

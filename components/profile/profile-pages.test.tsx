@@ -10,11 +10,14 @@ const mocks = vi.hoisted(() => ({
   getAvatarCleanupStatus: vi.fn(),
   currentUser: vi.fn(),
   getPublicPosts: vi.fn(),
+  getProfileFollows: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({ connection: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/posts/read-post.server", () => ({ getPublicPosts: mocks.getPublicPosts }));
+vi.mock("@/lib/profiles/read-follows.server", () => ({ getProfileFollows: mocks.getProfileFollows }));
+vi.mock("@/actions/profile-follows", () => ({ loadProfileFollows: vi.fn(), setProfileFollow: vi.fn() }));
 vi.mock("@clerk/nextjs/server", () => ({ currentUser: mocks.currentUser }));
 vi.mock("@/lib/profiles/read-profile.server", () => ({
   getOwnProfile: mocks.getOwnProfile,
@@ -23,6 +26,7 @@ vi.mock("@/lib/profiles/read-profile.server", () => ({
 vi.mock("@clerk/nextjs", () => ({
   UserButton: () => null,
   SignOutButton: ({ children }: { children: ReactNode }) => children,
+  useAuth: () => ({ isLoaded: true, userId: null }),
 }));
 vi.mock("next/navigation", () => ({
   redirect: mocks.redirect,
@@ -55,6 +59,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.getAvatarCleanupStatus.mockResolvedValue({ pending: false, unavailable: false });
   mocks.getPublicPosts.mockResolvedValue({ status: "ready", posts: [], nextCursor: null });
+  mocks.getProfileFollows.mockResolvedValue({ status: "unavailable" });
   mocks.currentUser.mockResolvedValue({ firstName: "Ada", fullName: "Ada Lovelace" });
   mocks.redirect.mockImplementation(() => { throw new Error("NEXT_REDIRECT"); });
   mocks.notFound.mockImplementation(() => { throw new Error("NEXT_NOT_FOUND"); });
@@ -184,6 +189,23 @@ describe("profile views", () => {
     expect(mocks.getPublicProfile).toHaveBeenCalledWith("ada_42");
     expect(markup).toContain("Ada Lovelace");
     expect(markup).toContain("@ada_42");
+    expect(mocks.getProfileFollows).toHaveBeenCalledWith({ username: "ada_42" });
+  });
+  it("renders public follow counts without private relationships or gallery controls", async () => {
+    mocks.getPublicProfile.mockResolvedValue({ status: "found", profile });
+    mocks.getProfileFollows.mockResolvedValue({ status: "ready", summary: {
+      profile_id: "b02e9ce0-0a90-4e7c-a5cb-f54ff20f228a", username: profile.username,
+      follower_count: 7, following_count: 2, viewer: "anonymous", following: null,
+    } });
+    const markup = renderToStaticMarkup(await PublicProfilePage({
+      params: Promise.resolve({ username: profile.username }), searchParams: Promise.resolve({}),
+    }));
+    expect(markup).toContain("Seguidores");
+    expect(markup).toContain("Seguidos");
+    expect(markup).toContain("<dd>7</dd>");
+    expect(markup).toContain("<dd>2</dd>");
+    expect(markup).toContain("Inicia sesión para seguir");
+    expect(markup).not.toContain("follower_id");
   });
 
   it("shows honest empty states and renders biography as text rather than HTML", () => {

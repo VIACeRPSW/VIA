@@ -45,7 +45,7 @@ export function ProfileDetails({ profile }: { profile: PublicProfile }) {
       </dl>
       <section className="profile-future" aria-labelledby="profile-future-title">
         <h2 id="profile-future-title">Tu actividad en VIA</h2>
-        <p>Las publicaciones, seguidores, seguidos y medallas se habilitarán en próximas fases.</p>
+        <p>Las medallas y estadísticas avanzadas se habilitarán en próximas fases.</p>
       </section>
     </section>
   );

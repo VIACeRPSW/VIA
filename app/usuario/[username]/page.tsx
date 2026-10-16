@@ -6,6 +6,8 @@ import { getPublicPosts } from "@/lib/posts/read-post.server";
 import { parsePostCursor, type PostSearchParams } from "@/lib/posts/post-cursor";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import { getPublicProfile } from "@/lib/profiles/read-profile.server";
+import { ProfileFollows } from "@/components/profile/ProfileFollows";
+import { getProfileFollows } from "@/lib/profiles/read-follows.server";
 
 export default async function PublicProfilePage({
   params,
@@ -22,8 +24,10 @@ export default async function PublicProfilePage({
     notFound();
   }
   const cursor = parsePostCursor(await searchParams);
-  const posts = result.status === "found" && cursor.valid
-    ? await getPublicPosts({ authorUsername: result.profile.username, cursor: cursor.cursor }) : null;
+  const [posts, follows] = result.status === "found" ? await Promise.all([
+    cursor.valid ? getPublicPosts({ authorUsername: result.profile.username, cursor: cursor.cursor }) : null,
+    getProfileFollows({ username: result.profile.username }),
+  ]) : [null, null];
 
   return (
     <main className="profile-page">
@@ -37,6 +41,7 @@ export default async function PublicProfilePage({
       {result.status === "found" ? (
         <>
           <ProfileDetails profile={result.profile} />
+          {follows && <ProfileFollows key={result.profile.username} username={result.profile.username} initial={follows} />}
           <section aria-labelledby="author-posts-title">
             <h2 id="author-posts-title">Publicaciones de {result.profile.displayName}</h2>
             {posts ? <PostList result={posts} basePath={`/usuario/${result.profile.username}`}

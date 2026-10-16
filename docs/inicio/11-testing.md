@@ -217,3 +217,35 @@ exitoso. Deben probarse también errores, permisos y datos inválidos.
   Cero perfiles/posts/tickets del fixture tras limpieza y comentario real
   previo conservado. Sin nueva migración/RLS/rollback ni eventos de shares;
   no se ejecutaron las dos comprobaciones de likes diferidas.
+
+### Interacción — Sprint 4.1 de seguimiento
+
+- 219 pruebas enfocadas en 15 archivos aprobadas: contratos estrictos,
+  lecturas públicas/personales, acciones y perfiles, más regresión social
+  de likes/comentarios/compartir/presentación. Se verifica que cambiar el
+  UUID de un username reutilizado reinicia el estado del control.
+- `npm run test:db:follows`: SQL transaccional con A/B/anónimo/sin perfil/
+  moderador/admin sintéticos, unicidad, spoofing, privacidad, auto-follow,
+  destino ausente, exp/nbf, renombrado, conteos y FK restrictivas.
+  El rollback rechaza relaciones existentes; con tabla vacía retira/reaplica
+  y compara funciones, grants, RLS, FK y perfiles. Todo se revierte.
+- `npm run test:e2e -- profile-follows`: Chromium con identidades/sesiones
+  reales de desarrollo; seis peticiones idénticas y seis conflictivas,
+  seguimiento recíproco sin deadlock, recarga y conteos en ambos perfiles.
+  Comprueba ausencia de estado ajeno al cambiar cuenta, filas privadas,
+  spoofing, self/missing, reconciliación por foco/visibilidad y rename por UUID.
+- Fallo antes de guardar y respuesta perdida tras guardar inyectados;
+  reintento conserva intención sin duplicar. JWT real válido y luego
+  vencido (`exp` + 6 s), y firma inválida, sin cambios indebidos de conteo.
+  Teclado, 360/768/1280 y orden del feed conservados.
+- Ruta anterior tras rename: RPC null y UI «Perfil no encontrado», sin
+  perfil/control anterior. HTTP 200/404 admitidos solo con esas aserciones:
+  Next.js permite 200 en not-found transmitido por streaming.
+- Se observó un aviso de hidratación en `UserButton` de Clerk al alternar
+  sesiones, aunque las aserciones pasaron; queda registrado para 5.1.
+  Los errores redactados por fallos de red inyectados son esperados.
+  No se afirma consola libre de errores ni cierre integrado de la fase.
+- Tipos, lint enfocado, build y escaneo del cliente aprobados. Limpieza
+  remota confirmada: cero follows/perfiles de fixture, un comentario real
+  conservado y 13 migraciones. Sin posts/imágenes nuevos en este E2E.
+  Sin commit/deploy; las dos comprobaciones diferidas de likes no se ejecutaron.

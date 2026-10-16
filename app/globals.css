@@ -648,6 +648,22 @@ footer p {
 	border-top: 1px solid #edf0e9;
 }
 
+.profile-follows {
+	margin-block: 1.5rem;
+}
+
+.profile-follow-counts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2rem;
+}
+
+.profile-follow-counts dd {
+	margin: 0.25rem 0 1rem;
+	font-size: 1.5rem;
+	font-weight: 700;
+}
+
 .post-comments {
 	margin-block: 2rem;
 	padding-top: 1.5rem;

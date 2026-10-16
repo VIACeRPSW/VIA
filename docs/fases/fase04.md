@@ -2,13 +2,13 @@
 
 ## Estado
 
-- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprints 2.1/2.2 de comentarios y 3.1 de compartir implementados y validados el 2026-10-15. Siguiente: Sprint 4.1, seguimiento básico.
+- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprints 2.1/2.2 de comentarios, 3.1 de compartir y 4.1 de seguimiento implementados y validados el 2026-10-15. Siguiente: Sprint 5.1, cierre integrado de interacción.
 - Roadmap: Fase 4
 - Dependencias: Fases 1 y 2 completadas; Fase 3 cerrada por decisión del usuario el 2026-10-15 con deuda de verificación explícita; Clerk y el Supabase existentes; aprobación de contratos del Sprint 1.1 antes de mutaciones sociales.
 - Criterio de salida: núcleo social funcional con like/unlike, lectura/creación/eliminación propia de comentarios, compartir enlaces y seguir/dejar de seguir usuarios, con permisos equivalentes en UI, servidor y RLS, contadores reales y diseño previo conservado.
 
 **Entrada para otra sesión: «comenzar fase 4».** Leer este documento y
-retomar por el Sprint 4.1; el 1.1 está consolidado y los Hitos 2/3 validados.
+retomar por el Sprint 5.1; el 1.1 está consolidado y los Hitos 2/3/4 validados.
 Las dos pruebas de likes están diferidas por decisión explícita, no
 aprobadas. Las autorizaciones de likes/comentarios y su evidencia
 figuran más abajo. No se autorizan por arrastre migraciones de otros
@@ -24,12 +24,12 @@ Guion de arranque:
    y contratos base afectados.
 3. Contrastar esquema/migraciones y superficies actuales antes de añadir
    lógica. Ya existen likes, lectura/creación/eliminación propia de comentarios
-   y compartir enlaces públicos; no asumir implementado seguimiento por
-   estar descrito en el modelo conceptual.
+   y compartir enlaces públicos, seguimiento y conteos de perfil.
+   Contrastar la evidencia de cada incremento antes del recorrido integrado.
 4. Respetar los acuerdos de arranque y reanudación de 1.1; resolver solo nuevas decisiones.
    Registrar contratos aprobados en documentación base. No inventar acuerdos.
-5. Respetar el diferimiento de pruebas de likes y continuar seguimiento
-   básico según el contrato aprobado, sin personalizar el feed.
+5. Respetar el diferimiento de pruebas de likes y cerrar la integración
+   según el contrato aprobado, sin personalizar el feed.
    Pedir autorización específica antes de aplicar SQL al remoto; si falta,
    dejar esa parte bloqueada y preparar solo trabajo local autorizado.
 6. Usar pruebas enfocadas y avisos breves. Abrir servidor solo si hace falta,
@@ -520,33 +520,74 @@ seguras, sin feed personalizado.
 
 **Alcance**
 
-- [ ] `follows`, mutación propia y control en perfil público ajeno.
-- [ ] Conteos reales de seguidores/seguidos en perfiles según contrato.
+- [x] `follows`, mutación propia y control en perfil público ajeno.
+- [x] Conteos reales de seguidores/seguidos en perfiles según contrato.
 
 **Tareas**
 
-- [ ] `Sin identificador existente` `VIA-004` `VIA-005` Migrar relaciones con FK a perfiles, unicidad, prohibición de auto-seguimiento, índices, RLS y rollback protegido.
-- [ ] `Sin identificador existente` Implementar estado deseado idempotente, resolviendo actor autenticado y destino estable sin confiar en Clerk ID/rol enviados.
-- [ ] `Sin identificador existente` Integrar botón/estado/conteos según acuerdos; sin botón activo para seguirse a sí mismo ni cambios del orden del feed.
-- [ ] `Sin identificador existente` Resolver username renombrado, perfil inexistente, sesión vencida, carreras y fallo de red; revalidar ambos perfiles sin divulgar datos privados.
+- [x] `Sin identificador existente` `VIA-004` `VIA-005` Migrar relaciones con FK a perfiles, unicidad, prohibición de auto-seguimiento, índices, RLS y rollback protegido.
+- [x] `Sin identificador existente` Implementar estado deseado idempotente, resolviendo actor autenticado y destino estable sin confiar en Clerk ID/rol enviados.
+- [x] `Sin identificador existente` Integrar botón/estado/conteos según acuerdos; sin botón activo para seguirse a sí mismo ni cambios del orden del feed.
+- [x] `Sin identificador existente` Resolver username renombrado, perfil inexistente, sesión vencida, carreras y fallo de red; revalidar ambos perfiles sin divulgar datos privados.
 
 **Criterios de aceptación**
 
-- [ ] CA-4.1.1 — Seguir/repetir/dejar de seguir persiste sin duplicados, con conteos exactos en ambos perfiles tras recarga.
-- [ ] CA-4.1.2 — Auto-seguimiento, destino inexistente y mutación ajena no son posibles ni mediante acceso directo.
-- [ ] CA-4.1.3 — Renombrar username no rompe relaciones; error o sesión vencida no producen éxito ficticio ni exponen estado de otro visitante.
-- [ ] CA-4.1.4 — Teclado/responsive y navegación de perfil se conservan; feed reciente y galerías mantienen comportamiento/diseño previos.
+- [x] CA-4.1.1 — Seguir/repetir/dejar de seguir persiste sin duplicados, con conteos exactos en ambos perfiles tras recarga.
+- [x] CA-4.1.2 — Auto-seguimiento, destino inexistente y mutación ajena no son posibles ni mediante acceso directo.
+- [x] CA-4.1.3 — Renombrar username no rompe relaciones; error o sesión vencida no producen éxito ficticio ni exponen estado de otro visitante.
+- [x] CA-4.1.4 — Teclado/responsive y navegación de perfil se conservan; feed reciente y galerías mantienen comportamiento/diseño previos.
 
 **Pruebas**
 
-- [ ] P-4.1.1 — Unitarias: destino/estado, repetición, mensajes y revalidación (CA-4.1.1 a CA-4.1.3).
-- [ ] P-4.1.2 — Integración: unicidad, auto-follow, carreras, renombrado, conteos y rollback/reaplicación sin afectar perfiles (CA-4.1.1 a CA-4.1.3).
-- [ ] P-4.1.3 — E2E: B sigue A, recarga, visita ambos perfiles y deja de seguir; sin control propio, fallo observable y teclado a 360/768/1280 (CA-4.1.1 a CA-4.1.4).
-- [ ] P-4.1.4 — Seguridad/RLS: anónimo/sin perfil/A/B/roles elevados, follower falsificado y JWT inválido/vencido; proyección solo con datos autorizados (CA-4.1.2, CA-4.1.3).
+- [x] P-4.1.1 — Unitarias: destino/estado, repetición, mensajes y revalidación (CA-4.1.1 a CA-4.1.3).
+- [x] P-4.1.2 — Integración: unicidad, auto-follow, carreras, renombrado, conteos y rollback/reaplicación sin afectar perfiles (CA-4.1.1 a CA-4.1.3).
+- [x] P-4.1.3 — E2E: B sigue A, recarga, visita ambos perfiles y deja de seguir; sin control propio, fallo observable y teclado a 360/768/1280 (CA-4.1.1 a CA-4.1.4).
+- [x] P-4.1.4 — Seguridad/RLS: anónimo/sin perfil/A/B/roles elevados, follower falsificado y JWT inválido/vencido; proyección solo con datos autorizados (CA-4.1.2, CA-4.1.3).
 
 **Evidencia de cierre**
 
-- Pendiente.
+**Cierre del Sprint 4.1 — 2026-10-15**
+
+- Autorización explícita del usuario: migración incremental por MCP y pruebas
+  con fixtures temporales y limpieza, sin reset, commit ni deploy.
+  Aplicada `20261016003306_add_profile_follows` al proyecto existente.
+- Relaciones propias con FK restrictivas, unicidad y prohibición de
+  auto-seguimiento. RLS limita lectura/borrado a relaciones salientes propias;
+  no hay UPDATE ni privilegios extra de moderación. La sesión exige `exp`
+  futuro y `nbf` válido cuando existe, también después de esperar bloqueos.
+- Resumen público acotado por username o UUID estable: conteos reales,
+  sin listas ni identidad Clerk. Estado personal ligado al actor actual.
+  Seguir/dejar de seguir confirma el estado deseado idempotente; revalida
+  ambos perfiles y `/perfil`, sin alterar el feed ni las galerías.
+- UI aislada por actor y UUID de destino; conserva intención al perder una
+  respuesta, reconcilia al recuperar foco/visibilidad y no inventa ceros al
+  fallar. El renombrado mantiene la relación y ofrece la ruta canónica;
+  reutilizar un username por otro UUID reinicia el estado del control.
+- `npm run test:db:follows` aprobado: matriz SQL con roles sintéticos,
+  permisos directos/RPC, expiración/nbf, FK y renombrado. Rollback protegido
+  rechaza relaciones existentes; retirada/reaplicación del esquema vacío
+  comparada dentro de una transacción revertida, conservando perfiles.
+- 219 pruebas enfocadas en 15 archivos aprobadas, con regresión de likes,
+  comentarios, compartir, presentación y perfiles; tipos, lint enfocado,
+  build de producción y escaneo de secretos del cliente aprobados.
+- `npm run test:e2e -- profile-follows` aprobado en Chromium: concurrencia
+  repetida/conflictiva y recíproca, conteos tras recarga, fallo antes de
+  guardar/respuesta perdida, cambios de cuenta, foco/visibilidad, renombrado,
+  retirada de destino, teclado y 360/768/1280. JWT real válido y luego vencido
+  (`exp` + 6 s), y firma inválida, rechazados sin cambiar relaciones.
+- La ruta antigua renombrada muestra «Perfil no encontrado», sin el perfil
+  ni control anteriores, y su RPC devuelve null. Se admite HTTP 200/404:
+  Next.js documenta 200 para not-found transmitido por streaming.
+- El E2E emitió un aviso de hidratación en `UserButton` de Clerk durante
+  alternancia de sesiones, sin fallar sus aserciones. Revisarlo en 5.1;
+  no se presenta la consola como libre de errores. Los fallos de red
+  inyectados también generan los errores redactados esperados.
+- Limpieza remota confirmada: cero follows y perfiles de fixture; el
+  comentario real previo sigue presente. Historial remoto: 13 migraciones.
+  Sin dependencias nuevas, commit ni despliegue. Las dos comprobaciones
+  diferidas de likes siguen pendientes; este resultado no las sustituye.
+- Siguiente: Sprint 5.1, cierre integrado de Fase 4. El origen HTTPS de
+  compartir sigue siendo configuración obligatoria antes del despliegue.
 
 ## Hito 5 — Núcleo social demostrado y siguiente fase delimitada
 
@@ -610,5 +651,5 @@ publicaciones, perfiles y límites de seguridad existentes.
 | 2026-10-15 | 2.1 | Validado | 91 pruebas enfocadas, SQL/rollback/E2E | Lectura/creación, paginación, idempotencia y JWT vencido de comentarios. |
 | 2026-10-15 | 2.2 | Validado | 117 pruebas enfocadas, SQL y E2E | Eliminación propia; rollback de permisos preservando datos existentes. |
 | 2026-10-15 | 3.1 | Validado | 155 pruebas enfocadas, E2E Clipboard/404 y build | Web Share simulado explícitamente; origen HTTPS por configurar en despliegue. |
-| 2026-10-15 | 4.1 | Pendiente | — | Depende de 1.1 y patrones de identidad/estado de 1.2; no personaliza feed. |
+| 2026-10-15 | 4.1 | Validado | 219 pruebas enfocadas, SQL/rollback y E2E reales; build/escaneo | Seguimiento propio y conteos; aviso Clerk registrado para 5.1; no personaliza feed. |
 | 2026-10-15 | 5.1 | Pendiente | — | Depende de todos los incrementos anteriores; cierre con evidencia, no por casillas automáticas. |

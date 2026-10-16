@@ -353,7 +353,8 @@ comentarios, ya implementado: lectura pública paginada, creación con
 sesión/perfil y conteos por lote en feed/detalle. Sprint 2.2 implementado y
 validado: eliminación exclusivamente propia con confirmación/cancelación.
 Sprint 3.1 también implementado y validado: copia/compartir enlaces públicos.
-Sigue seguimiento (4.1), sin personalizar el feed.
+Sprint 4.1 implementado y validado: seguimiento y conteos en perfiles,
+sin personalizar el feed. Sigue el cierre integrado de Fase 4 (5.1).
 
 Like/unlike exige sesión y perfil, permite publicaciones propias y usa
 estado deseado idempotente. Conteos públicos, estado personal privado,
@@ -421,6 +422,27 @@ de Chromium, navegación anónima y 404 tras retirar el post. API ausente,
 Clipboard denegado y Web Share se prueban mediante simulaciones explícitas;
 no se da por probado un diálogo nativo del sistema operativo. Fixtures
 retirados, comentario real previo conservado y ninguna migración nueva.
+
+Seguimiento: botón seguir/dejar de seguir en perfil ajeno, conteos públicos
+en perfil propio/público y estado personal privado. Sin auto-seguimiento,
+listas de seguidores ni moderación de relaciones ajenas. Confirma el estado
+deseado, conserva la intención al reintentar y reconcilia al recuperar foco.
+El destino es un UUID estable ante renombrados, sin cambiar el feed.
+Migración `20261016003306` aplicada por MCP con autorización específica.
+
+```powershell
+npm run test -- lib\profiles\follow-contract.test.ts lib\profiles\read-follows.test.ts actions\profile-follows.test.ts components\profile\profile-follows.test.tsx components\profile\profile-pages.test.tsx
+npm run test:db:follows
+npm run test:e2e -- profile-follows
+```
+
+Sprint 4.1: 219 pruebas enfocadas con regresión social, SQL/RLS y
+rollback/reaplicación transaccional, E2E real con JWT vencido/firma inválida,
+tipos/lint/build y escaneo aprobados. Cero relaciones/perfiles de fixture,
+comentario previo conservado y 13 migraciones remotas. Se registró un aviso
+de hidratación de `UserButton` de Clerk al alternar sesiones para revisar
+en el cierre 5.1; las aserciones E2E pasaron. La deuda de likes y la
+configuración HTTPS de compartir antes del despliegue siguen explícitas.
 
 Antes de aplicar el esquema de publicaciones de Fase 3 a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:
