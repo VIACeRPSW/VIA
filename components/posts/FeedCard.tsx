@@ -3,6 +3,7 @@ import type { PostWithImage } from "@/lib/posts/read-post.server";
 import { PostImage } from "./PostImage";
 import { LikeButton, type LikeEntry } from "./PostLikes";
 import type { PostLike } from "@/lib/posts/like-contract";
+import { PostShare } from "./PostShare";
 
 export function FeedCard({ item, likes }: { item: PostWithImage; likes?: {
   entry?: LikeEntry; viewerKey: string; update: (like: PostLike) => void; retry: () => void;
@@ -30,6 +31,7 @@ export function FeedCard({ item, likes }: { item: PostWithImage; likes?: {
           {item.commentCount === undefined ? "Ver comentarios" : item.commentCount === null
             ? "Comentarios no disponibles" : `${item.commentCount} ${item.commentCount === 1 ? "comentario" : "comentarios"}`}
         </Link>
+        <PostShare postId={post.id} />
         <time dateTime={post.created_at}>{new Date(post.created_at).toLocaleDateString("es")}</time>
         <Link href={`/post/${post.id}`} prefetch={false}>Ver publicación <span aria-hidden="true">↗</span></Link>
       </div>

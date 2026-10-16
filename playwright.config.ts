@@ -24,6 +24,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- --hostname localhost --port 3000",
     url: "http://localhost:3000",
+    env: { NEXT_PUBLIC_APP_ORIGIN: "http://localhost:3000" },
     reuseExistingServer: true,
     timeout: 120_000,
   },

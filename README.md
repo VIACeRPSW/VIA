@@ -29,6 +29,16 @@ versionarse.
 Las variables con prefijo `NEXT_PUBLIC_` pueden incluirse en el bundle del
 navegador. `CLERK_SECRET_KEY` es exclusiva del servidor.
 
+Para compartir publicaciones, configurar `NEXT_PUBLIC_APP_ORIGIN` con el
+origen público de la aplicación, sin ruta, parámetros, fragmento ni credenciales.
+En desarrollo, un valor ausente/vacío usa `http://localhost:3000`; para otro
+puerto hay que indicar el origen local exacto. Preview/Production requieren
+su propio origen HTTPS, sin localhost. No se infiere del navegador, Host ni
+dominio de Storage. Si falta o es inválido, compartir queda deshabilitado
+con un mensaje explícito, sin inventar un enlace.
+Next.js incorpora esta variable pública al compilar: configurarla antes
+de `next build` y recompilar al cambiarla.
+
 Para Supabase, añadir a `.env.local`:
 
 ```text
@@ -81,6 +91,7 @@ previews y revisar esta decisión antes de almacenar datos reales.
 | `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` | `/perfil` | `/perfil` | `/perfil` | Cliente |
 | `NEXT_PUBLIC_SUPABASE_URL` | Requerida | Requerida | Requerida | Cliente |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Requerida | Requerida | Requerida | Cliente |
+| `NEXT_PUBLIC_APP_ORIGIN` | Predeterminado `http://localhost:3000` | Origen HTTPS de la preview | Origen HTTPS definitivo | Cliente, fijada al compilar |
 
 ### Lista de comprobación de despliegue
 
@@ -341,7 +352,8 @@ rollback/reaplicación, sin marcarlas superadas. Autorizó el Sprint 2.1 de
 comentarios, ya implementado: lectura pública paginada, creación con
 sesión/perfil y conteos por lote en feed/detalle. Sprint 2.2 implementado y
 validado: eliminación exclusivamente propia con confirmación/cancelación.
-Siguen compartir (3.1) y seguimiento (4.1).
+Sprint 3.1 también implementado y validado: copia/compartir enlaces públicos.
+Sigue seguimiento (4.1), sin personalizar el feed.
 
 Like/unlike exige sesión y perfil, permite publicaciones propias y usa
 estado deseado idempotente. Conteos públicos, estado personal privado,
@@ -391,6 +403,24 @@ El E2E usa usuarios/imágenes efímeros y valida un JWT realmente vencido,
 respuesta perdida, reintento y limpieza. No equivale a cerrar la deuda de
 likes ni a desplegar la funcionalidad. Sprint 2.2 validado con 117 pruebas
 enfocadas, SQL, E2E Chromium, TypeScript/lint/build y escaneo del cliente.
+
+Compartir en feed/detalle abre un diálogo accesible con copia, enlace
+seleccionable manualmente y opción nativa cuando el navegador la ofrece.
+Solo transmite la URL canónica del detalle; sin firma de imagen, identidad,
+analítica ni escritura remota. Cancelación, API ausente y error no anuncian
+éxito. Las galerías conservan su grid solo-imágenes.
+
+```powershell
+npm run test -- lib\posts\share-contract.test.ts components\posts\post-share.test.tsx components\posts\post-layout.test.tsx
+npm run test:e2e -- post-share
+```
+
+Sprint 3.1: 155 pruebas enfocadas con regresión social, TypeScript/lint/build
+y escaneo del cliente aprobados. El E2E verifica Clipboard real con permisos
+de Chromium, navegación anónima y 404 tras retirar el post. API ausente,
+Clipboard denegado y Web Share se prueban mediante simulaciones explícitas;
+no se da por probado un diálogo nativo del sistema operativo. Fixtures
+retirados, comentario real previo conservado y ninguna migración nueva.
 
 Antes de aplicar el esquema de publicaciones de Fase 3 a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:

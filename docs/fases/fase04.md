@@ -2,13 +2,13 @@
 
 ## Estado
 
-- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprints 2.1 y 2.2 de comentarios implementados y validados el 2026-10-15. Siguiente: Sprint 3.1, compartir enlaces públicos.
+- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprints 2.1/2.2 de comentarios y 3.1 de compartir implementados y validados el 2026-10-15. Siguiente: Sprint 4.1, seguimiento básico.
 - Roadmap: Fase 4
 - Dependencias: Fases 1 y 2 completadas; Fase 3 cerrada por decisión del usuario el 2026-10-15 con deuda de verificación explícita; Clerk y el Supabase existentes; aprobación de contratos del Sprint 1.1 antes de mutaciones sociales.
 - Criterio de salida: núcleo social funcional con like/unlike, lectura/creación/eliminación propia de comentarios, compartir enlaces y seguir/dejar de seguir usuarios, con permisos equivalentes en UI, servidor y RLS, contadores reales y diseño previo conservado.
 
 **Entrada para otra sesión: «comenzar fase 4».** Leer este documento y
-retomar por el Sprint 3.1; el 1.1 está consolidado y el Hito 2 validado.
+retomar por el Sprint 4.1; el 1.1 está consolidado y los Hitos 2/3 validados.
 Las dos pruebas de likes están diferidas por decisión explícita, no
 aprobadas. Las autorizaciones de likes/comentarios y su evidencia
 figuran más abajo. No se autorizan por arrastre migraciones de otros
@@ -23,13 +23,13 @@ Guion de arranque:
    [roadmap](../inicio/12-roadmap.md), [backlog](../inicio/14-backlog-inicial.md)
    y contratos base afectados.
 3. Contrastar esquema/migraciones y superficies actuales antes de añadir
-   lógica. Ya existen likes y lectura/creación/eliminación propia de comentarios; no asumir
-   implementados compartir ni seguimiento por estar
-   descritos en el modelo conceptual.
+   lógica. Ya existen likes, lectura/creación/eliminación propia de comentarios
+   y compartir enlaces públicos; no asumir implementado seguimiento por
+   estar descrito en el modelo conceptual.
 4. Respetar los acuerdos de arranque y reanudación de 1.1; resolver solo nuevas decisiones.
    Registrar contratos aprobados en documentación base. No inventar acuerdos.
-5. Respetar el diferimiento de pruebas de likes y continuar compartir
-   enlaces según el contrato aprobado, sin añadir analítica.
+5. Respetar el diferimiento de pruebas de likes y continuar seguimiento
+   básico según el contrato aprobado, sin personalizar el feed.
    Pedir autorización específica antes de aplicar SQL al remoto; si falta,
    dejar esa parte bloqueada y preparar solo trabajo local autorizado.
 6. Usar pruebas enfocadas y avisos breves. Abrir servidor solo si hace falta,
@@ -452,31 +452,64 @@ referencia privada de Storage.
 
 **Alcance**
 
-- [ ] Acción de compartir en feed/detalle, con copia y alternativa aprobadas.
-- [ ] Sin métricas, eventos remotos ni tabla `shares` por defecto.
+- [x] Acción de compartir en feed/detalle, con copia y alternativa aprobadas.
+- [x] Sin métricas, eventos remotos ni tabla `shares` por defecto.
 
 **Tareas**
 
-- [ ] `VIA-018` Construir URL canónica de `/post/[id]` según origen permitido aprobado, sin parámetros privados o URL firmada.
-- [ ] `VIA-018` Implementar Clipboard/Web Share según capacidades y contrato; cancelación no es éxito, fallo de copia tiene mensaje/alternativa accesible, sin dependencias innecesarias.
-- [ ] `VIA-018` Conservar foco y anunciar únicamente resultado real; no cambiar diseño del feed ni añadir controles al grid.
+- [x] `VIA-018` Construir URL canónica de `/post/[id]` según origen permitido aprobado, sin parámetros privados o URL firmada.
+- [x] `VIA-018` Implementar Clipboard/Web Share según capacidades y contrato; cancelación no es éxito, fallo de copia tiene mensaje/alternativa accesible, sin dependencias innecesarias.
+- [x] `VIA-018` Conservar foco y anunciar únicamente resultado real; no cambiar diseño del feed ni añadir controles al grid.
 
 **Criterios de aceptación**
 
-- [ ] CA-3.1.1 — Enlace compartido abre el mismo detalle como anónimo mientras existe; tras retirarlo no muestra contenido anterior.
-- [ ] CA-3.1.2 — API ausente, permiso denegado y cancelación tienen resultados distintos; no se informa «copiado» si no se copió.
-- [ ] CA-3.1.3 — El payload no contiene JWT, firma de imagen, identidad Clerk ni origen arbitrario; control funciona con teclado y tres anchos.
+- [x] CA-3.1.1 — Enlace compartido abre el mismo detalle como anónimo mientras existe; tras retirarlo no muestra contenido anterior.
+- [x] CA-3.1.2 — API ausente, permiso denegado y cancelación tienen resultados distintos; no se informa «copiado» si no se copió.
+- [x] CA-3.1.3 — El payload no contiene JWT, firma de imagen, identidad Clerk ni origen arbitrario; control funciona con teclado y tres anchos.
 
 **Pruebas**
 
-- [ ] P-3.1.1 — Unitarias: construcción/validación de URL, APIs ausentes, rechazo/cancelación y resultado (CA-3.1.1 a CA-3.1.3).
-- [ ] P-3.1.2 — Integración: capacidades del navegador y navegación al detalle/404; sin esquema ni rollback nuevos si no se persisten eventos (CA-3.1.1, CA-3.1.2).
-- [ ] P-3.1.3 — E2E: copiar y abrir en contexto anónimo; Clipboard denegado y Web Share simulado se identifican como simulados; teclado y 360/768/1280 (CA-3.1.1 a CA-3.1.3).
-- [ ] P-3.1.4 — Seguridad/RLS: inspeccionar URL/payload y acceso a post retirado; no aplica nueva RLS sin persistencia, se conserva la de publicaciones (CA-3.1.1, CA-3.1.3).
+- [x] P-3.1.1 — Unitarias: construcción/validación de URL, APIs ausentes, rechazo/cancelación y resultado (CA-3.1.1 a CA-3.1.3).
+- [x] P-3.1.2 — Integración: capacidades del navegador y navegación al detalle/404; sin esquema ni rollback nuevos si no se persisten eventos (CA-3.1.1, CA-3.1.2).
+- [x] P-3.1.3 — E2E: copiar y abrir en contexto anónimo; Clipboard denegado y Web Share simulado se identifican como simulados; teclado y 360/768/1280 (CA-3.1.1 a CA-3.1.3).
+- [x] P-3.1.4 — Seguridad/RLS: inspeccionar URL/payload y acceso a post retirado; no aplica nueva RLS sin persistencia, se conserva la de publicaciones (CA-3.1.1, CA-3.1.3).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- `PostShare` conectado en feed/detalle para cualquier visitante, sin
+  controles nuevos en galerías ni consultas/métricas de compartidos.
+  No hay Server Action, tabla, migración ni cambio de RLS para compartir.
+- `NEXT_PUBLIC_APP_ORIGIN` es la única fuente del origen: canónico, sin
+  ruta/query/fragmento/credenciales, HTTPS fuera de desarrollo y loopback
+  solo en dev. Ausente/vacío en dev usa `http://localhost:3000`; fuera de
+  dev no hay fallback. Configuración inválida deshabilita el control y
+  muestra el motivo sin inventar URL. Documentado en `.env.example`/README.
+- Preview/Production deben configurar su origen real antes de compilar:
+  la variable pública queda fijada en el bundle. No se configuró un dominio
+  remoto ni se hizo deploy; no se infiere Host, navegador ni URL de Storage.
+- Diálogo con foco en copia, enlace etiquetado/seleccionable, copia manual,
+  Web Share si existe y cierre/Escape con retorno al disparador. Petición
+  pendiente bloquea controles/cierre; solo la resolución anuncia éxito.
+  API ausente, Clipboard denegado, cancelación y fallo nativo se distinguen.
+  Payload de Web Share exactamente `{ url }`.
+- 42 pruebas de contrato/presentación enfocadas aprobadas; 155 en diez
+  archivos con regresión de likes/comentarios/feed. TypeScript, lint
+  enfocado, build de producción y escaneo de secretos del cliente aprobados.
+- `npm run test:e2e -- post-share` aprobado en Chromium: Clipboard real
+  con permisos de navegador, URL copiada exacta, apertura en otro contexto
+  anónimo y HTTP 404 sin contenido anterior después de retirar el fixture.
+  Teclado/foco/diálogo y ausencia de overflow a 360/768/1280.
+- APIs ausentes, Clipboard denegado y Web Share resuelto/cancelado/rechazado
+  se prueban con simulaciones explícitas. No se declara probada una hoja
+  nativa real del SO. Los logs `NotAllowedError` del E2E aprobado son
+  fallos inyectados, no errores ocultos.
+- Consulta MCP final: cero perfiles/posts/tickets de fixtures de compartir,
+  comentario real previo conservado y doce versiones de migración sin
+  cambios. Usuario Clerk e imagen efímeros limpiados en `finally`.
+  Sin commit, deploy ni nuevas dependencias.
+- Siguiente: Sprint 4.1, seguir/dejar de seguir y conteos en perfiles,
+  sin personalizar el feed. Requiere autorización específica antes de
+  aplicar su SQL remoto. Deuda diferida de likes intacta.
 
 ## Hito 4 — Seguir autores sin modificar el feed aprobado
 
@@ -572,10 +605,10 @@ publicaciones, perfiles y límites de seguridad existentes.
 
 | Fecha | Sprint | Estado | Evidencia | Notas |
 | --- | --- | --- | --- | --- |
-| 2026-10-15 | 1.1 | Pendiente | — | Primer paso al decir «comenzar fase 4»; resolver contratos, sin implementación ni operación remota automática. |
-| 2026-10-15 | 1.2 | Pendiente | — | Depende de 1.1; primer incremento implementable: like/unlike. |
-| 2026-10-15 | 2.1 | Pendiente | — | Depende de 1.1 y 1.2 para reutilizar permisos/agregados y demostrar el siguiente incremento. |
-| 2026-10-15 | 2.2 | Pendiente | — | Depende de 2.1; eliminación propia, no moderación ajena. |
-| 2026-10-15 | 3.1 | Pendiente | — | Depende del contrato 1.1; independiente del esquema de comentarios/seguimiento. |
+| 2026-10-15 | 1.1 | Consolidado | Acuerdos y documentos base actualizados | Sin autorización por arrastre de otras migraciones. |
+| 2026-10-15 | 1.2 | Implementado; aceptación manual | SQL/E2E y evidencia del Sprint 1.2 | JWT vencido y rollback/reaplicación diferidos explícitamente, no aprobados. |
+| 2026-10-15 | 2.1 | Validado | 91 pruebas enfocadas, SQL/rollback/E2E | Lectura/creación, paginación, idempotencia y JWT vencido de comentarios. |
+| 2026-10-15 | 2.2 | Validado | 117 pruebas enfocadas, SQL y E2E | Eliminación propia; rollback de permisos preservando datos existentes. |
+| 2026-10-15 | 3.1 | Validado | 155 pruebas enfocadas, E2E Clipboard/404 y build | Web Share simulado explícitamente; origen HTTPS por configurar en despliegue. |
 | 2026-10-15 | 4.1 | Pendiente | — | Depende de 1.1 y patrones de identidad/estado de 1.2; no personaliza feed. |
 | 2026-10-15 | 5.1 | Pendiente | — | Depende de todos los incrementos anteriores; cierre con evidencia, no por casillas automáticas. |

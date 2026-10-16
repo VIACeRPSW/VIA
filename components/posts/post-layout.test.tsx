@@ -24,6 +24,7 @@ describe("social post presentation", () => {
     expect(markup).not.toContain("<h2");
     expect(markup).not.toContain(item.post.description);
     expect(markup).not.toContain(item.post.author_display_name);
+    expect(markup).not.toContain("Compartir");
   });
   it("keeps author, title, caption and text hashtags in the feed", () => {
     const markup = renderToStaticMarkup(<FeedCard item={item} />);
@@ -31,6 +32,7 @@ describe("social post presentation", () => {
     expect(markup).toContain(item.post.description);
     expect(markup).toContain(item.post.author_display_name);
     expect(markup).toContain("#arte");
+    expect(markup).toContain("Compartir");
     expect(markup).not.toContain("/_next/image");
   });
   it("shows read failures rather than pretending a gallery is empty", () => {

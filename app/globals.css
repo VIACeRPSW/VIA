@@ -737,7 +737,8 @@ footer p {
 	border-color: #e8b8b1;
 }
 
-.post-delete-dialog {
+.post-delete-dialog,
+.post-share-dialog {
 	width: min(32rem, calc(100% - 2rem));
 	padding: 2rem;
 	border: 1px solid var(--line);
@@ -745,13 +746,29 @@ footer p {
 	color: var(--ink);
 }
 
-.post-delete-dialog::backdrop {
+.post-delete-dialog::backdrop,
+.post-share-dialog::backdrop {
 	background: rgb(15 28 20 / 45%);
 	backdrop-filter: blur(4px);
 }
 
-.post-delete-dialog .profile-actions {
+.post-delete-dialog .profile-actions,
+.post-share-dialog .profile-actions {
 	margin-top: 1.5rem;
+}
+
+.post-share {
+	min-width: 0;
+}
+
+.share-button {
+	padding: 0.35rem 0.65rem;
+	font-size: 0.8rem;
+}
+
+.post-share-dialog input {
+	width: 100%;
+	min-width: 0;
 }
 
 .post-cleanup {

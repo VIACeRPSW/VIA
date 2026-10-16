@@ -74,6 +74,15 @@ conteos de seguidores/seguidos en perfiles, sin listas ni feed personalizado.
 El diseño aprobado se conserva; cada control se habilita al implementar
 su incremento, no como promesa de una función inexistente.
 
+Sprint 3.1 implementado: «Compartir» en feed/detalle abre diálogo nativo
+HTML con foco en «Copiar enlace», enlace público etiquetado/seleccionable,
+opción de otra aplicación cuando existe Web Share y cierre con retorno
+de foco al disparador. Escape cierra salvo petición pendiente. Se anuncian
+resultado real, ausencia de API, cancelación y error por separado.
+No hay controles nuevos en las galerías ni rediseño del feed.
+Si el origen de aplicación no está configurado correctamente, el control
+se deshabilita y explica el motivo, en lugar de inventar un enlace.
+
 ## 5. Crear
 
 La pantalla deberá reducir fricción:

@@ -115,6 +115,23 @@ por entorno; localhost permitido solo en desarrollo, nunca firma Storage.
 Copia y Web Share opcional, con resultados distintos para éxito,
 cancelación y error; alternativa accesible cuando faltan APIs.
 
+Sprint 3.1 implementado sin Server Action ni endpoint de compartidos.
+`getPostShareLink(postId)` valida UUID y `NEXT_PUBLIC_APP_ORIGIN`:
+origen canónico sin credenciales/ruta/query/fragmento, HTTPS fuera de
+desarrollo y loopback solo en desarrollo. Si está ausente/vacío en dev
+usa `http://localhost:3000`; no hay fallback en Preview/Production ni
+inferencia de Host, `window.location` o URL de imagen. Una configuración
+inválida muestra indisponibilidad explícita, sin compartir otro destino.
+La variable pública queda fijada en `next build` y exige recompilar.
+
+`PostShare` ofrece Clipboard y, si existe, Web Share con payload `{ url }`.
+Ambas APIs se invocan desde el gesto del usuario; no hay consulta previa
+ni métrica persistida. Solo se anuncia copia/compartir tras resolución.
+Ausencia de API, rechazo y `AbortError` tienen mensajes distintos.
+El enlace readonly siempre permite copia manual; los fallos de Clipboard
+lo enfocan/seleccionan. No se necesita sesión para compartir ni se amplía
+la lectura pública de un post retirado.
+
 ### Profile
 
 ``` text

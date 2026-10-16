@@ -6,6 +6,7 @@ import { PostManagement } from "@/components/posts/PostManagement";
 import { PostImage } from "@/components/posts/PostImage";
 import { PostLikes } from "@/components/posts/PostLikes";
 import { PostComments } from "@/components/posts/PostComments";
+import { PostShare } from "@/components/posts/PostShare";
 import { getPublicComments } from "@/lib/posts/read-comments.server";
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,6 +44,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         </ul>
         <time dateTime={result.post.created_at}>{new Date(result.post.created_at).toLocaleDateString("es")}</time>
         <PostLikes postId={id} />
+        <PostShare postId={id} />
         {comments && <PostComments key={id} postId={id} initial={comments} />}
       </article> : <section className="profile-form-panel">
         <h1>Publicación no disponible</h1>

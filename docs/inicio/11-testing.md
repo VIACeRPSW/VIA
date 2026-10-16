@@ -192,3 +192,28 @@ exitoso. Deben probarse también errores, permisos y datos inválidos.
 - Cero fixtures tras limpieza; un comentario real previo conservado.
   No se ejecutó una regresión integral ni se retomaron las dos
   comprobaciones de likes diferidas por el usuario.
+
+### Interacción — Sprint 3.1 de compartir enlaces
+
+- `lib/posts/share-contract.test.ts`: UUID, origen canónico HTTPS, loopback
+  solo dev y su valor predeterminado explícito; rechazo de credenciales,
+  rutas, query/fragmento, protocolos y payloads manipulados. Clipboard
+  solo confirma al resolver; Web Share transmite únicamente `{ url }`,
+  con API ausente, cancelación y error diferenciados y logs redactados.
+- `components/posts/post-share.test.tsx` y regresión de presentación:
+  diálogo etiquetado, enlace readonly y alternativa manual sin sesión;
+  configuración inválida visible sin URL adivinada; compartir en feed,
+  nunca en tiles de galerías.
+- `npm run test:e2e -- post-share`: Clipboard real en Chromium con permisos
+  concedidos, URL exacta abierta en otro contexto anónimo, detalle público
+  y HTTP 404 sin contenido previo tras retirar el post de fixture.
+  Teclado, foco, cierre/Escape y ancho de diálogo a 360/768/1280.
+- El mismo E2E simula explícitamente APIs ausentes, Clipboard denegado y
+  Web Share resuelto/cancelado/rechazado; inspecciona payload exacto y
+  ausencia de éxito ficticio. No valida una hoja nativa real del SO.
+  Los errores `NotAllowedError` del recorrido aprobado son inyectados.
+- 155 pruebas enfocadas en diez archivos con regresión de likes/comentarios/
+  feed; TypeScript, lint enfocado, build y escaneo del cliente aprobados.
+  Cero perfiles/posts/tickets del fixture tras limpieza y comentario real
+  previo conservado. Sin nueva migración/RLS/rollback ni eventos de shares;
+  no se ejecutaron las dos comprobaciones de likes diferidas.
