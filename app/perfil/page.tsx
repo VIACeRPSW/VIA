@@ -1,5 +1,6 @@
-import { SignOutButton, UserButton } from "@clerk/nextjs";
+import { SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { AccountButton } from "@/components/profile/AccountButton";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
 import { getProfileForRoute } from "@/lib/profiles/profile-route.server";
 import { ProfileFollows } from "@/components/profile/ProfileFollows";
@@ -21,7 +22,7 @@ export default async function ProfilePage() {
               Cerrar sesión
             </button>
           </SignOutButton>
-          <UserButton />
+          <AccountButton />
         </div>
       </header>
 

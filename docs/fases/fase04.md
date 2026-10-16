@@ -2,19 +2,19 @@
 
 ## Estado
 
-- Estado: En curso — Sprint 1.1 consolidado; likes aprobados manualmente con dos comprobaciones diferidas por el usuario; Sprints 2.1/2.2 de comentarios, 3.1 de compartir y 4.1 de seguimiento implementados y validados el 2026-10-15. Siguiente: Sprint 5.1, cierre integrado de interacción.
+- Estado: Entrega funcional y cierre integrado completados el 2026-10-15 — Sprint 5.1 validado en su alcance ejecutado; las dos comprobaciones de likes diferidas por el usuario siguen sin aprobarse. No equivale a verificación integral sin excepciones ni a despliegue. Siguiente: planificar Fase 5.
 - Roadmap: Fase 4
 - Dependencias: Fases 1 y 2 completadas; Fase 3 cerrada por decisión del usuario el 2026-10-15 con deuda de verificación explícita; Clerk y el Supabase existentes; aprobación de contratos del Sprint 1.1 antes de mutaciones sociales.
 - Criterio de salida: núcleo social funcional con like/unlike, lectura/creación/eliminación propia de comentarios, compartir enlaces y seguir/dejar de seguir usuarios, con permisos equivalentes en UI, servidor y RLS, contadores reales y diseño previo conservado.
 
 **Entrada para otra sesión: «comenzar fase 4».** Leer este documento y
-retomar por el Sprint 5.1; el 1.1 está consolidado y los Hitos 2/3/4 validados.
+consultar el cierre del Sprint 5.1 antes de planificar Fase 5.
 Las dos pruebas de likes están diferidas por decisión explícita, no
 aprobadas. Las autorizaciones de likes/comentarios y su evidencia
 figuran más abajo. No se autorizan por arrastre migraciones de otros
 incrementos, commits ni despliegues.
 
-Guion de arranque:
+Guion de reanudación:
 
 1. Revisar el estado real de Git sin descartar ni sobrescribir cambios.
    La sesión anterior dejó documentación y pruebas sin commit; no asumir
@@ -25,11 +25,11 @@ Guion de arranque:
 3. Contrastar esquema/migraciones y superficies actuales antes de añadir
    lógica. Ya existen likes, lectura/creación/eliminación propia de comentarios
    y compartir enlaces públicos, seguimiento y conteos de perfil.
-   Contrastar la evidencia de cada incremento antes del recorrido integrado.
+   El recorrido integrado está demostrado en el Sprint 5.1.
 4. Respetar los acuerdos de arranque y reanudación de 1.1; resolver solo nuevas decisiones.
    Registrar contratos aprobados en documentación base. No inventar acuerdos.
-5. Respetar el diferimiento de pruebas de likes y cerrar la integración
-   según el contrato aprobado, sin personalizar el feed.
+5. Respetar el diferimiento de pruebas de likes. El siguiente alcance es
+   comunidades/búsqueda de Fase 5; todavía no está implementado.
    Pedir autorización específica antes de aplicar SQL al remoto; si falta,
    dejar esa parte bloqueada y preparar solo trabajo local autorizado.
 6. Usar pruebas enfocadas y avisos breves. Abrir servidor solo si hace falta,
@@ -598,49 +598,101 @@ publicaciones, perfiles y límites de seguridad existentes.
 
 **Alcance**
 
-- [ ] Recorrido integrado A/B/anónimo y regresión de superficies afectadas.
-- [ ] Evidencia reproducible, limpieza de fixtures y documentación de salida.
+- [x] Recorrido integrado A/B/anónimo y regresión de superficies afectadas.
+- [x] Evidencia reproducible, limpieza de fixtures y documentación de salida.
 
 **Tareas**
 
-- [ ] `VIA-015` `VIA-016` `VIA-017` `VIA-018` `Sin identificador existente` Recorrer like, comentario, retiro propio, compartir y seguir con recarga y cambios de sesión.
-- [ ] `Sin identificador existente` Ejecutar unitarias relacionadas, tipos/lint, build/escaneo al cierre del incremento pertinente y matrices SQL/HTTP afectadas; no repetir suites completas sin causa.
-- [ ] `Sin identificador existente` Verificar migraciones y rollback incremental de lo nuevo con precondiciones/respaldo; usar transacciones revertidas o entorno ya autorizado, nunca reset del compartido ni otra base por iniciativa propia.
-- [ ] `Sin identificador existente` Ejecutar comprobaciones enfocadas de deuda de Fase 3 solo cuando el cambio toque esa superficie; distinguir nuevos resultados de diferimientos todavía vigentes.
-- [ ] `Sin identificador existente` Verificar cero fixtures propios en Clerk/PostgreSQL/Storage, conservar datos reales y detener procesos abiertos; registrar comandos y resultados sin secretos.
-- [ ] `Sin identificador existente` Actualizar docs con decisiones/evidencia y destino de Fase 5; despliegue/commit únicamente con autorización independiente.
+- [x] `VIA-015` `VIA-016` `VIA-017` `VIA-018` `Sin identificador existente` Recorrer like, comentario, retiro propio, compartir y seguir con recarga y cambios de sesión.
+- [x] `Sin identificador existente` Ejecutar unitarias relacionadas, tipos/lint, build/escaneo al cierre del incremento pertinente y matrices SQL/HTTP afectadas; no repetir suites completas sin causa.
+- [x] `Sin identificador existente` Verificar migraciones y rollback incremental de lo nuevo con precondiciones/respaldo; usar transacciones revertidas o entorno ya autorizado, nunca reset del compartido ni otra base por iniciativa propia.
+- [x] `Sin identificador existente` Ejecutar comprobaciones enfocadas de deuda de Fase 3 solo cuando el cambio toque esa superficie; distinguir nuevos resultados de diferimientos todavía vigentes.
+- [x] `Sin identificador existente` Verificar cero fixtures propios en Clerk/PostgreSQL/Storage, conservar datos reales y detener procesos abiertos; registrar comandos y resultados sin secretos.
+- [x] `Sin identificador existente` Actualizar docs con decisiones/evidencia y destino de Fase 5; despliegue/commit únicamente con autorización independiente.
 
 **Criterios de aceptación**
 
-- [ ] CA-5.1.1 — Likes, comentarios, compartir y seguimiento funcionan de extremo a extremo con estado y permisos equivalentes en UI, acciones y base.
-- [ ] CA-5.1.2 — CRUD de posts, perfiles, avatar, acceso y logout conservan comportamiento; feed continuo y grid aprobado no regresan.
+- [x] CA-5.1.1 — Likes, comentarios, compartir y seguimiento funcionan de extremo a extremo con estado y permisos equivalentes en UI, acciones y base.
+- [x] CA-5.1.2 — CRUD de posts, perfiles, avatar, acceso y logout conservan comportamiento; feed continuo y grid aprobado no regresan.
 - [ ] CA-5.1.3 — Esquema incremental/RLS/rollback comprobados, sin fixtures ni procesos propios residuales; no se confunden resultados simulados con pruebas remotas.
-- [ ] CA-5.1.4 — Evidencia accesible/responsive y comandos respaldan cierre; pendientes explícitos y alcance de Fase 5 documentados, sin afirmar deploy no realizado.
+- [x] CA-5.1.4 — Evidencia accesible/responsive y comandos respaldan cierre; pendientes explícitos y alcance de Fase 5 documentados, sin afirmar deploy no realizado.
 
 **Pruebas**
 
-- [ ] P-5.1.1 — Unitarias: suites sociales y de posts/perfiles afectadas, errores y límites exactos aprobados (CA-5.1.1, CA-5.1.2).
+- [x] P-5.1.1 — Unitarias: suites sociales y de posts/perfiles afectadas, errores y límites exactos aprobados (CA-5.1.1, CA-5.1.2).
 - [ ] P-5.1.2 — Integración: auth-boundary, RLS, conteos/paginación, retirada del post con hijos y cleanup de imagen; historial/rollback de lo nuevo y cero fixtures (CA-5.1.1 a CA-5.1.3).
-- [ ] P-5.1.3 — E2E: E2E-03/04 más compartir/seguir, edición/borrado de post con interacción, perfil/avatar y sesión expirada donde haya impacto; teclado, foco, contraste y 360/768/1280 (CA-5.1.1, CA-5.1.2, CA-5.1.4).
+- [x] P-5.1.3 — E2E: E2E-03/04 más compartir/seguir, edición/borrado de post con interacción, perfil/avatar y sesión expirada donde haya impacto; teclado, foco, contraste y 360/768/1280 (CA-5.1.1, CA-5.1.2, CA-5.1.4).
 - [ ] P-5.1.4 — Seguridad/RLS: matriz A/B/anónimo/sin perfil/roles, payload manipulado, publicación retirada y aislamiento de caché de estado personal; logs/bundle sin secretos (CA-5.1.1, CA-5.1.3).
-- [ ] P-5.1.5 — Verificación documental: roadmap completo, CA→P de todos los sprints, decisiones aprobadas y deuda heredada diferenciada (CA-5.1.4).
+- [x] P-5.1.5 — Verificación documental: roadmap completo, CA→P de todos los sprints, decisiones aprobadas y deuda heredada diferenciada (CA-5.1.4).
 
 **Evidencia de cierre**
 
-- Pendiente.
+- Autorización expresa para pruebas integradas con usuarios/perfiles/posts/
+  imágenes temporales y limpieza. No se autorizaron ni aplicaron migraciones
+  nuevas, reset, commit o deploy.
+- `AccountButton` monta únicamente `UserButton` en navegador mediante
+  `next/dynamic` con `ssr: false` dentro de un Client Component. Usado en
+  portada y perfil, sin convertir la app a render dinámico global ni ocultar
+  errores con `suppressHydrationWarning`. El SDK instalado condicionaba su
+  contenedor a `clerk.loaded`, distinto entre servidor y cliente.
+- 411 pruebas en 32 archivos de acciones, posts y perfiles aprobadas;
+  TypeScript, lint enfocado, build y escaneo de secretos del cliente aprobados.
+- Matrices `test:db:auth-boundary`, `test:db:likes`, `test:db:comments` y
+  `test:db:follows` aprobadas. Comentarios conserva el comentario real y
+  ensaya únicamente permisos de eliminación cuando hay datos; seguimiento
+  ensaya rollback/reaplicación vacíos en transacción revertida. No se ejecuta
+  rollback de likes ni su JWT real vencido.
+- Siete E2E aprobados en cinco archivos: seis regresiones de avatar,
+  publicación, seguimiento, onboarding/edición/proyección pública,
+  enlace de perfil ausente y sesión Clerk realmente vencida en rutas
+  privadas de perfiles/publicaciones; más el recorrido integrado ampliado.
+  El primer lote obtuvo seis aprobados y un selector erróneo del test;
+  corregido el selector de conteo anónimo, se reejecutó solo el integrado.
+- El integrado usa el mismo post para like/unlike, comentario/retiro propio,
+  Clipboard real con navegación anónima y seguimiento persistente. A no
+  puede retirar el comentario de B; edición conserva conteos en feed,
+  y el retiro del post elimina sus likes/comentarios, invalida el enlace
+  público y no elimina la relación de seguimiento. Después se deja de
+  seguir, se verifica cero tras recarga y se limpia la imagen.
+- El retiro del post con hijos se verifica por API autenticada más UI
+  anónima/propia; la regresión de publicación conserva el recorrido de
+  eliminación por UI. No se confunden esas dos vías.
+- Teclado/foco y 360/768/1280; contraste de texto del botón real de
+  publicación de comentarios >= 4.5:1 mediante colores computados en
+  navegador. No es una auditoría WCAG completa. El integrado exige cero
+  errores de hidratación en sus tres páginas y botón Clerk visible tras
+  acceso/recarga; no se volvió a observar el aviso de 4.1.
+  Los abortos de red inyectados mantienen ruido de conexión en `next dev`;
+  no se afirma consola completamente limpia.
+- Baseline/final remotos coinciden: 6 perfiles, 1 post, 1 comentario,
+  1 like, 0 follows, 1 objeto posts y 4 avatars; cero perfiles nuevos de
+  fixture. Los E2E eliminaron sus usuarios Clerk y objetos en sus bloques
+  de limpieza. Historial sin cambios: 13 migraciones.
+- CA-5.1.3 y P-5.1.2/P-5.1.4 siguen abiertos para una verificación integral
+  sin excepciones: la evidencia ejecutada anterior está aprobada, pero no
+  sustituye JWT real vencido ni rollback/reaplicación de likes, diferidos
+  por el usuario. La deuda restante de Fase 3 tampoco se cierra por arrastre.
+- Siguiente: planificar Fase 5, comunidades/miembros y descubrimiento por
+  categorías, búsqueda, filtros y hashtags persistidos. Sin feed
+  personalizado, moderación, gamificación ni analítica en este cierre.
+  Antes de desplegar, configurar `NEXT_PUBLIC_APP_ORIGIN` HTTPS y recompilar.
 
 ## Validación final de la fase
 
 - [ ] Todos los criterios de aceptación están verificados.
 - [ ] Pruebas unitarias, integración y E2E requeridas superadas.
-- [ ] Permisos de aplicación, RLS y Storage verificados cuando aplican.
+- [x] Permisos de aplicación, RLS y Storage verificados cuando aplican.
 - [ ] Migraciones y procedimiento de rollback validados cuando aplican.
-- [ ] Accesibilidad y responsive comprobados cuando existe UI.
-- [ ] Documentación base actualizada si cambió una decisión.
-- [ ] Criterio de salida del roadmap demostrado.
-- [ ] Diseño aprobado conservado y cero controles ficticios en galerías/feed.
-- [ ] Deuda heredada de Fase 3 no presentada como prueba aprobada.
-- [ ] Cero fixtures y procesos propios residuales; commit/deploy solo con autorización.
+- [x] Accesibilidad y responsive comprobados cuando existe UI.
+- [x] Documentación base actualizada si cambió una decisión.
+- [x] Criterio de salida del roadmap demostrado.
+- [x] Diseño aprobado conservado y cero controles ficticios en galerías/feed.
+- [x] Deuda heredada de Fase 3 no presentada como prueba aprobada.
+- [x] Cero fixtures y procesos propios residuales; commit/deploy solo con autorización.
+
+Las tres casillas globales abiertas conservan las excepciones explícitas
+de likes; no impiden registrar la entrega funcional ni se marcan aprobadas
+por haber pasado otros recorridos.
 
 ## Registro de progreso
 
@@ -652,4 +704,4 @@ publicaciones, perfiles y límites de seguridad existentes.
 | 2026-10-15 | 2.2 | Validado | 117 pruebas enfocadas, SQL y E2E | Eliminación propia; rollback de permisos preservando datos existentes. |
 | 2026-10-15 | 3.1 | Validado | 155 pruebas enfocadas, E2E Clipboard/404 y build | Web Share simulado explícitamente; origen HTTPS por configurar en despliegue. |
 | 2026-10-15 | 4.1 | Validado | 219 pruebas enfocadas, SQL/rollback y E2E reales; build/escaneo | Seguimiento propio y conteos; aviso Clerk registrado para 5.1; no personaliza feed. |
-| 2026-10-15 | 5.1 | Pendiente | — | Depende de todos los incrementos anteriores; cierre con evidencia, no por casillas automáticas. |
+| 2026-10-15 | 5.1 | Cierre funcional validado; deuda explícita | 411 unitarias/32 archivos, cuatro matrices HTTP/SQL, siete E2E, tipos/lint/build/escaneo | Hidratación de UserButton corregida; 13 migraciones sin cambios y baseline conservado; likes diferidos intactos. |

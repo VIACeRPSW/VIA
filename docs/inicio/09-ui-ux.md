@@ -97,6 +97,14 @@ actor o UUID de destino reinicia estado personal. Tras renombrado se
 ofrece el enlace canónico conservando el UUID seguido.
 Teclado y anchos 360/768/1280 comprobados; feed/galerías sin cambios.
 
+Sprint 5.1: el control de cuenta usa `AccountButton` en portada/perfil,
+cargando solo `UserButton` en navegador para evitar el contenedor distinto
+por `clerk.loaded` entre SSR e hidratación. El resto de la app conserva SSR
+y sus permisos; no se ocultan avisos ni se vuelve dinámica toda la app.
+E2E integrado exige cero errores de hidratación y presencia del control
+tras acceso/recarga. Contraste de texto del botón de comentarios >= 4.5:1
+medido en navegador a 360/768/1280; no equivale a auditoría WCAG integral.
+
 ## 5. Crear
 
 La pantalla deberá reducir fricción:

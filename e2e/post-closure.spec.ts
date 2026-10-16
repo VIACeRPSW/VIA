@@ -2,12 +2,24 @@ import { createHash, randomUUID } from "node:crypto";
 import { createClerkClient } from "@clerk/backend";
 import { clerk, setupClerkTestingToken } from "@clerk/testing/playwright";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import sharp from "sharp";
-import { deleteProfile, runProfileFixtureSql } from "./profile-fixture";
+import { deleteProfile } from "./profile-fixture";
 
-test("checks post isolation, keyboard layouts, interrupted requests and retired image delivery", async ({ page, browser }) => {
+test("integrates social interactions, post isolation, keyboard layouts and retired image delivery", async ({ page, browser }) => {
   test.setTimeout(300_000);
+  const hydrationErrors: string[] = [];
+  function trackHydration(target: Page) {
+    target.on("pageerror", (error) => {
+      if (/hydration|hydrating|#418/i.test(error.message)) hydrationErrors.push(error.message);
+    });
+    target.on("console", (message) => {
+      if (message.type() === "error" && /hydration|hydrating|#418/i.test(message.text())) {
+        hydrationErrors.push(message.text());
+      }
+    });
+  }
+  trackHydration(page);
   const secretKey = process.env.CLERK_SECRET_KEY;
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const origin = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,27 +29,33 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
   }
   const backend = createClerkClient({ secretKey, publishableKey });
   const fixtures: {
-    id: string; email: string; client: SupabaseClient | null;
+    id: string; email: string; client: SupabaseClient | null; profileId: string | null;
     uploads: { operation: string; lease: string }[];
   }[] = [];
   const otherContext = await browser.newContext();
+  const publicContext = await browser.newContext();
   const suffix = Date.now().toString(36);
   try {
     for (const name of ["owner", "other"]) {
       const email = `via.close.${name}.${suffix}+clerk_test@example.com`;
       const user = await backend.users.createUser({ emailAddress: [email], skipPasswordRequirement: true });
       if (!/^user_[A-Za-z0-9]+$/.test(user.id)) throw new Error("Unexpected fixture identity");
-      const fixture: (typeof fixtures)[number] = { id: user.id, email, client: null, uploads: [] };
+      const fixture: (typeof fixtures)[number] = { id: user.id, email, client: null, profileId: null, uploads: [] };
       fixtures.push(fixture);
       const session = await backend.sessions.createSession({ userId: user.id });
       fixture.client = createClient(origin, apiKey, {
         accessToken: async () => (await backend.sessions.getToken(session.id, "supabase")).jwt,
       });
-      runProfileFixtureSql(`insert into public.profiles(clerk_user_id,username,display_name)
-        values('${user.id}','via_e2e_close_${name}_${suffix}','Cierre ${name}');`);
+      const profile = await fixture.client.from("profiles").insert({
+        clerk_user_id: user.id, username: `via_e2e_close_${name}_${suffix}`, display_name: `Cierre ${name}`,
+      }).select("id").single();
+      expect(profile.error).toBeNull();
+      fixture.profileId = profile.data!.id;
     }
     const [owner, other] = fixtures;
-    if (!owner.client || !other.client) throw new Error("Fixture authentication failed");
+    if (!owner.client || !other.client || !owner.profileId || !other.profileId) {
+      throw new Error("Fixture authentication failed");
+    }
     const anonymous = createClient(origin, apiKey, { auth: { persistSession: false } });
     const categories = await owner.client.from("categories").select("id").limit(1).single();
     expect(categories.error).toBeNull();
@@ -75,6 +93,7 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
     expect((await fetch(signedUrl)).ok).toBe(true);
 
     const otherPage = await otherContext.newPage();
+    trackHydration(otherPage);
     await setupClerkTestingToken({ page: otherPage });
     await otherPage.goto("/");
     await otherPage.waitForFunction(() => Boolean(window.Clerk?.loaded));
@@ -84,11 +103,52 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
     await expect(otherPage.getByRole("link", { name: "Editar publicación", exact: true })).toHaveCount(0);
     await expect(otherPage.getByRole("button", { name: "Eliminar publicación", exact: true })).toHaveCount(0);
     expect(await otherPage.content()).not.toContain(owner.id);
+    const initialComment = `Interacción integrada ${suffix}`;
+    const retainedComment = `Comentario para retirada ${suffix}`;
+    const authorPath = `/usuario/via_e2e_close_owner_${suffix}`;
+    const followSection = otherPage.getByRole("region", { name: "Seguimiento del perfil", exact: true });
+    const followerCount = followSection.getByText("Seguidores", { exact: true }).locator("..").locator("dd");
+    await otherPage.getByRole("button", { name: "Dar me gusta", exact: true }).click();
+    await expect(otherPage.getByRole("button", { name: "Quitar me gusta", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
+    await otherPage.getByLabel("Escribe un comentario", { exact: true }).fill(initialComment);
+    await otherPage.getByRole("button", { name: "Publicar comentario", exact: true }).click();
+    await expect(otherPage.getByRole("heading", { name: "Comentarios (1)", exact: true })).toBeVisible();
+    await otherPage.reload();
+    await expect(otherPage.getByText(initialComment, { exact: true })).toBeVisible();
+    await expect(otherPage.getByRole("button", { name: "Quitar me gusta", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
+    await otherContext.grantPermissions(["clipboard-read", "clipboard-write"], { origin: "http://localhost:3000" });
+    await otherPage.getByRole("button", { name: "Compartir", exact: true }).click();
+    const shareDialog = otherPage.getByRole("dialog");
+    await shareDialog.getByRole("button", { name: "Copiar enlace", exact: true }).click();
+    const sharedUrl = await otherPage.evaluate(() => navigator.clipboard.readText());
+    expect(sharedUrl).toBe(`http://localhost:3000${detail}`);
+    await otherPage.keyboard.press("Escape");
+    const publicPage = await publicContext.newPage();
+    trackHydration(publicPage);
+    await publicPage.goto(sharedUrl);
+    await expect(publicPage.getByText(initialComment, { exact: true })).toBeVisible();
+    await expect(publicPage.getByText("1 me gusta", { exact: true })).toBeVisible();
+    await expect(publicPage.getByRole("button", { name: "Eliminar comentario", exact: true })).toHaveCount(0);
+    await otherPage.goto(authorPath);
+    await followSection.getByRole("button", { name: "Seguir", exact: true }).click();
+    await expect(followSection.getByRole("button", { name: "Dejar de seguir", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
+    await expect(followerCount).toHaveText("1");
+    await otherPage.reload();
+    await expect(followSection.getByRole("button", { name: "Dejar de seguir", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
+    await publicPage.goto(authorPath);
+    await expect(publicPage.getByText("Seguidores", { exact: true }).locator("..").locator("dd")).toHaveText("1");
+    await expect(publicPage.getByRole("button", { name: "Seguir", exact: true })).toHaveCount(0);
+    expect(await publicPage.content()).not.toContain(other.id);
     await otherPage.goto(`${detail}/editar`);
     await expect(otherPage.getByRole("heading", { name: "Editar publicación", exact: true })).toHaveCount(0);
     await otherPage.goto("/imagenes");
     await expect(otherPage.getByText("Total: 0 publicaciones.", { exact: true })).toBeVisible();
     await otherPage.goto("/perfil");
+    await expect(otherPage.locator('[data-clerk-component="UserButton"]')).toBeVisible();
     await otherPage.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
     await expect(otherPage).toHaveURL("http://localhost:3000/");
     await otherPage.goto("/crear");
@@ -98,6 +158,14 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
     await page.goto("/");
     await page.waitForFunction(() => Boolean(window.Clerk?.loaded));
     await clerk.signIn({ emailAddress: owner.email, page });
+    await page.goto("/perfil");
+    await expect(page.locator('[data-clerk-component="UserButton"]')).toBeVisible();
+    await page.reload();
+    await expect(page.locator('[data-clerk-component="UserButton"]')).toBeVisible();
+    await expect(page.getByText("Seguidores", { exact: true }).locator("..").locator("dd")).toHaveText("1");
+    await page.goto(detail);
+    await expect(page.getByRole("button", { name: "Eliminar comentario", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Dar me gusta", exact: true })).toHaveAttribute("aria-pressed", "false");
     for (const width of [360, 768, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       for (const route of ["/crear", `${detail}/editar`, detail, "/imagenes", "/inicio"]) {
@@ -106,6 +174,24 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       }
       await page.goto(detail);
+      const commentSubmit = page.getByRole("button", { name: "Publicar comentario", exact: true });
+      await expect(commentSubmit).toBeEnabled();
+      const textContrast = await commentSubmit.evaluate((element) => {
+        const style = getComputedStyle(element);
+        function luminance(color: string) {
+          const channels = color.match(/\d+(?:\.\d+)?/g)?.map(Number);
+          if (!channels || channels.length !== 3) throw new Error("Expected an opaque RGB control color");
+          const [red, green, blue] = channels.map((value) => {
+            const srgb = value / 255;
+            return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+          });
+          return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+        }
+        const foreground = luminance(style.color);
+        const background = luminance(style.backgroundColor);
+        return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+      });
+      expect(textContrast).toBeGreaterThanOrEqual(4.5);
       const trigger = page.getByRole("button", { name: "Eliminar publicación", exact: true });
       await trigger.focus();
       await page.keyboard.press("Enter");
@@ -134,6 +220,8 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
         const card = page.locator(".feed-card").filter({ has: page.getByRole("heading", { name: updatedTitle, exact: true }) });
         await expect(card).toHaveCount(1);
         await expect(card.getByText("#niños", { exact: true })).toBeVisible();
+        await expect(card.getByLabel("1 me gusta", { exact: true })).toBeVisible();
+        await expect(card.getByRole("link", { name: "1 comentario", exact: true })).toBeVisible();
       } else {
         await expect(page.getByRole("link", { name: `Ver publicación: ${updatedTitle}`, exact: true })).toBeVisible();
         await expect(page.getByRole("list", { name: "Publicaciones", exact: true }).getByRole("heading")).toHaveCount(0);
@@ -141,6 +229,34 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
     }
     expect((await owner.client.from("posts").select("image_path,hashtags").eq("id", postId).single()).data)
       .toEqual({ image_path: imagePath, hashtags: ["arte", "niños"] });
+    await otherPage.goto("/");
+    await otherPage.waitForFunction(() => Boolean(window.Clerk?.loaded));
+    await clerk.signIn({ emailAddress: other.email, page: otherPage });
+    await otherPage.goto(detail);
+    await expect(otherPage.getByRole("heading", { name: updatedTitle, exact: true })).toBeVisible();
+    await otherPage.getByRole("button", { name: "Eliminar comentario", exact: true }).click();
+    await otherPage.getByRole("dialog").getByRole("button", { name: "Confirmar eliminación", exact: true }).click();
+    await expect(otherPage.getByRole("heading", { name: "Comentarios (0)", exact: true })).toBeVisible();
+    await expect(otherPage.getByText(initialComment, { exact: true })).toHaveCount(0);
+    await otherPage.getByLabel("Escribe un comentario", { exact: true }).fill(retainedComment);
+    await otherPage.getByRole("button", { name: "Publicar comentario", exact: true }).click();
+    await expect(otherPage.getByRole("heading", { name: "Comentarios (1)", exact: true })).toBeVisible();
+    await otherPage.getByRole("button", { name: "Quitar me gusta", exact: true }).click();
+    await expect(otherPage.getByRole("button", { name: "Dar me gusta", exact: true }))
+      .toHaveAttribute("aria-pressed", "false");
+    await otherPage.reload();
+    await expect(otherPage.getByLabel("0 me gusta", { exact: true })).toBeVisible();
+    await otherPage.getByRole("button", { name: "Dar me gusta", exact: true }).click();
+    await expect(otherPage.getByRole("button", { name: "Quitar me gusta", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
+    const activeChildren = await Promise.all([
+      other.client.from("likes").select("id").eq("post_id", postId),
+      other.client.from("comments").select("id").eq("post_id", postId),
+    ]);
+    for (const children of activeChildren) {
+      expect(children.error).toBeNull();
+      expect(children.data).toHaveLength(1);
+    }
     await page.goto("/crear");
     const input = page.getByLabel("Imagen de la publicación", { exact: true });
     await input.focus();
@@ -170,6 +286,23 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
     expect((await owner.client.from("posts").select("id")).data).toEqual([{ id: postId }]);
 
     expect((await owner.client.from("posts").delete().eq("id", postId)).error).toBeNull();
+    for (const table of ["likes", "comments"]) {
+      const children = await other.client.from(table).select("id").eq("post_id", postId);
+      expect(children.error).toBeNull();
+      expect(children.data).toEqual([]);
+    }
+    const retiredShared = await publicPage.goto(sharedUrl);
+    expect(retiredShared?.status()).toBe(404);
+    await expect(publicPage.getByRole("heading", { name: updatedTitle, exact: true })).toHaveCount(0);
+    await expect(publicPage.getByText(retainedComment, { exact: true })).toHaveCount(0);
+    await otherPage.goto(authorPath);
+    await expect(followerCount).toHaveText("1");
+    await followSection.getByRole("button", { name: "Dejar de seguir", exact: true }).click();
+    await expect(followSection.getByRole("button", { name: "Seguir", exact: true })).toHaveAttribute("aria-pressed", "false");
+    await expect(followerCount).toHaveText("0");
+    await otherPage.goto("/perfil");
+    await otherPage.reload();
+    await expect(otherPage.getByText("Seguidos", { exact: true }).locator("..").locator("dd")).toHaveText("0");
     expect((await anonymous.storage.from("posts").createSignedUrl(imagePath, 60)).error).not.toBeNull();
     await page.goto(detail);
     await expect(page.getByRole("heading", { name: updatedTitle, exact: true })).toHaveCount(0);
@@ -182,8 +315,17 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
     await expect(page.locator(".post-cleanup").getByRole("status")).toContainText("Limpieza completada");
     expect((await owner.client.from("post_uploads").select("operation_id")).data).toEqual([]);
     expect((await owner.client.storage.from("posts").list(imagePath.split("/")[0])).data).toEqual([]);
+    expect(hydrationErrors).toEqual([]);
   } finally {
-    await otherContext.close();
+    const contexts = await Promise.allSettled([
+      page.goto("about:blank"), otherContext.close(), publicContext.close(),
+    ]);
+    const relations = await Promise.allSettled(fixtures.map(async ({ client, profileId }) => {
+      if (client && profileId) {
+        const removed = await client.from("follows").delete().eq("follower_id", profileId);
+        if (removed.error) throw new Error("Could not remove closure fixture follows");
+      }
+    }));
     const cleanup = await Promise.allSettled(fixtures.map(async ({ id, client, uploads }) => {
       try {
         if (client) {
@@ -209,7 +351,7 @@ test("checks post isolation, keyboard layouts, interrupted requests and retired 
         await backend.users.deleteUser(id);
       }
     }));
-    const failures = cleanup.filter((result) => result.status === "rejected");
+    const failures = [...contexts, ...relations, ...cleanup].filter((result) => result.status === "rejected");
     if (failures.length) throw new AggregateError(failures.map((result) => result.reason), "Closure fixture cleanup failed");
   }
 });

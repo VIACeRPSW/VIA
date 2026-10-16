@@ -249,3 +249,38 @@ exitoso. Deben probarse también errores, permisos y datos inválidos.
   remota confirmada: cero follows/perfiles de fixture, un comentario real
   conservado y 13 migraciones. Sin posts/imágenes nuevos en este E2E.
   Sin commit/deploy; las dos comprobaciones diferidas de likes no se ejecutaron.
+
+### Interacción — Sprint 5.1 de cierre integrado
+
+- `npm run test -- actions lib\posts lib\profiles components\posts components\profile`:
+  411 pruebas aprobadas en 32 archivos. Tipos, lint enfocado, build y
+  escaneo del cliente aprobados.
+- Matrices auth-boundary, likes, comentarios y seguimiento aprobadas.
+  SQL usa fixtures transaccionales revertidos; comentarios preserva datos
+  y roundtrip de permisos de eliminación, seguimiento roundtrip vacío.
+  No se ensaya rollback de likes ni su JWT real vencido.
+- `npm run test:e2e -- post-closure profile-follows post-publishing profile-onboarding avatar`:
+  siete recorridos. El primer lote aprobó seis; el integrado usaba un
+  selector de label inexistente para el conteo anónimo, corregido a texto
+  visible. Se repitió solo ese test hasta aprobar su versión final.
+- `post-closure` integra B sobre un post de A: like/unlike con recarga,
+  comentario y retirada propia, Clipboard real abierto por anónimo,
+  seguir/dejar de seguir y conteos en ambos perfiles. A no borra el
+  comentario ajeno; editar conserva conteos del feed; retirar vía API
+  autenticada elimina likes/comentarios, produce 404 del enlace compartido
+  y conserva el seguimiento hasta retirarlo expresamente.
+  La regresión de publicación cubre aparte la eliminación por UI.
+- Teclado/foco y 360/768/1280; contraste real de texto del botón de comentar
+  >= 4.5:1 con `getComputedStyle`, no una auditoría WCAG completa.
+  `AccountButton` difiere solo el widget Clerk al navegador; el integrado
+  comprueba presencia tras acceso/recarga y cero errores de hidratación
+  en sus tres páginas. Sin `suppressHydrationWarning` ni SSR global apagado.
+- Regresiones reales de avatar, publicación, seguimiento y onboarding/
+  edición/proyección pública, enlace de perfil ausente y sesión Clerk vencida
+  en rutas privadas. No equivalen al JWT Supabase vencido de likes diferido.
+  Los abortos inyectados siguen generando errores de conexión en `next dev`.
+- Baseline/final: 6 perfiles, 1 post, 1 comentario, 1 like, 0 follows,
+  1 objeto posts y 4 avatars; cero perfiles nuevos de fixture. E2E cleanup
+  de usuarios Clerk/objetos aprobado, historial estable en 13 migraciones.
+  Sin migraciones nuevas, reset, commit ni deploy. Cierre funcional no
+  declara aprobadas las excepciones de likes ni deuda pendiente de Fase 3.

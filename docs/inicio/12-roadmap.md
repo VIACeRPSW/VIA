@@ -71,7 +71,8 @@ aprobadas, en [el cierre de Fase 3](../fases/fase03.md#puerta-de-fase-4).
 **Salida:** núcleo social.
 
 Plan ejecutable: [Fase 04 — Interacción](../fases/fase04.md).
-Estado: en curso desde el 2026-10-15. Sprint 1.1 consolidado; likes
+Estado: entrega funcional y cierre integrado completados el 2026-10-15,
+con excepciones explícitas de verificación. Sprint 1.1 consolidado; likes
 implementados y aprobados manualmente, con JWT vencido y rollback/
 reaplicación diferidos explícitamente por el usuario, no aprobados.
 Sprint 2.1 autorizado e implementado: lectura/creación de comentarios,
@@ -90,9 +91,16 @@ conteos públicos/estado privado, UUID estable ante renombrado y sesión
 vigente exigida también en PostgreSQL. 219 pruebas enfocadas, SQL/RLS/
 rollback y E2E reales con expiración/firma inválida, tipos/lint/build/
 escaneo aprobados; fixtures limpiados y datos previos conservados.
-Sigue Sprint 5.1: cierre integrado de Fase 4, sin personalizar el feed.
-Revisar el aviso de hidratación de `UserButton` de Clerk observado en
-alternancia de sesiones; no equivale a cerrar la fase ni su deuda diferida.
+Sprint 5.1: 411 pruebas de acciones/posts/perfiles y siete E2E enfocados,
+cuatro matrices HTTP/SQL, tipos/lint/build/escaneo aprobados. Recorrido
+integrado sobre un mismo post, retirada con interacciones, regresión de
+perfiles/avatar/sesión vencida y datos/objetos previos conservados.
+`UserButton` montado solo en navegador corrige su aviso de hidratación;
+el integrado exige cero errores de hidratación. No cierra las comprobaciones
+diferidas de likes ni la deuda heredada de Fase 3. La verificación integral
+sin excepciones mantiene sus casillas abiertas, sin éxitos por arrastre.
+Siguiente: planificar Fase 5; no está implementada. Origen HTTPS de compartir
+obligatorio antes de construir un despliegue.
 Sin commit ni despliegue nuevo.
 
 ## Fase 5 --- Comunidades y búsqueda

@@ -24,7 +24,7 @@ vi.mock("@/lib/profiles/read-profile.server", () => ({
   getPublicProfile: mocks.getPublicProfile,
 }));
 vi.mock("@clerk/nextjs", () => ({
-  UserButton: () => null,
+  UserButton: () => <span data-clerk-component="UserButton" />,
   SignOutButton: ({ children }: { children: ReactNode }) => children,
   useAuth: () => ({ isLoaded: true, userId: null }),
 }));
@@ -46,6 +46,7 @@ import EditProfilePage from "@/app/perfil/editar/page";
 import CompleteProfilePage from "@/app/perfil/completar/page";
 import PublicProfilePage from "@/app/usuario/[username]/page";
 import { ProfileDetails } from "@/components/profile/ProfileDetails";
+import { AccountButton } from "@/components/profile/AccountButton";
 
 const profile = {
   username: "ada_42",
@@ -66,6 +67,10 @@ beforeEach(() => {
 });
 
 describe("profile views", () => {
+  it("does not prerender the browser-only Clerk account control", () => {
+    expect(renderToStaticMarkup(<AccountButton />)).not.toContain("data-clerk-component");
+  });
+
   describe("onboarding view", () => {
     it.each([
       ["unauthorized", "/sign-in"],

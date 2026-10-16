@@ -343,7 +343,8 @@ No hay un despliegue nuevo confirmado.
 
 La Fase 3 quedó cerrada por decisión del usuario el 2026-10-15, con sus
 comprobaciones ampliadas no ejecutadas conservadas como diferidas, no aprobadas.
-La [Fase 4 — Interacción](docs/fases/fase04.md) está en curso. Los contratos
+La [Fase 4 — Interacción](docs/fases/fase04.md) tiene su entrega funcional
+y cierre integrado validados, con dos comprobaciones diferidas explícitas. Los contratos
 del Sprint 1.1 están consolidados y el incremento de likes está implementado
 en feed/detalle, con migración `20261015223045` aplicada por MCP al proyecto
 existente. Las galerías conservan su grid solo-imágenes. El usuario aprobó
@@ -354,7 +355,8 @@ sesión/perfil y conteos por lote en feed/detalle. Sprint 2.2 implementado y
 validado: eliminación exclusivamente propia con confirmación/cancelación.
 Sprint 3.1 también implementado y validado: copia/compartir enlaces públicos.
 Sprint 4.1 implementado y validado: seguimiento y conteos en perfiles,
-sin personalizar el feed. Sigue el cierre integrado de Fase 4 (5.1).
+sin personalizar el feed. Sprint 5.1 validado en su alcance ejecutado;
+sigue planificar Fase 5, comunidades y búsqueda.
 
 Like/unlike exige sesión y perfil, permite publicaciones propias y usa
 estado deseado idempotente. Conteos públicos, estado personal privado,
@@ -443,6 +445,26 @@ comentario previo conservado y 13 migraciones remotas. Se registró un aviso
 de hidratación de `UserButton` de Clerk al alternar sesiones para revisar
 en el cierre 5.1; las aserciones E2E pasaron. La deuda de likes y la
 configuración HTTPS de compartir antes del despliegue siguen explícitas.
+
+Cierre 5.1: 411 pruebas de acciones/posts/perfiles, cuatro matrices HTTP/SQL
+y siete E2E de integración/regresión aprobados, con tipos/lint/build/escaneo.
+El mismo post recorre likes, comentarios, compartir y seguimiento; editarlo
+conserva conteos y retirarlo limpia interacciones sin borrar el seguimiento.
+También se comprueban perfiles/avatar, sesión Clerk vencida, responsive,
+foco y contraste >= 4.5:1 del botón de comentario.
+
+El aviso de hidratación anterior se corrigió cargando solo `UserButton`
+en navegador mediante `AccountButton`, en portada y perfil. El integrado
+exige cero errores de hidratación y verifica que aparece tras acceso/recarga;
+los abortos de red inyectados siguen generando ruido de conexión esperado.
+Datos/objetos remotos coinciden con el baseline y las 13 migraciones no
+cambiaron; sin fixtures ni servidor de pruebas residual, commit o deploy.
+Las excepciones de likes/Fase 3 no se dan por aprobadas.
+
+```powershell
+npm run test -- actions lib\posts lib\profiles components\posts components\profile
+npm run test:e2e -- post-closure profile-follows post-publishing profile-onboarding avatar
+```
 
 Antes de aplicar el esquema de publicaciones de Fase 3 a una base Fase 2 sin `posts`/`categories`,
 puede ensayarse sin persistir el esquema:

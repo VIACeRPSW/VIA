@@ -2,9 +2,9 @@ import {
   Show,
   SignInButton,
   SignUpButton,
-  UserButton,
 } from "@clerk/nextjs";
 import Link from "next/link";
+import { AccountButton } from "@/components/profile/AccountButton";
 
 export default function Home() {
   return (
@@ -31,7 +31,7 @@ export default function Home() {
             <Link className="button button-primary" href="/perfil">
               Mi bienvenida
             </Link>
-            <UserButton />
+            <AccountButton />
           </Show>
         </nav>
       </header>
